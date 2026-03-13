@@ -6,7 +6,7 @@
    git clone https://github.com/lindsey5/Zhiyuan-Backend.git
 ```
 
-2. Install dependencies (pnpm recommended)
+2. Install dependencies
 
 ```bash
    npm install
