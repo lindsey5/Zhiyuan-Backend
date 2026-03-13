@@ -3,20 +3,21 @@
 1. Clone repository
 
 ```bash
-git clone https://github.com/lindsey5/Zhiyuan-Backend.git
+   git clone https://github.com/lindsey5/Zhiyuan-Backend.git
 ```
 
 2. Install dependencies (pnpm recommended)
 
 ```bash
-npm install
+   npm install
 ```
 
 3. Create .env
-   Copy `.env.example` (if present) or create `.env` and set required values:
 
 ```bash
-cp .env.example .env
+   Copy `.env.example` (if present) or create `.env` and set required values:
+
+   cp .env.example .env
 ```
 
 4. Setup database
