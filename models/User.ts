@@ -2,15 +2,6 @@ import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
 import { hashPassword } from "../utils/auth";
 
-interface UserAttributes {
-    id: number;
-    firstname: string;
-    lastname: string;
-    email: string;
-    password: string;
-    role_id: number;
-}
-
 interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
 
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {

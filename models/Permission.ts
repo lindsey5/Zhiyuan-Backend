@@ -1,12 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
 
-interface PermissionAttributes {
-    id: number;
-    action: string;
-    role_id: number;
-}
-
 interface PermissionCreationAttributes extends Optional<PermissionAttributes, "id"> {}
 
 class Permission
