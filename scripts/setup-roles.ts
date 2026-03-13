@@ -54,14 +54,6 @@ const setupRoles = async () => {
                 console.log(`Role ${role.name} created with permissions`);
 
             }
-
-            const roles = await Role.findAll({
-                include: [
-                    {
-                        model: Permission
-                    }
-                ]
-            });
             
         }
 
