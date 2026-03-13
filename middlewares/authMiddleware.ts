@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Role, User, Permission } from "../models";
 import { UserWithRole } from "../types/types";
-import { permission } from "node:process";
 
 interface AuthRequest extends Request {
     user?: any;
