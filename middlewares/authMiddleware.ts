@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Role, User, Permission } from "../models";
 import { UserWithRole } from "../types/types";
+import { permission } from "node:process";
 
 interface AuthRequest extends Request {
     user?: any;
@@ -32,7 +33,14 @@ export const authenticate = async (
             include: [
                 {
                     model: Role,
-                    include: [{ model: Permission }]
+                    as: 'role',
+                    include: [
+                        { 
+                            model: Permission,
+                            as: 'permissions',
+                            attributes: ['action']
+                        }
+                    ]
                 }
             ]
         });
@@ -44,7 +52,21 @@ export const authenticate = async (
 
         const userData : UserWithRole = user.toJSON();
 
-        req.user = userData;
+        if (!userData.role) {
+            res.status(401).json({ error: "User role not found" });
+            return;
+        }
+
+        const { permissions, ...rest } = userData.role;
+
+        const userPermissions = permissions?.map(permission => permission.action) || [];
+
+        req.user = { ...userData, 
+            role: {
+                ...rest,
+                permissions: userPermissions
+            }
+        };
 
         next();
     } catch (error) {

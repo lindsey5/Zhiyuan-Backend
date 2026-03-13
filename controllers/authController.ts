@@ -8,16 +8,18 @@ export const login = async (req : Request, res : Response) => {
         const { email, password } = req.body;
 
         const user = await User.findOne({
-            attributes: { exclude: ["password"] },
             where: {
                 email
             },
             include:[
                 {
                     model: Role,
+                    as: 'role',
                     include: [
                         {
-                            model: Permission
+                            model: Permission,
+                            as: 'permissions',
+                            attributes: ['action']
                         }
                     ]
                 }
@@ -38,9 +40,11 @@ export const login = async (req : Request, res : Response) => {
         const accessToken = generateAccessToken(userData.id, userData.role?.name as string);
         const refreshToken = generateRefreshToken(userData.id);
 
+        const { password : userPassword, ...rest } = userData
+
         res.status(200).json({
             success: true,
-            user: userData,
+            user: rest,
             token: {
                 accessToken,
                 refreshToken

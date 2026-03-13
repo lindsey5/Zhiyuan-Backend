@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from '../models/index';
+import { Permission, Role, User } from '../models/index';
 
 export const createUser = async (req : Request, res : Response) => {
     try{
@@ -17,7 +17,20 @@ export const createUser = async (req : Request, res : Response) => {
 
 export const getUsers = async (req : Request, res : Response) => {
     try{
-        const users = await User.findAll();
+        const users = await User.findAll({
+            include: [
+                { 
+                    model: Role,
+                    as: 'role',
+                    include: [
+                        {
+                            model: Permission,
+                            as: 'permissions',
+                        }
+                    ]
+                }
+            ]
+        });
 
         res.status(200).json({ success: true, users });
 
