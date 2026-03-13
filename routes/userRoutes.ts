@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, getUsers } from "../controllers/userController";
+import { createUser, deleteUser, getUserById, getUsers, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 
@@ -18,6 +18,41 @@ router.get(
     authorizePermission(PERMISSIONS.USER_READ_ALL),
     getUsers
 );
+
+router.put(
+    '/',
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_UPDATE),
+    updateUser
+)
+
+router.get(
+    '/:id',
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_READ),
+    getUserById
+)
+
+router.get(
+    '/me',
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_READ_OWN),
+    userGetOwn
+)
+
+router.put(
+    '/me',
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_UPDATE_OWN),
+    userUpdateOwn
+)
+
+router.delete(
+    '/:id',
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_DELETE),
+    deleteUser
+)
 
 const userRoutes = router
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Permission, Role, User } from '../models/index';
 import { generateAccessToken, generateRefreshToken } from "../utils/auth";
-import { UserWithRole } from "../types/types";
+import { UserWithRole } from "../types/model";
 
 export const login = async (req : Request, res : Response) => {
     try{
