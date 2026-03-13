@@ -1,6 +1,8 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
 import { hashPassword } from "../utils/auth";
+import { UserAttributes } from "../types/types";
+import bcrypt from "bcrypt";
 
 interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
 
@@ -11,6 +13,10 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
     public email!: string;
     public password!: string;
     public role_id!: number;
+
+    public async matchPassword(plainPassword: string): Promise<boolean> {
+        return await bcrypt.compare(plainPassword, this.password);
+    }
 }
 
 User.init(
