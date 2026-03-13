@@ -3,7 +3,7 @@
 1. Clone repository
 
 ```bash
-git clone https://github.com/lindsey5/Zhiyuan-Backend
+git clone https://github.com/lindsey5/Zhiyuan-Backend.git
 ```
 
 2. Install dependencies (pnpm recommended)
