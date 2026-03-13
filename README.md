@@ -21,7 +21,8 @@
 
 4. Setup database
 ```bash
-   Create `database.sqlite` file
+   # Create `database.sqlite` file
+   type NUL > database.sqlite
 ```
 
 6. Setup database roles and user
