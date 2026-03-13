@@ -15,8 +15,7 @@
 3. Create .env
 
 ```bash
-   Copy `.env.example` (if present) or create `.env` and set required values:
-
+   #Copy `.env.example` (if present) or create `.env` and set required values:
    cp .env.example .env
 ```
 
