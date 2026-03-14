@@ -18,10 +18,7 @@ export const errorHandler = (
     if (err instanceof ValidationError) {
         return res.status(400).json({
             error: "Validation error",
-            details: err.errors.map(e => ({
-                field: e.path,
-                message: e.message
-            }))
+            message: err.errors[0].message,
         });
     }
 
@@ -29,7 +26,7 @@ export const errorHandler = (
     if (err instanceof UniqueConstraintError) {
         return res.status(409).json({
             error: "Duplicate value",
-            field: err.errors[0]?.path
+            message: `${err.errors[0]?.path} already exists.`
         });
     }
 
