@@ -27,12 +27,18 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
         })
 
         if(!user){
-            res.status(401).json({ error: 'User not found.' });
+            res.status(401).json({ 
+                success: false,
+                message: 'User not found.' 
+            });
             return;   
         }
 
         if(!(await user.matchPassword(password))){
-            res.status(401).json({ error: 'Incorrect password.' });
+            res.status(401).json({ 
+                success: false,
+                message: 'Incorrect password.' 
+            });
             return;
         }
 

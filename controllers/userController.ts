@@ -46,7 +46,10 @@ export const updateUser = async (req : Request, res : Response, next : NextFunct
         const user = await User.findByPk(req.params.id as string);
 
         if(!user){
-            res.status(404).json({ error: 'User not found.'});
+            res.status(404).json({ 
+                success: false,
+                message: 'User not found.'
+            });
             return;
         }
 
@@ -70,7 +73,10 @@ export const getUserById = async (req : Request, res : Response, next : NextFunc
         const user = await User.findByPk(req.params.id as string);
 
         if(!user){
-             res.status(404).json({ error: 'User not found.'});
+             res.status(404).json({ 
+                success: false,
+                message: 'User not found.'
+            });
             return;
         }
 
@@ -109,7 +115,10 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response, next : Ne
         const user = await User.findByPk(req.user.id);
 
         if(!user){
-            res.status(404).json({ error: 'User not found.'});
+            res.status(404).json({ 
+                success: false,
+                message: 'User not found.'
+            });
             return;
         }
 
@@ -128,7 +137,10 @@ export const deleteUser = async (req : Request, res : Response, next : NextFunct
         const user = await User.findByPk(req.params.id as string);
 
         if(!user){
-            res.status(404).json({ error: 'User not found.'});
+            res.status(404).json({ 
+                success: false,
+                message: 'User not found.'
+            });
             return;
         }
 

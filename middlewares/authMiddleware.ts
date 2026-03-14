@@ -12,7 +12,10 @@ export const authenticate = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith("Bearer ")) {
-        res.status(401).json({ error: "Access token required" });
+        res.status(401).json({ 
+            success: false, 
+            message: "Access token required"
+        });
         return;
     }
 
@@ -42,14 +45,20 @@ export const authenticate = async (
         });
 
         if (!user) {
-            res.status(401).json({ error: "Invalid token" });
+            res.status(401).json({ 
+                success: false,
+                message: "Invalid token" 
+            });
             return;
         }
 
         const userData : UserWithRole = user.toJSON();
 
         if (!userData.role) {
-            res.status(401).json({ error: "User role not found" });
+            res.status(401).json({ 
+                success: false,
+                message: "User role not found" 
+            });
             return;
         }
 
@@ -66,7 +75,10 @@ export const authenticate = async (
 
         next();
     } catch (error) {
-        res.status(401).json({ error: "Unauthorized" });
+        res.status(401).json({ 
+            success: false,
+            message: "Unauthorized" 
+        });
     }
 };
 
@@ -76,7 +88,10 @@ export const authorizePermission = (...requiredPermissions: string[]) => {
         res: Response,
         next: NextFunction
     ) => {
-        if (!req.user) return res.status(403).json({ error: "Forbidden: insufficient rights" });
+        if (!req.user) return res.status(403).json({ 
+            success: false,
+            message: "Forbidden: insufficient rights"
+         });
 
         const userPermissions = req.user.role?.permissions || [];
 
@@ -88,7 +103,8 @@ export const authorizePermission = (...requiredPermissions: string[]) => {
 
         if (!hasAllPermissions) {
             return res.status(403).json({
-                error: "Forbidden: insufficient permissions",
+                success: false,
+                message: "Forbidden: insufficient permissions",
                 required: requiredPermissions,
                 current: userPermissions
             });
