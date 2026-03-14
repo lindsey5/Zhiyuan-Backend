@@ -13,9 +13,9 @@ class Role extends Model<RoleAttributes, RoleCreationAttributes> implements Role
 Role.init(
     {
         id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
         },
         name: {
         type: DataTypes.STRING,
@@ -23,6 +23,10 @@ Role.init(
             unique: true,
             validate: {
                 notEmpty: { msg: "name is required." },
+                len: {
+                args: [3, 100],
+                msg: "name must be between 3 and 50 characters."
+            }
             },
         },
         description: {
@@ -30,6 +34,10 @@ Role.init(
             allowNull: false,
             validate: {
                 notEmpty: { msg: "description is required." },
+                len: {
+                args: [3, 100],
+                msg: "description must be between 10 and 100 characters."
+            }
             },
         },
     },

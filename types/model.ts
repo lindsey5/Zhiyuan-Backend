@@ -26,3 +26,17 @@ export interface UserWithRole extends UserAttributes {
         permissions?: Permission[];
     };
 }
+
+export interface ProductAttributes {
+    id: number;
+    product_name: string;
+    description: string;
+    thumbnail: string;
+    stock: number;
+}
+
+export interface ProductSubImage {
+    id: number;
+    product_id: number;
+    url: string;
+}

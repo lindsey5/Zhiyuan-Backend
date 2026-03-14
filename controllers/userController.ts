@@ -7,13 +7,6 @@ export const createUser = async (req : Request, res : Response, next : NextFunct
     try{
         const user = req.body;
 
-        const existingRole = await Role.findByPk(user.role_id);
-
-        if(!existingRole){
-            res.status(404).json({ error: 'Role not exist.'});
-            return;
-        }
-
         const newUser = await User.create(user);
 
         res.status(201).json({ success: true, user: newUser });

@@ -18,7 +18,10 @@ export const errorHandler = (
     if (err instanceof ValidationError) {
         return res.status(400).json({
             error: "Validation error",
-            message: err.errors[0].message,
+            details: err.errors.map(e => ({
+                field: e.path,
+                message: e.message
+            }))
         });
     }
 
