@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { Permission, Role, User } from '../models/index';
 import { AuthRequest } from "../types/auth";
 
 
-export const createUser = async (req : Request, res : Response) => {
+export const createUser = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const user = req.body;
 
@@ -19,12 +19,11 @@ export const createUser = async (req : Request, res : Response) => {
         res.status(201).json({ success: true, user: newUser });
 
     }catch(err : any){
-        console.log(err)
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 }
 
-export const getUsers = async (req : Request, res : Response) => {
+export const getUsers = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const users = await User.findAll({
             include: [
@@ -44,12 +43,11 @@ export const getUsers = async (req : Request, res : Response) => {
         res.status(200).json({ success: true, users });
 
     }catch(err : any){
-        console.log(err)
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 }
 
-export const updateUser = async (req : Request, res : Response) => {
+export const updateUser = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const { password, ...rest } = req.body;
         const user = await User.findByPk(req.params.id as string);
@@ -70,12 +68,11 @@ export const updateUser = async (req : Request, res : Response) => {
 
 
     }catch(err : any){
-        console.log(err)
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 }
 
-export const getUserById = async (req : Request, res : Response) => {
+export const getUserById = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const user = await User.findByPk(req.params.id as string);
 
@@ -86,12 +83,11 @@ export const getUserById = async (req : Request, res : Response) => {
 
         res.status(200).json({ success: true, user });
     }catch(err : any){
-        console.log(err)
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 }
 
-export const userGetOwn= async (req : AuthRequest, res : Response) => {
+export const userGetOwn= async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
         const user = await User.findByPk(req.user.id, {
             include: [
@@ -110,12 +106,11 @@ export const userGetOwn= async (req : AuthRequest, res : Response) => {
 
         res.status(200).json({ success: true, user });
     }catch(err : any){
-        console.log(err)
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 }
 
-export const userUpdateOwn = async (req : AuthRequest, res : Response) => {
+export const userUpdateOwn = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
         const { password, ...rest } = req.body;
         const user = await User.findByPk(req.user.id);
@@ -131,12 +126,11 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response) => {
 
         res.status(200).json({ success: true, user: updatedUser });
     }catch(err : any){
-        console.log(err)
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 }
 
-export const deleteUser = async (req : Request, res : Response) => {
+export const deleteUser = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const user = await User.findByPk(req.params.id as string);
 
@@ -150,7 +144,6 @@ export const deleteUser = async (req : Request, res : Response) => {
         res.status(200).json({ success: true, message: 'User successfully deleted.' });
 
     }catch(err : any){
-        console.log(err)
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 }

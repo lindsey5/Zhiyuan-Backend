@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { Permission, Role, User } from '../models/index';
 import { generateAccessToken, generateRefreshToken } from "../utils/auth";
 import { UserWithRole } from "../types/model";
 
-export const login = async (req : Request, res : Response) => {
+export const login = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const { email, password } = req.body;
 
@@ -52,7 +52,6 @@ export const login = async (req : Request, res : Response) => {
         })
 
     }catch(err : any){
-        console.log(err);
-        res.status(500).json({ error: err.message });
+       next(err);
     }
 }
