@@ -95,7 +95,10 @@ export const authorizePermission = (...requiredPermissions: string[]) => {
 
         const userPermissions = req.user.role?.permissions || [];
 
-        if (userPermissions.length === 0) return res.status(403).json({ error: "Forbidden: no role assigned" });
+        if (userPermissions.length === 0) return res.status(403).json({ 
+            success: false,
+            message: "Forbidden: no role assigned" 
+        });
 
         const hasAllPermissions = requiredPermissions.every(permission =>
             userPermissions.includes(permission)
