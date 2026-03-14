@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import sequelize from "./config/db";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
+import { errorHandler } from "./middlewares/errorHandler";
 
 dotenv.config();
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.urlencoded());
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use(errorHandler);
 
 sequelize.sync()
 .then(() => {
