@@ -16,5 +16,4 @@ const PERMISSIONS = {
     ROLE_UPDATE: 'role:update',
     ROLE_DELETE: 'role:delete',
 }
-
 export default PERMISSIONS

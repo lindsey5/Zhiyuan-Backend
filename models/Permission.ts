@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
 import { PermissionAttributes } from "../types/model";
+import PERMISSIONS from "../utils/permissions";
 
 interface PermissionCreationAttributes extends Optional<PermissionAttributes, "id"> {}
 
@@ -22,7 +23,7 @@ Permission.init(
     },
 
     action: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM(...Object.values(PERMISSIONS)),
         allowNull: false,
         validate: {
             notEmpty: { msg: "action is required." },

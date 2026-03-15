@@ -6,8 +6,16 @@ export const createRole = async (req: Request, res: Response, next: NextFunction
     try {
         const { permissions, ...rest } = req.body;
 
-        if (!Array.isArray(permissions) || permissions.length === 0) {
+        if (!Array.isArray(permissions)) {
             res.status(400).json({ success: false, message: "Permissions must be an array" });
+            return;
+        }
+
+        if(permissions.length === 0){
+            res.status(400).json({
+                success: false,
+                message: "Role must have at least one permission."
+            });
             return;
         }
 
@@ -55,10 +63,18 @@ export const updateRole = async (req : Request, res : Response, next : NextFunct
             return;
         }
 
-        if (!Array.isArray(permissions) || permissions.length === 0) {
+        if (!Array.isArray(permissions)) {
             res.status(400).json({ 
                 success: false,
                 message: "Permissions must be an array" 
+            });
+            return;
+        }
+
+        if(permissions.length === 0){
+            res.status(400).json({
+                success: false,
+                message: "Role must have at least one permission."
             });
             return;
         }
