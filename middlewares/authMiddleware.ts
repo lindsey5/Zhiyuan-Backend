@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Role, User, Permission } from "../models";
 import { UserWithRole } from "../types/model";
@@ -97,7 +97,7 @@ export const authorizePermission = (...requiredPermissions: string[]) => {
 
         if (userPermissions.length === 0) return res.status(403).json({ 
             success: false,
-            message: "Forbidden: no role assigned" 
+            message: "Forbidden: no permission assigned" 
         });
 
         const hasAllPermissions = requiredPermissions.every(permission =>
