@@ -32,11 +32,11 @@ export interface ProductAttributes {
     product_name: string;
     description: string;
     thumbnail: string;
-    stock: number;
 }
 
-export interface ProductSubImage {
+export interface VariantAttributes {
     id: number;
     product_id: number;
-    url: string;
+    variant_name: string;
+    variant_image: string;
 }

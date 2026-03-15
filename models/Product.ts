@@ -9,7 +9,6 @@ class Product extends Model<ProductAttributes, ProductCreationAttributes> implem
     public product_name!: string;
     public description!: string;
     public thumbnail!: string;
-    public stock!: number;
 }
 
 Product.init(
@@ -51,20 +50,6 @@ Product.init(
             notEmpty: { msg: "thumbnail is required." },
         }
     },
-    
-    stock: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-            notEmpty: { msg: "stock is required." },
-            isInt: { msg: "stock must be a number." },
-            min: {
-                args: [0],
-                msg: "stock cannot be negative."
-            }
-        }
-    }
-
 },
 {
     sequelize,
