@@ -39,4 +39,5 @@ export interface VariantAttributes {
     product_id: number;
     variant_name: string;
     variant_image: string;
+    stock: number;
 }

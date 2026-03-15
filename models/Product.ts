@@ -47,7 +47,9 @@ Product.init(
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-            notEmpty: { msg: "thumbnail is required." },
+            notNull: { msg: "Thumbnal is required." },
+            notEmpty: { msg: "Thumbnail cannot be empty." },
+            isUrl: { msg: "Thumbnail must be a valid URL." }
         }
     },
 },
