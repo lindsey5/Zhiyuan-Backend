@@ -4,7 +4,8 @@ import sequelize from "../config/db";
 
 const setupRoles = async () => {
     try{
-        sequelize.sync().then(() => console.log("Database synced"));
+        await sequelize.sync();
+        console.log('Database synced.');
 
         for(const [, roleData] of Object.entries(ROLES)){
             const existingRole = await Role.findOne({
