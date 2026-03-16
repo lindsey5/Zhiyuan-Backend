@@ -59,6 +59,9 @@ const setupRoles = async () => {
 
     }catch(err : any){
         console.error('❌ Error setting up roles:', err);
+    }finally {
+        await sequelize.close();
+        console.log("Database connection closed.");
     }
 }
 
