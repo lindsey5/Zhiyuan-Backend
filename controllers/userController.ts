@@ -2,7 +2,6 @@ import { NextFunction, Request, Response } from "express";
 import { Permission, Role, User } from '../models/index';
 import { AuthRequest } from "../types/auth";
 
-
 export const createUser = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const user = req.body;
@@ -19,6 +18,9 @@ export const createUser = async (req : Request, res : Response, next : NextFunct
 export const getUsers = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const users = await User.findAll({
+            attributes: {
+                exclude: ['password']
+            },
             include: [
                 { 
                     model: Role,
@@ -43,7 +45,11 @@ export const getUsers = async (req : Request, res : Response, next : NextFunctio
 export const updateUser = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const { password, ...rest } = req.body;
-        const user = await User.findByPk(req.params.id as string);
+        const user = await User.findByPk(req.params.id as string, {
+            attributes: {
+                exclude: ['password']
+            },
+        });
 
         if(!user){
             res.status(404).json({ 
@@ -70,7 +76,11 @@ export const updateUser = async (req : Request, res : Response, next : NextFunct
 
 export const getUserById = async (req : Request, res : Response, next : NextFunction) => {
     try{
-        const user = await User.findByPk(req.params.id as string);
+        const user = await User.findByPk(req.params.id as string, {
+            attributes: {
+                exclude: ['password']
+            },
+        });
 
         if(!user){
              res.status(404).json({ 
@@ -89,6 +99,9 @@ export const getUserById = async (req : Request, res : Response, next : NextFunc
 export const userGetOwn= async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
         const user = await User.findByPk(req.user.id, {
+            attributes: {
+                exclude: ['password']
+            },
             include: [
                 {
                     model: Role,
@@ -112,7 +125,11 @@ export const userGetOwn= async (req : AuthRequest, res : Response, next : NextFu
 export const userUpdateOwn = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
         const { password, ...rest } = req.body;
-        const user = await User.findByPk(req.user.id);
+        const user = await User.findByPk(req.user.id, {
+            attributes: {
+                exclude: ['password']
+            },
+        });
 
         if(!user){
             res.status(404).json({ 
@@ -122,7 +139,7 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response, next : Ne
             return;
         }
 
-        user?.set(rest);
+        user.set(rest);
         await user.save();
         const updatedUser = user.toJSON();
 
