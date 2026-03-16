@@ -2,6 +2,9 @@ import { Router } from "express";
 import { createUser, deleteUser, getUserById, getUsers, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
+import validateBody from "../middlewares/validateBody";
+import { createProductSchema } from "../schema/productSchema";
+import { updateUserSchema } from "../schema/userSchema";
 
 const router = Router();
 
@@ -9,6 +12,7 @@ router.post(
     '/', 
     authenticate, 
     authorizePermission(PERMISSIONS.USER_CREATE),
+    validateBody(createProductSchema),
     createUser
 );
 
@@ -23,6 +27,7 @@ router.put(
     '/:id',
     authenticate,
     authorizePermission(PERMISSIONS.USER_UPDATE),
+    validateBody(updateUserSchema),
     updateUser
 )
 
@@ -44,6 +49,7 @@ router.put(
     '/me',
     authenticate,
     authorizePermission(PERMISSIONS.USER_UPDATE_OWN),
+    validateBody(updateUserSchema),
     userUpdateOwn
 )
 

@@ -13,4 +13,4 @@ Permission.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Product.hasMany(Variant, { foreignKey: 'product_id', as: 'variants' });
 Variant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
-export { Role, Permission, User };
+export { Role, Permission, User, Product };

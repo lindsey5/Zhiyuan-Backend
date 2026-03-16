@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
-import { VariantAttributes } from "../types/model";
+import { VariantAttributes } from "../types/model-attributes";
 
 interface VariantCreationAttributes extends Optional<VariantAttributes, "id"> {}
 
@@ -10,6 +10,9 @@ class Variant extends Model<VariantAttributes, VariantCreationAttributes> implem
     public variant_name!: string;
     public variant_image!: string;
     public stock!: number;
+    public price!: number;
+    public image_public_id!: string;
+    public image_url!: string;
 }
 
 Variant.init(
@@ -42,13 +45,22 @@ Variant.init(
         }
     },
 
-    variant_image: {
+    image_url: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-            notNull: { msg: "Variant image is required." },
-            notEmpty: { msg: "Variant image cannot be empty." },
-            isUrl: { msg: "Variant image must be a valid URL." }
+            notNull: { msg: "Variant image url is required." },
+            notEmpty: { msg: "Variant image url cannot be empty." },
+            isUrl: { msg: "Variant image url must be a valid URL." }
+        }
+    },
+
+    image_public_id: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            notNull: { msg: "Variant image public id is required." },
+            notEmpty: { msg: "Variant image public id cannot be empty." },
         }
     },
     
@@ -61,6 +73,17 @@ Variant.init(
             min: {
                 args: [0],
                 msg: "Stock cannot be negative."
+            }
+        }
+    },
+    price: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        validate: {
+            notNull: { msg: "Price is required." },
+            min: {
+                args: [0],
+                msg: "Price cannot be negative."
             }
         }
     }

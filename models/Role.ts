@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
-import { RoleAttributes } from "../types/model";
+import { RoleAttributes } from "../types/model-attributes";
 
 interface RoleCreationAttributes extends Optional<RoleAttributes, "id"> {}
 

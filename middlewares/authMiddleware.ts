@@ -1,7 +1,7 @@
 import { Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Role, User, Permission } from "../models";
-import { UserWithRole } from "../types/model";
+import { UserWithRole } from "../types/model-attributes";
 import { AuthRequest } from "../types/auth";
 
 export const authenticate = async (

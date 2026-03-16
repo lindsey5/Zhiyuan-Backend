@@ -15,5 +15,12 @@ const PERMISSIONS = {
     ROLE_READ_ALL: 'role:read:all',
     ROLE_UPDATE: 'role:update',
     ROLE_DELETE: 'role:delete',
+
+    // Product management
+    PRODUCT_CREATE: 'product:create',
+    PRODUCT_READ: 'product:read',
+    PRODUCT_REAL_ALL: 'product:read:all',
+    PRODUCT_UPDATE: 'product:update',
+    PRODUCT_DELETE: 'product:delete'
 }
 export default PERMISSIONS

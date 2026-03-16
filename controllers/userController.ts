@@ -44,7 +44,6 @@ export const getUsers = async (req : Request, res : Response, next : NextFunctio
 
 export const updateUser = async (req : Request, res : Response, next : NextFunction) => {
     try{
-        const { password, ...rest } = req.body;
         const user = await User.findByPk(req.params.id as string, {
             attributes: {
                 exclude: ['password']
@@ -59,7 +58,7 @@ export const updateUser = async (req : Request, res : Response, next : NextFunct
             return;
         }
 
-        user.set(rest);
+        user.set(req.body);
         await user.save();
         const updatedUser = user.toJSON();
 
@@ -124,7 +123,6 @@ export const userGetOwn= async (req : AuthRequest, res : Response, next : NextFu
 
 export const userUpdateOwn = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
-        const { password, ...rest } = req.body;
         const user = await User.findByPk(req.user.id, {
             attributes: {
                 exclude: ['password']
@@ -139,7 +137,7 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response, next : Ne
             return;
         }
 
-        user.set(rest);
+        user.set(req.body);
         await user.save();
         const updatedUser = user.toJSON();
 

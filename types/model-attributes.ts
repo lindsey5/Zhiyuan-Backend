@@ -31,13 +31,16 @@ export interface ProductAttributes {
     id: number;
     product_name: string;
     description: string;
-    thumbnail: string;
+    thumbnail_public_id: string;
+    thumbnail_url: string;
 }
 
 export interface VariantAttributes {
     id: number;
     product_id: number;
     variant_name: string;
-    variant_image: string;
     stock: number;
+    price: number;
+    image_public_id: string;
+    image_url: string;
 }

@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Permission, Role, User } from '../models/index';
 import { generateAccessToken, generateRefreshToken } from "../utils/auth";
-import { UserWithRole } from "../types/model";
+import { UserWithRole } from "../types/model-attributes";
 
 export const login = async (req : Request, res : Response, next : NextFunction) => {
     try{

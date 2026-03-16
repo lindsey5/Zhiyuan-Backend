@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db";
-import { ProductAttributes } from "../types/model";
+import { ProductAttributes } from "../types/model-attributes";
 
 interface ProductCreationAttributes extends Optional<ProductAttributes, "id"> {}
 
@@ -8,7 +8,8 @@ class Product extends Model<ProductAttributes, ProductCreationAttributes> implem
     public id!: number;
     public product_name!: string;
     public description!: string;
-    public thumbnail!: string;
+    public thumbnail_public_id!: string;
+    public thumbnail_url!: string;
 }
 
 Product.init(
@@ -43,13 +44,22 @@ Product.init(
         }
     },
 
-    thumbnail: {
+    thumbnail_public_id: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-            notNull: { msg: "Thumbnal is required." },
-            notEmpty: { msg: "Thumbnail cannot be empty." },
-            isUrl: { msg: "Thumbnail must be a valid URL." }
+            notNull: { msg: "Thumbnail Public Id is required." },
+            notEmpty: { msg: "Thumbnail Public Id cannot be empty." },
+        }
+    },
+
+    thumbnail_url: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            notNull: { msg: "Thumbnail URL is required." },
+            notEmpty: { msg: "Thumbnail URL cannot be empty." },
+            isUrl: { msg: "Thumbnail URL must be a valid URL." }
         }
     },
 },
