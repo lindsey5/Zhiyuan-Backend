@@ -20,7 +20,7 @@ router.get(
 );
 
 router.put(
-    '/',
+    '/:id',
     authenticate,
     authorizePermission(PERMISSIONS.USER_UPDATE),
     updateUser
