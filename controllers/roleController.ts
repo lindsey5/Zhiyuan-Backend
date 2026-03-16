@@ -25,8 +25,8 @@ export const createRole = async (req: Request, res: Response, next: NextFunction
             res.status(400).json({
                 success: false,
                 message: "Some permissions are invalid",
-                invalidPermissions,
-                acceptedPermissions: Object.values(permissions)
+                invalid: invalidPermissions,
+                allowed: Object.values(PERMISSIONS)
             });
             return;
         }
@@ -85,8 +85,8 @@ export const updateRole = async (req : Request, res : Response, next : NextFunct
             res.status(400).json({
                 success: false,
                 message: "Some permissions are invalid",
-                invalidPermissions,
-                acceptedPermissions: Object.values(permissions)
+                invalid: invalidPermissions,
+                allowed: Object.values(PERMISSIONS)
             });
             return;
         }
