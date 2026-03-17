@@ -39,21 +39,17 @@ const updateVariantSchema = z.object({
     id: z.number().optional(),
     variant_name: z.string()
         .min(3, "Variant name must be at least 3 characters")
-        .max(100, "Variant name can be at most 100 characters")
-        .optional(),
+        .max(100, "Variant name can be at most 100 characters"),
     price: z.coerce.number()
         .positive("Variant price must be positive"),
     stock: z.coerce.number()
         .int()
-        .nonnegative("Stock must be 0 or more")
-        .optional(),
+        .nonnegative("Stock must be 0 or more"),
     sku: z.string()
         .min(3, "SKU must be at least 3 characters")
-        .max(100, "SKU can be at most 100 characters")
-        .optional(),
+        .max(100, "SKU can be at most 100 characters"),
     image_url: z.string()
         .nonempty("Variant image URL or Base64 is required")
-        .optional()
 });
 
 export const updateProductSchema = z.object({
@@ -70,13 +66,9 @@ export const updateProductSchema = z.object({
     thumbnail_url: z.string()
         .optional(),
 
-    variants: z.preprocess((val) => {
-        if (typeof val === "string") return JSON.parse(val);
-        return val;
-    }, z.array(updateVariantSchema).optional())
+    variants: z.array(updateVariantSchema)
 })
-.strict()
 .refine((data) => !data.variants || data.variants.length > 0, {
-    message: "At least one variant is required if variants are provided",
+    message: "At least one variant is required",
     path: ["variants"]
 });

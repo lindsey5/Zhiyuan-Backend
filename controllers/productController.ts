@@ -210,7 +210,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         // UPDATE THUMBNAIL
         if (updatedProduct.thumbnail_url && updatedProduct.thumbnail_url !== product.thumbnail_url) {
             // Upload new thumbnail if it's a base64 string
-            if (updatedProduct.thumbnail_url.startsWith("data:image")) {
+            if (updatedProduct?.thumbnail_url.startsWith("data:image")) {
                 const { public_id, secure_url } = await uploadBase64(updatedProduct.thumbnail_url);
                 uploadedPublicIds.push(public_id);
                 imagesToDelete.push(product.thumbnail_public_id);
@@ -248,7 +248,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
                 let newImageUrl = variant.image_url;
                 let newImagePublicId = "";
 
-                if (variant.image_url.startsWith("data:image")) {
+                if (variant?.image_url.startsWith("data:image")) {
                     const { public_id, secure_url } = await uploadBase64(variant.image_url);
                     uploadedPublicIds.push(public_id);
                     newImagePublicId = public_id;
@@ -279,15 +279,10 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
             }
         }
 
+        await deleteFiles(imagesToDelete);
+
         // COMMIT TRANSACTION
         await t.commit();
-
-        // DELETE OLD IMAGES FROM CLOUDINARY
-        try {
-            await deleteFiles(imagesToDelete);
-        } catch (err) {
-            console.error("Failed to delete old images:", err);
-        }
 
         res.status(200).json({
             success: true,
