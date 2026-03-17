@@ -46,6 +46,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
             description: req.body.description,
             thumbnail_public_id: thumbnailPublicId,
             thumbnail_url: thumbnailUrl,
+            category: req.body.category
         });
 
         const productVariants = await Variant.bulkCreate(

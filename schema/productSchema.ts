@@ -1,4 +1,5 @@
 import { z } from "zod";
+import CATEGORIES from "../utils/categories";
 
 const createVariantSchema = z.object({
     variant_name: z.string()
@@ -22,6 +23,8 @@ export const createProductSchema = z.object({
     description: z.string()
         .min(5, "Description must be at least 5 characters")
         .max(100, "Description can be at most 100 characters"),
+
+    category: z.enum(CATEGORIES),
 
     variants: z.preprocess((val) => {
         if (typeof val === "string") return JSON.parse(val);
@@ -66,7 +69,9 @@ export const updateProductSchema = z.object({
     thumbnail_url: z.string()
         .optional(),
 
-    variants: z.array(updateVariantSchema)
+    category: z.enum(CATEGORIES),
+
+    variants: z.array(updateVariantSchema),
 })
 .refine((data) => !data.variants || data.variants.length > 0, {
     message: "At least one variant is required",

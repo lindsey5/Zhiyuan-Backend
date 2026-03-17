@@ -10,6 +10,7 @@ class Product extends Model<ProductAttributes, ProductCreationAttributes> implem
     public description!: string;
     public thumbnail_public_id!: string;
     public thumbnail_url!: string;
+    public category!: string;
 }
 
 Product.init(
@@ -61,6 +62,15 @@ Product.init(
             notNull: { msg: "Thumbnail URL is required." },
             notEmpty: { msg: "Thumbnail URL cannot be empty." },
             isUrl: { msg: "Thumbnail URL must be a valid URL." }
+        }
+    },
+
+    category: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            notNull: { msg: "Category is required." },
+            notEmpty: { msg: "Category cannot be empty." },
         }
     },
 },

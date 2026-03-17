@@ -33,6 +33,7 @@ export interface ProductAttributes {
     description: string;
     thumbnail_public_id: string;
     thumbnail_url: string;
+    category: string;
 }
 
 export interface VariantAttributes {

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Permission, Role, User } from '../models/index';
 import { AuthRequest } from "../types/auth";
+import { Op } from "sequelize";
 
 export const createUser = async (req : Request, res : Response, next : NextFunction) => {
     try{
@@ -15,9 +16,12 @@ export const createUser = async (req : Request, res : Response, next : NextFunct
     }
 }
 
-export const getUsers = async (req : Request, res : Response, next : NextFunction) => {
+export const getUsers = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
         const users = await User.findAll({
+            where: {
+                id: { [Op.ne] : req.user.id}
+            },
             attributes: {
                 exclude: ['password']
             },
