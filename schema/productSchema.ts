@@ -1,27 +1,78 @@
 import { z } from "zod";
 
-const variantSchema = z.object({
-    variant_name: z.string(),
-    price: z.number(),
-    stock: z.number(),
-});
+const createVariantSchema = z.object({
+    variant_name: z.string()
+        .min(3, "Variant name must be at least 3 characters")
+        .max(100, "Variant name can be at most 100 characters"),
+    price: z.coerce.number()
+        .positive("Variant price must be positive"),
+    stock: z.coerce.number()
+        .int()
+        .nonnegative("Stock must be 0 or more"),
+    sku: z.string()
+        .min(3, "SKU must be at least 3 characters")
+        .max(100, "SKU can be at most 100 characters"),
+}).strict();
 
 export const createProductSchema = z.object({
     product_name: z.string()
         .min(3, "Product name must be at least 3 characters")
         .max(100, "Product name can be at most 100 characters"),
-    
+
     description: z.string()
         .min(5, "Description must be at least 5 characters")
         .max(100, "Description can be at most 100 characters"),
-    
-    variants: z.union([
-        z.string().transform((val) => JSON.parse(val) as z.infer<typeof variantSchema>[]),
-        z.array(variantSchema)
-    ])
-    })
-    .refine((data) => data.variants.length > 0, {
-        message: "At least one variant is required",
-        path: ["variants"],
-    })
+
+    variants: z.preprocess((val) => {
+        if (typeof val === "string") return JSON.parse(val);
+        return val;
+    }, z.array(createVariantSchema))
+})
+.refine((data) => data.variants.length > 0, {
+    message: "At least one variant is required",
+    path: ["variants"],
+})
 .strict();
+
+
+const updateVariantSchema = z.object({
+    id: z.number().optional(),
+    variant_name: z.string()
+        .min(3, "Variant name must be at least 3 characters")
+        .max(100, "Variant name can be at most 100 characters"),
+    price: z.coerce.number()
+        .positive("Variant price must be positive"),
+    stock: z.coerce.number()
+        .int()
+        .nonnegative("Stock must be 0 or more"),
+    sku: z.string()
+        .min(3, "SKU must be at least 3 characters")
+        .max(100, "SKU can be at most 100 characters"),
+    image_url: z.string()
+        .nonempty("Variant image URL or Base64 is required")
+}).strict();
+
+export const updateProductSchema = z.object({
+    product_name: z.string()
+        .min(3, "Product name must be at least 3 characters")
+        .max(100, "Product name can be at most 100 characters")
+        .optional(),
+
+    description: z.string()
+        .min(5, "Description must be at least 5 characters")
+        .max(100, "Description can be at most 100 characters")
+        .optional(),
+
+    thumbnail_url: z.string()
+        .optional(),
+
+    variants: z.preprocess((val) => {
+        if (typeof val === "string") return JSON.parse(val);
+        return val;
+    }, z.array(updateVariantSchema).optional())
+})
+.strict()
+.refine((data) => !data.variants || data.variants.length > 0, {
+    message: "At least one variant is required if variants are provided",
+    path: ["variants"]
+});

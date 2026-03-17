@@ -13,6 +13,7 @@ class Variant extends Model<VariantAttributes, VariantCreationAttributes> implem
     public price!: number;
     public image_public_id!: string;
     public image_url!: string;
+    public sku!: string;
 }
 
 Variant.init(
@@ -86,7 +87,21 @@ Variant.init(
                 msg: "Price cannot be negative."
             }
         }
-    }
+    },
+
+    sku: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+            notNull: { msg: "SKU is required." },
+            notEmpty: { msg: "SKU cannot be empty." },
+            len: {
+                args: [3, 100],
+                msg: "SKU must be between 3 and 100 characters."
+            }
+        }
+    },
 
 },
 {

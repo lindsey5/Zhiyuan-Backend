@@ -23,6 +23,7 @@ Product.init(
     product_name: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
         validate: {
             notEmpty: { msg: "product name is required." },
             len: {

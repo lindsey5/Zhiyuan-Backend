@@ -63,18 +63,18 @@ export const updateRole = async (req : Request, res : Response, next : NextFunct
             return;
         }
 
-        if (!Array.isArray(permissions)) {
-            res.status(400).json({ 
-                success: false,
-                message: "Permissions must be an array" 
-            });
-            return;
-        }
-
         if(permissions.length === 0){
             res.status(400).json({
                 success: false,
                 message: "Role must have at least one permission."
+            });
+            return;
+        }
+
+        if (!Array.isArray(permissions)) {
+            res.status(400).json({ 
+                success: false,
+                message: "Permissions must be an array" 
             });
             return;
         }

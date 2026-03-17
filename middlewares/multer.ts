@@ -26,7 +26,7 @@ export const handleMulterError = (err : any, req : Request, res : Response, next
       return next(new Error('File size exceeds the 5MB limit'));
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
-      return next(new Error('Too many files. Maximum is 10 images'));
+      return next(new Error('Too many files. Maximum is 11 images'));
     }
     return next(new Error(`File upload error: ${err.message}`));
   }
@@ -34,7 +34,7 @@ export const handleMulterError = (err : any, req : Request, res : Response, next
   next(err);
 };
 
-export const productUploads = upload.fields([
+export const createProductUploads = upload.fields([
     { name: "thumbnail", maxCount: 1 },
-    { name: "variant_images", maxCount: 10 },
+    { name: "variant_images" },
 ])

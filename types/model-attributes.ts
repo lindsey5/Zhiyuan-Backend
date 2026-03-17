@@ -43,4 +43,5 @@ export interface VariantAttributes {
     price: number;
     image_public_id: string;
     image_url: string;
+    sku: string;
 }

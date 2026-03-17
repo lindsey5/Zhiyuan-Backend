@@ -3,7 +3,7 @@ import { authenticate, authorizePermission } from "../middlewares/authMiddleware
 import PERMISSIONS from "../utils/permissions";
 import { createRole, deleteRole, getAllRoles, getRoleById, updateRole } from "../controllers/roleController";
 import validateBody from "../middlewares/validateBody";
-import { createRoleSchema, updateRoleSchema } from "../schema/roleSchema";
+import { createAndUpdateRoleSchema } from "../schema/roleSchema";
 
 const router = Router();
 
@@ -11,7 +11,7 @@ router.post(
     '/',
     authenticate,
     authorizePermission(PERMISSIONS.ROLE_CREATE),
-    validateBody(createRoleSchema),
+    validateBody(createAndUpdateRoleSchema),
     createRole
 );
 
@@ -33,7 +33,7 @@ router.put(
     '/:id',
     authenticate,
     authorizePermission(PERMISSIONS.ROLE_UPDATE),
-    validateBody(updateRoleSchema),
+    validateBody(createAndUpdateRoleSchema),
     updateRole
 )
 

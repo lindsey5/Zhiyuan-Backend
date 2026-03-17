@@ -3,8 +3,7 @@ import { createUser, deleteUser, getUserById, getUsers, updateUser, userGetOwn, 
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import validateBody from "../middlewares/validateBody";
-import { createProductSchema } from "../schema/productSchema";
-import { updateUserSchema } from "../schema/userSchema";
+import { createUserSchema, updateUserSchema } from "../schema/userSchema";
 
 const router = Router();
 
@@ -12,7 +11,7 @@ router.post(
     '/', 
     authenticate, 
     authorizePermission(PERMISSIONS.USER_CREATE),
-    validateBody(createProductSchema),
+    validateBody(createUserSchema),
     createUser
 );
 

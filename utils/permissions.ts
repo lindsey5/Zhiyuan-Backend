@@ -18,8 +18,6 @@ const PERMISSIONS = {
 
     // Product management
     PRODUCT_CREATE: 'product:create',
-    PRODUCT_READ: 'product:read',
-    PRODUCT_REAL_ALL: 'product:read:all',
     PRODUCT_UPDATE: 'product:update',
     PRODUCT_DELETE: 'product:delete'
 }
