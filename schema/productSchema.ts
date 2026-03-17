@@ -39,18 +39,22 @@ const updateVariantSchema = z.object({
     id: z.number().optional(),
     variant_name: z.string()
         .min(3, "Variant name must be at least 3 characters")
-        .max(100, "Variant name can be at most 100 characters"),
+        .max(100, "Variant name can be at most 100 characters")
+        .optional(),
     price: z.coerce.number()
         .positive("Variant price must be positive"),
     stock: z.coerce.number()
         .int()
-        .nonnegative("Stock must be 0 or more"),
+        .nonnegative("Stock must be 0 or more")
+        .optional(),
     sku: z.string()
         .min(3, "SKU must be at least 3 characters")
-        .max(100, "SKU can be at most 100 characters"),
+        .max(100, "SKU can be at most 100 characters")
+        .optional(),
     image_url: z.string()
         .nonempty("Variant image URL or Base64 is required")
-}).strict();
+        .optional()
+});
 
 export const updateProductSchema = z.object({
     product_name: z.string()
