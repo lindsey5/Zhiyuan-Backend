@@ -4,14 +4,7 @@ import { ProductAttributes } from "../types/model-attributes";
 
 interface ProductCreationAttributes extends Optional<ProductAttributes, "id"> {}
 
-class Product extends Model<ProductAttributes, ProductCreationAttributes> implements ProductAttributes {
-    public id!: number;
-    public product_name!: string;
-    public description!: string;
-    public thumbnail_public_id!: string;
-    public thumbnail_url!: string;
-    public category!: string;
-}
+class Product extends Model<ProductAttributes, ProductCreationAttributes> {}
 
 Product.init(
 {

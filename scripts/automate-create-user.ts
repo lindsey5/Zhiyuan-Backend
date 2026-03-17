@@ -34,7 +34,7 @@ dotenv.config();
             lastname,
             email,
             password,
-            role_id: role.id,
+            role_id: role.toJSON().id,
         });
 
         console.log("New user created:", newUser.toJSON());

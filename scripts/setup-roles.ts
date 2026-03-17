@@ -18,14 +18,14 @@ const setupRoles = async () => {
                 await Role.update(
                     { description: roleData.description },
                     {
-                        where: { id: existingRole.id }
+                        where: { id: existingRole.toJSON().id }
                     }
                 )
 
                 for(const permission of roleData.permissions){
                     const existingPermission = await Permission.findOne({
                         where: {
-                            role_id: existingRole.id,
+                            role_id: existingRole.toJSON().id,
                             action: permission,
                         }
                     })
@@ -33,7 +33,7 @@ const setupRoles = async () => {
                     if(!existingPermission){
                         await Permission.create({
                             action: permission,
-                            role_id: existingRole.id
+                            role_id: existingRole.toJSON().id
                         })
                     }
                 }
@@ -47,12 +47,12 @@ const setupRoles = async () => {
 
                 const permissionData = permissions.map((action: string) => ({
                     action,
-                    role_id: role.id
+                    role_id: role.toJSON().id
                 }));
 
                 await Permission.bulkCreate(permissionData);
 
-                console.log(`Role ${role.name} created with permissions`);
+                console.log(`Role ${role.toJSON().name} created with permissions`);
 
             }
             

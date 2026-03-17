@@ -5,14 +5,7 @@ import PERMISSIONS from "../utils/permissions";
 
 interface PermissionCreationAttributes extends Optional<PermissionAttributes, "id"> {}
 
-class Permission
-    extends Model<PermissionAttributes, PermissionCreationAttributes>
-    implements PermissionAttributes {
-
-    public id!: number;
-    public action!: string;
-    public role_id!: number;
-}
+class Permission extends Model<PermissionAttributes, PermissionCreationAttributes> {}
 
 Permission.init(
 {

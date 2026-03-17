@@ -53,6 +53,7 @@ const updateVariantSchema = z.object({
         .max(100, "SKU can be at most 100 characters"),
     image_url: z.string()
         .nonempty("Variant image URL or Base64 is required")
+        .optional()
 });
 
 export const updateProductSchema = z.object({

@@ -1,7 +1,6 @@
 import { Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Role, User, Permission } from "../models";
-import { UserWithRole } from "../types/model-attributes";
 import { AuthRequest } from "../types/auth";
 
 export const authenticate = async (
@@ -52,7 +51,7 @@ export const authenticate = async (
             return;
         }
 
-        const userData : UserWithRole = user.toJSON();
+        const userData : any = user.toJSON();
 
         if (!userData.role) {
             res.status(401).json({ 
@@ -64,7 +63,7 @@ export const authenticate = async (
 
         const { permissions, ...rest } = userData.role;
 
-        const userPermissions = permissions?.map(permission => permission.action) || [];
+        const userPermissions = permissions?.map((permission : any) => permission.action) || [];
 
         req.user = { ...userData, 
             role: {
@@ -75,6 +74,7 @@ export const authenticate = async (
 
         next();
     } catch (error) {
+        console.log(error)
         res.status(401).json({ 
             success: false,
             message: "Unauthorized" 

@@ -22,7 +22,7 @@ export interface UserAttributes {
 }
 
 export interface UserWithRole extends UserAttributes {
-    role?: Role & {
+    role: Role & {
         permissions?: Permission[];
     };
 }

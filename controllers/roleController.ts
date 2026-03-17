@@ -36,7 +36,7 @@ export const createRole = async (req: Request, res: Response, next: NextFunction
 
         const newPermissions = await Permission.bulkCreate(permissions.map(permission => ({
             action: permission,
-            role_id: newRole.id
+            role_id: newRole.toJSON().id
         })))
 
         res.status(201).json({
@@ -94,14 +94,14 @@ export const updateRole = async (req : Request, res : Response, next : NextFunct
         role.set(rest);
         await Permission.destroy({
             where: {
-                role_id: role.id
+                role_id: role.toJSON().id
             }
         })
 
         await role.save();
         const updatedPermissions = await Permission.bulkCreate(permissions.map(permission => ({
             action: permission,
-            role_id: role.id,
+            role_id: role.toJSON().id,
         })))
 
         res.status(200).json({

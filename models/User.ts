@@ -6,16 +6,10 @@ import bcrypt from "bcrypt";
 
 interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
 
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-    public id!: number;
-    public firstname!: string;
-    public lastname!: string;
-    public email!: string;
-    public password!: string;
-    public role_id!: number;
+class User extends Model<UserAttributes, UserCreationAttributes> {
 
     public async matchPassword(plainPassword: string): Promise<boolean> {
-        return await bcrypt.compare(plainPassword, this.password);
+        return await bcrypt.compare(plainPassword, this.toJSON().password);
     }
 }
 
@@ -77,7 +71,8 @@ User.init(
         timestamps: false,
 
         hooks: {
-            beforeCreate: async (account: User) => {
+            beforeCreate: async (user: User) => {
+                const account = user.toJSON();
                 console.log("account about to be created & saved:", account);
 
                 if (account.password) account.password = await hashPassword(account.password);

@@ -4,17 +4,7 @@ import { VariantAttributes } from "../types/model-attributes";
 
 interface VariantCreationAttributes extends Optional<VariantAttributes, "id"> {}
 
-class Variant extends Model<VariantAttributes, VariantCreationAttributes> implements VariantAttributes {
-    public id!: number;
-    public product_id!: number;
-    public variant_name!: string;
-    public variant_image!: string;
-    public stock!: number;
-    public price!: number;
-    public image_public_id!: string;
-    public image_url!: string;
-    public sku!: string;
-}
+class Variant extends Model<VariantAttributes, VariantCreationAttributes> {}
 
 Variant.init(
 {

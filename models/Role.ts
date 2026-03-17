@@ -4,11 +4,7 @@ import { RoleAttributes } from "../types/model-attributes";
 
 interface RoleCreationAttributes extends Optional<RoleAttributes, "id"> {}
 
-class Role extends Model<RoleAttributes, RoleCreationAttributes> implements RoleAttributes {
-    public id!: number;
-    public name!: string;
-    public description!: string;
-}
+class Role extends Model<RoleAttributes, RoleCreationAttributes> {}
 
 Role.init(
     {

@@ -54,7 +54,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
                 variant : any, 
                 i : number
             ) => ({
-                product_id: product.id,
+                product_id: product.toJSON().id,
                 ...variant,
                 image_url: variantImageUrls[i].secure_url,
                 image_public_id: variantImageUrls[i].public_id
@@ -162,7 +162,7 @@ export const deleteProduct = async (req : Request, res : Response, next : NextFu
             return
         }
 
-        await deleteFile(product.thumbnail_public_id);
+        await deleteFile(product.toJSON().thumbnail_public_id);
 
         for(const variant of (product as any).variants){
             await deleteFile(variant.image_public_id);
@@ -209,12 +209,12 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         const imagesToDelete: string[] = [];
 
         // UPDATE THUMBNAIL
-        if (updatedProduct.thumbnail_url && updatedProduct.thumbnail_url !== product.thumbnail_url) {
+        if (updatedProduct.thumbnail_url && updatedProduct.thumbnail_url !== product.toJSON().thumbnail_url) {
             // Upload new thumbnail if it's a base64 string
             if (updatedProduct?.thumbnail_url.startsWith("data:image")) {
                 const { public_id, secure_url } = await uploadBase64(updatedProduct.thumbnail_url);
                 uploadedPublicIds.push(public_id);
-                imagesToDelete.push(product.thumbnail_public_id);
+                imagesToDelete.push(product.toJSON().thumbnail_public_id);
 
                 updatedProduct.thumbnail_public_id = public_id;
                 updatedProduct.thumbnail_url = secure_url;
@@ -232,10 +232,10 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
 
                 if (existingVariant) {
                     // Only upload new image if it's base64
-                    if (variant.image_url?.startsWith("data:image") && variant.image_url !== existingVariant.image_url) {
+                    if (variant.image_url?.startsWith("data:image") && variant.image_url !== existingVariant.toJSON().image_url) {
                         const { public_id, secure_url } = await uploadBase64(variant.image_url);
                         uploadedPublicIds.push(public_id);
-                        imagesToDelete.push(existingVariant.image_public_id);
+                        imagesToDelete.push(existingVariant.toJSON().image_public_id);
 
                         variant.image_public_id = public_id;
                         variant.image_url = secure_url;
@@ -257,7 +257,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
                 }
 
                 const newVariant = await Variant.create({
-                    product_id: product.id,
+                    product_id: product.toJSON().id,
                     variant_name: variant.variant_name,
                     price: variant.price,
                     stock: variant.stock,
@@ -295,6 +295,7 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         });
 
     } catch (err: any) {
+        console.log(err)
         // ROLLBACK DB
         await t.rollback();
 

@@ -42,8 +42,8 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
             return;
         }
 
-        const userData : UserWithRole = user.toJSON();
-        const accessToken = generateAccessToken(userData.id, userData.role?.name as string);
+        const userData : any = user.toJSON();
+        const accessToken = generateAccessToken(userData.id, userData.role?.role as string);
         const refreshToken = generateRefreshToken(userData.id);
 
         const { password : userPassword, ...rest } = userData

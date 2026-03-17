@@ -7,20 +7,22 @@ import authRoutes from "./routes/authRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
 import roleRoutes from "./routes/roleRoutes";
 import productRoutes from "./routes/productRoutes";
+import cors from 'cors';
 
 dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000; 
 
+app.use(cors({
+  origin: ['http://localhost:8081'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
 app.use(morgan('dev'));
 app.use(express.static('public'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ limit: '200mb', extended: true }));
 
-app.use((req, res, next) => {
-  console.log('Content-Type:', req.headers['content-type']);
-  next();
-});
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/roles', roleRoutes);
