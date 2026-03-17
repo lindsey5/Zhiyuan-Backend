@@ -87,11 +87,13 @@ export const getProducts = async (req : Request, res : Response, next : NextFunc
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
         const search = req.query.search ? String(req.query.search) : "";
+        const category = req.query.category ? String(req.query.category) : ""
 
         const { count, rows } = await Product.findAndCountAll({
-            where: search
-                ? { product_name: { [Op.like]: `%${search}%` } }
-                : undefined,
+            where: {
+                ...(search && { product_name: { [Op.like]: `%${search}%` } }),
+                ...(category && { category })
+            },
             include: [
                 {
                     model: Variant,
