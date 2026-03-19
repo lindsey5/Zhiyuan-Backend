@@ -19,8 +19,6 @@
    cp .env.example .env
 ```
 
-```
-
 4. Setup database roles and user
 
 ```bash
