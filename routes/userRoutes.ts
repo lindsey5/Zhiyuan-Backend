@@ -23,6 +23,14 @@ router.get(
 );
 
 router.put(
+    '/me',
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_UPDATE_OWN),
+    validateBody(updateUserSchema),
+    userUpdateOwn
+)
+
+router.put(
     '/:id',
     authenticate,
     authorizePermission(PERMISSIONS.USER_UPDATE),
@@ -35,14 +43,6 @@ router.get(
     authenticate,
     authorizePermission(PERMISSIONS.USER_READ_OWN),
     userGetOwn
-)
-
-router.put(
-    '/me',
-    authenticate,
-    authorizePermission(PERMISSIONS.USER_UPDATE_OWN),
-    validateBody(updateUserSchema),
-    userUpdateOwn
 )
 
 router.get(

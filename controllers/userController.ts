@@ -101,7 +101,6 @@ export const getUserById = async (req : Request, res : Response, next : NextFunc
 
 export const userGetOwn= async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
-        console.log(req.user)
         const user = await User.findByPk(req.user.id, {
             attributes: {
                 exclude: ['password']
