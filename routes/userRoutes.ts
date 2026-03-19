@@ -31,13 +31,6 @@ router.put(
 )
 
 router.get(
-    '/:id',
-    authenticate,
-    authorizePermission(PERMISSIONS.USER_READ),
-    getUserById
-)
-
-router.get(
     '/me',
     authenticate,
     authorizePermission(PERMISSIONS.USER_READ_OWN),
@@ -50,6 +43,13 @@ router.put(
     authorizePermission(PERMISSIONS.USER_UPDATE_OWN),
     validateBody(updateUserSchema),
     userUpdateOwn
+)
+
+router.get(
+    '/:id',
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_READ),
+    getUserById
 )
 
 router.delete(
