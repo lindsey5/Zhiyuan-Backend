@@ -73,7 +73,7 @@ User.init(
             beforeCreate: async (account: User) => {
                 console.log("account about to be created & saved:", account);
 
-                if (account.toJSON().password) account.set({ password: await hashPassword( account.toJSON().password)});
+                if (account.toJSON().password) account.set({ password: await hashPassword(account.toJSON().password)});
             },
         },
     }
