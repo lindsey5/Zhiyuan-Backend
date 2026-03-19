@@ -24,7 +24,6 @@ User.init(
         firstname: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
             validate: {
                 notEmpty: { msg: "firstname is required." },
         },
@@ -71,11 +70,10 @@ User.init(
         timestamps: false,
 
         hooks: {
-            beforeCreate: async (user: User) => {
-                const account = user.toJSON();
+            beforeCreate: async (account: User) => {
                 console.log("account about to be created & saved:", account);
 
-                if (account.password) account.password = await hashPassword(account.password);
+                if (account.toJSON().password) account.set({ password: await hashPassword( account.toJSON().password)});
             },
         },
     }

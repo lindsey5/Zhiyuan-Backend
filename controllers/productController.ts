@@ -82,12 +82,25 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
     }
 };
 
-export const getProducts = async (req : Request, res : Response, next : NextFunction) => {
-    try{
+export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
         const search = req.query.search ? String(req.query.search) : "";
-        const category = req.query.category ? String(req.query.category) : ""
+        const category = req.query.category ? String(req.query.category) : "";
+        const minPrice = req.query.minPrice ? Number(req.query.minPrice) : null;
+        const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
+        const sortBy = req.query.sortBy ? String(req.query.sortBy) : "product_name";
+        const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? "DESC" : "ASC";
+
+        let priceFilter: any = {};
+        if (minPrice !== null && maxPrice !== null) {
+            priceFilter = { [Op.between]: [minPrice, maxPrice] };
+        } else if (minPrice !== null) {
+            priceFilter = { [Op.gte]: minPrice };
+        } else if (maxPrice !== null) {
+            priceFilter = { [Op.lte]: maxPrice };
+        }
 
         const { count, rows } = await Product.findAndCountAll({
             where: {
@@ -97,11 +110,20 @@ export const getProducts = async (req : Request, res : Response, next : NextFunc
             include: [
                 {
                     model: Variant,
-                    as: 'variants'
+                    as: 'variants',
+                    ...(Object.keys(priceFilter).length > 0 && {
+                        where: {
+                            price: priceFilter
+                        }
+                    })
                 }
             ],
             limit,
             offset: (page - 1) * limit,
+            distinct: true,
+            order: sortBy === "price" 
+                ? [[{ model: Variant, as: 'variants' }, 'price', order]] 
+                : [[sortBy, order]]
         });
 
         const totalPages = Math.ceil(count / limit);
@@ -112,12 +134,12 @@ export const getProducts = async (req : Request, res : Response, next : NextFunc
             limit,
             totalPages,
             products: rows,
-        })
+        });
 
-    } catch(err : any){
+    } catch (err: any) {
         next(err);
     }
-}
+};
 
 export const getProductById = async (req : Request, res : Response, next : NextFunction) => {
     try{
