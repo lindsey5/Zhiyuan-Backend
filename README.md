@@ -19,20 +19,14 @@
    cp .env.example .env
 ```
 
-4. Setup database
-```bash
-   # Create `database.sqlite` file
-   type NUL > database.sqlite
-```
-
-6. Setup database roles and user
+4. Setup database roles and user
 
 ```bash
 npm run setup-roles
 npm run create-user
 ```
 
-6. Start the server
+5. Start the server
 
 ```bash
 # development
