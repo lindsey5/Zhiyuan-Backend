@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { Permission, Role, User } from '../models/index';
+import { User } from '../models/index';
 import { generateAccessToken, generateRefreshToken } from "../utils/auth";
 
 export const login = async (req : Request, res : Response, next : NextFunction) => {
@@ -9,20 +9,7 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
         const user = await User.findOne({
             where: {
                 email
-            },
-            include:[
-                {
-                    model: Role,
-                    as: 'role',
-                    include: [
-                        {
-                            model: Permission,
-                            as: 'permissions',
-                            attributes: ['action']
-                        }
-                    ]
-                }
-            ]
+            }
         })
 
         if(!user){
@@ -45,8 +32,8 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
         const accessToken = generateAccessToken(userData.id, userData.role?.role as string);
         const refreshToken = generateRefreshToken(userData.id);
 
-        const { password : userPassword, ...rest } = userData
-
+        const { password : userPassword, role_id, id, ...rest } = userData
+        
         res.status(200).json({
             success: true,
             user: rest,
