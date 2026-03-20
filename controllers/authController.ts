@@ -57,6 +57,6 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
         })
 
     }catch(err : any){
-       next(err);
+        next(err);
     }
 }
