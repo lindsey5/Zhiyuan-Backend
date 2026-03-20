@@ -66,6 +66,12 @@ Product.init(
             notEmpty: { msg: "Category cannot be empty." },
         }
     },
+
+    createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW
+    },
 },
 {
     sequelize,

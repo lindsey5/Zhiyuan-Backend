@@ -87,11 +87,14 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
         const search = req.query.search ? String(req.query.search) : "";
-        const category = req.query.category ? String(req.query.category) : "";
+        const categories = req.query.categories ? String(req.query.categories) : "";
         const minPrice = req.query.minPrice ? Number(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
         const sortBy = req.query.sortBy ? String(req.query.sortBy) : "product_name";
         const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? "DESC" : "ASC";
+        const categoriesArr = categories
+            ? categories.split(',').map(c => c.trim()).filter(c => c !== "")
+            : [];
 
         let priceFilter: any = {};
         if (minPrice !== null && maxPrice !== null) {
@@ -105,12 +108,15 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const { count, rows } = await Product.findAndCountAll({
             where: {
                 ...(search && { product_name: { [Op.like]: `%${search}%` } }),
-                ...(category && { category })
+                ...(categoriesArr.length > 0 && { 
+                    category: { [Op.in]: categoriesArr } 
+                })
             },
             include: [
                 {
                     model: Variant,
                     as: 'variants',
+                    required: false,
                     ...(Object.keys(priceFilter).length > 0 && {
                         where: {
                             price: priceFilter
@@ -122,7 +128,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
             offset: (page - 1) * limit,
             distinct: true,
             order: sortBy === "price" 
-                ? [[{ model: Variant, as: 'variants' }, 'price', order]] 
+                ? [[{ model: Variant, as: 'variants' }, 'price',  order]] 
                 : [[sortBy, order]]
         });
 

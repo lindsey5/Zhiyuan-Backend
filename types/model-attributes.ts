@@ -26,6 +26,7 @@ export interface ProductAttributes {
     thumbnail_public_id: string;
     thumbnail_url: string;
     category: string;
+    createdAt?: Date;
 }
 
 export interface VariantAttributes {
