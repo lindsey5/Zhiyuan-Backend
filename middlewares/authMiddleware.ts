@@ -53,15 +53,7 @@ export const authenticate = async (
 
         const userData : any = user.toJSON();
 
-        if (!userData.role) {
-            res.status(401).json({ 
-                success: false,
-                message: "User role not found" 
-            });
-            return;
-        }
-
-        const { permissions, ...rest } = userData.role;
+        const { permissions, ...rest } = userData?.role;
 
         const userPermissions = permissions?.map((permission : any) => permission.action) || [];
 
@@ -73,11 +65,10 @@ export const authenticate = async (
         };
 
         next();
-    } catch (error) {
-        console.log(error)
-        res.status(401).json({ 
+    } catch (error : any) {
+        res.status(400).json({ 
             success: false,
-            message: "Unauthorized" 
+            message: error.message
         });
     }
 };

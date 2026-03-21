@@ -45,7 +45,7 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
             success: true,
             user: {
                 ...rest,
-                role: role.name,
+                role: role?.name,
             },
             token: {
                 accessToken,
@@ -95,7 +95,7 @@ export const refreshAccessToken = async (req : Request, res : Response, next : N
             success: true,
             user: {
                 ...rest,
-                role: role.name
+                role: role?.name
             },
             token: {
                 accessToken: newAccessToken,

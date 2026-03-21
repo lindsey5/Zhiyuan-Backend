@@ -7,6 +7,16 @@ export const createUser = async (req : Request, res : Response, next : NextFunct
     try{
         const user = req.body;
 
+        const role = await Role.findByPk(user.role_id);
+
+        if(!role){
+            res.status(404).json({
+                success: false,
+                message: 'Role id not found or exist.'
+            })
+            return;
+        }
+
         const newUser = await User.create(user);
 
         res.status(201).json({ 

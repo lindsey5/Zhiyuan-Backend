@@ -186,7 +186,7 @@ export const deleteRole = async (req : Request, res : Response, next : NextFunct
     }
 }
 
-export const getOwnPermissions = async (req : AuthRequest, res : Response, next : NextFunction) => {
+export const getOwnRole = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
         const user = await User.findByPk(req.user.id);
 
@@ -195,15 +195,29 @@ export const getOwnPermissions = async (req : AuthRequest, res : Response, next 
             return;
         }
 
-        const permissions = await Permission.findAll({
-            where: {
-                role_id: user.toJSON().role_id
-            }
+        const role = await Role.findByPk(user.toJSON().role_id, {
+            include: [
+                {
+                    model: Permission,
+                    as: 'permissions'
+                }
+            ]
         })
+
+        if(!role){
+            res.status(404).json({
+                success: false,
+                message: 'No role found.',
+            }); 
+            return
+        }
+
+        const { permissions, ...roleData } = role?.toJSON() as any;
 
         res.status(200).json({
             success: true,
-            permissions: permissions.map(permission => permission.toJSON().action)
+            role: roleData,
+            permissions: permissions.map((permission : any) => permission.action)
         })
 
     }catch(err){

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
-import { createRole, deleteRole, getAllRoles, getOwnPermissions, getRoleById, updateRole } from "../controllers/roleController";
+import { createRole, deleteRole, getAllRoles, getOwnRole, getRoleById, updateRole } from "../controllers/roleController";
 import validateBody from "../middlewares/validateBody";
 import { createAndUpdateRoleSchema } from "../schema/roleSchema";
 
@@ -23,9 +23,9 @@ router.get(
 )
 
 router.get(
-    '/permissions/me',
+    '/me',
     authenticate,
-    getOwnPermissions
+    getOwnRole
 )
 
 router.get(
