@@ -43,4 +43,5 @@ export const updateUserSchema = z.object({
     role_id: z.number()
         .int("Must be a whole number")
         .nonnegative("Must not be negative")
+        .optional()
 }).strict();

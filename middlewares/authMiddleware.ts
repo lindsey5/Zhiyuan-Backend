@@ -27,20 +27,7 @@ export const authenticate = async (
         ) as JwtPayload;
 
         const user = await User.findByPk(decoded.id, {
-            attributes: { exclude: ["password"] },
-            include: [
-                {
-                    model: Role,
-                    as: 'role',
-                    include: [
-                        { 
-                            model: Permission,
-                            as: 'permissions',
-                            attributes: ['action']
-                        }
-                    ]
-                }
-            ]
+            attributes: { exclude: ["password"] }
         });
 
         if (!user) {
@@ -53,22 +40,30 @@ export const authenticate = async (
 
         const userData : any = user.toJSON();
 
-        const { permissions, ...rest } = userData?.role;
+        const role = await Role.findByPk(userData.id, {
+            include: [
+                {
+                    model: Permission,
+                    as: 'permissions'
+                }
+            ]
+        })
 
-        const userPermissions = permissions?.map((permission : any) => permission.action) || [];
+        const userPermissions = (role?.toJSON() as any)?.permissions?.map((permission : any) => permission.action) || [];
 
         req.user = { ...userData, 
             role: {
-                ...rest,
+                ...role?.toJSON,
                 permissions: userPermissions
             }
         };
 
         next();
     } catch (error : any) {
-        res.status(400).json({ 
+        console.log(error)
+        res.status(401).json({ 
             success: false,
-            message: error.message
+            message: error.message || 'Unauthorized'
         });
     }
 };

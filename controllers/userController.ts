@@ -172,7 +172,7 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response, next : Ne
             message: 'Successfully Updated',
             user:  {
                 ...rest,
-                role: role.name
+                role: role?.name
             }
         });
     }catch(err : any){
