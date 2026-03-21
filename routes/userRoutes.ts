@@ -25,7 +25,6 @@ router.get(
 router.put(
     '/me',
     authenticate,
-    authorizePermission(PERMISSIONS.USER_UPDATE_OWN),
     validateBody(updateUserSchema),
     userUpdateOwn
 )
@@ -41,7 +40,6 @@ router.put(
 router.get(
     '/me',
     authenticate,
-    authorizePermission(PERMISSIONS.USER_READ_OWN),
     userGetOwn
 )
 

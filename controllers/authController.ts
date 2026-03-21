@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { Role, User } from '../models/index';
+import { User } from '../models/index';
 import { generateAccessToken, generateRefreshToken } from "../utils/auth";
 import jwt from 'jsonwebtoken';
 
@@ -10,13 +10,7 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
         const user = await User.findOne({
             where: {
                 email
-            },
-            include:[
-                {
-                    model: Role,
-                    as: 'role',
-                }
-            ]
+            }
         })
 
         if(!user){
@@ -36,14 +30,14 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
         }
 
         const userData : any = user.toJSON();
-        const accessToken = generateAccessToken(userData.id, userData.role.name);
+        const accessToken = generateAccessToken(userData.id, userData.role_id);
         const refreshToken = generateRefreshToken(userData.id);
 
-        const { password : userPassword, role_id, id, role, ...rest } = userData
+        const { password : userPassword, id, ...rest } = userData
         
         res.status(200).json({
             success: true,
-            user: { ...rest, role: role.name },
+            user: rest,
             token: {
                 accessToken,
                 refreshToken
@@ -68,11 +62,7 @@ export const refreshAccessToken = async (req : Request, res : Response, next : N
             refreshToken,
             process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret-key'
         );
-        const user = await User.findByPk(decoded.id as string, {
-            include: [
-                { model: Role, as: 'role' }
-            ]
-        });
+        const user = await User.findByPk(decoded.id as string);
 
         if (!user) {
             res.status(404).json({ success: false, message: 'User not found' });
@@ -81,13 +71,13 @@ export const refreshAccessToken = async (req : Request, res : Response, next : N
 
         const userData : any = user.toJSON();
         const newRefreshToken = generateRefreshToken(Number(decoded.id));
-        const newAccessToken = generateAccessToken(Number(decoded.id), userData.role.name);
+        const newAccessToken = generateAccessToken(Number(decoded.id), userData.role_id);
 
-        const { password : userPassword, role_id, id, role, ...rest } = userData
+        const { password : userPassword, id, role_id, ...rest } = userData
         
         res.status(200).json({
             success: true,
-            user: { ...rest, role: role.name },
+            user: rest,
             token: {
                 accessToken: newAccessToken,
                 refreshToken: newRefreshToken
