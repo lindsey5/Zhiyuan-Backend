@@ -42,6 +42,7 @@ export const createRole = async (req: Request, res: Response, next: NextFunction
 
         res.status(201).json({
             success: true,
+            message: 'Role successfully created',
             role: newRole,
             permissions: newPermissions,
         });
@@ -106,6 +107,7 @@ export const updateRole = async (req : Request, res : Response, next : NextFunct
 
         res.status(200).json({
             success: true,
+            message: 'Role successfully updated',
             role: {
                 ...role.toJSON(),
                 permissions: updatedPermissions

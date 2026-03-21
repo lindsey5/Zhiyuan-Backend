@@ -9,7 +9,11 @@ export const createUser = async (req : Request, res : Response, next : NextFunct
 
         const newUser = await User.create(user);
 
-        res.status(201).json({ success: true, user: newUser });
+        res.status(201).json({ 
+            success: true, 
+            message: 'User successfully created',
+            user: newUser 
+        });
 
     }catch(err : any){
         next(err);
@@ -68,6 +72,7 @@ export const updateUser = async (req : Request, res : Response, next : NextFunct
 
         res.status(200).json({
             success: true,
+            message: 'User successfully updated',
             updatedUser
         });
 
@@ -154,6 +159,7 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response, next : Ne
 
         res.status(200).json({ 
             success: true, 
+            message: 'Successfully Updated',
             user:  {
                 ...rest,
                 role: role.name
