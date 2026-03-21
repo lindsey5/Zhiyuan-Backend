@@ -42,8 +42,7 @@ export const createRole = async (req: Request, res: Response, next: NextFunction
 
         res.status(201).json({
             success: true,
-            message: "Role created successfully",
-            role: newRole.toJSON(),
+            role: newRole,
             permissions: newPermissions,
         });
 

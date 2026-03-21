@@ -131,6 +131,12 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response, next : Ne
             attributes: {
                 exclude: ['password']
             },
+            include: [
+                {
+                    model: Role,
+                    as: 'role'
+                }
+            ]
         });
 
         if(!user){
@@ -143,9 +149,16 @@ export const userUpdateOwn = async (req : AuthRequest, res : Response, next : Ne
 
         user.set(req.body);
         await user.save();
-        const updatedUser = user.toJSON();
+        const updatedUser : any = user.toJSON();
+        const { role, ...rest } = updatedUser;
 
-        res.status(200).json({ success: true, user: updatedUser });
+        res.status(200).json({ 
+            success: true, 
+            user:  {
+                ...rest,
+                role: role.name
+            }
+        });
     }catch(err : any){
         next(err);
     }
