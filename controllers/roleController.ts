@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { Permission, Role } from "../models/index";
+import { Permission, Role, User } from "../models/index";
 import PERMISSIONS from "../utils/permissions";
+import { AuthRequest } from "../types/auth";
 
 export const createRole = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -180,6 +181,31 @@ export const deleteRole = async (req : Request, res : Response, next : NextFunct
         })
 
     }catch (err) {
+        next(err);
+    }
+}
+
+export const getOwnPermissions = async (req : AuthRequest, res : Response, next : NextFunction) => {
+    try{
+        const user = await User.findByPk(req.user.id);
+
+        if(!user){
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        const permissions = await Permission.findAll({
+            where: {
+                role_id: user.toJSON().role_id
+            }
+        })
+
+        res.status(200).json({
+            success: true,
+            permissions: permissions.map(permission => permission.toJSON().action)
+        })
+
+    }catch(err){
         next(err);
     }
 }
