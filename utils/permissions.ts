@@ -19,6 +19,11 @@ const PERMISSIONS = {
     // Product management
     PRODUCT_CREATE: 'product:create',
     PRODUCT_UPDATE: 'product:update',
-    PRODUCT_DELETE: 'product:delete'
+    PRODUCT_DELETE: 'product:delete',
+
+    // Order management
+    ORDER_READ_ALL: 'order:read:all',
+    ORDER_READ: 'order:read',
+    ORDER_UPDATE: 'order:updated',
 }
 export default PERMISSIONS
