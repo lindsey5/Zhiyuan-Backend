@@ -34,7 +34,6 @@ router.put(
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_UPDATE),
     validateBody(updateProductSchema),
-    handleMulterError,
     updateProduct
 )
 

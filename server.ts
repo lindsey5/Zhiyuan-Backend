@@ -9,6 +9,8 @@ import roleRoutes from "./routes/roleRoutes";
 import productRoutes from "./routes/productRoutes";
 import cors from 'cors';
 import auditRoutes from "./routes/auditRoutes";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger";
 
 dotenv.config();
 const app = express();
@@ -30,6 +32,16 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/audits', auditRoutes);
 app.use(errorHandler);
+
+app.use(
+    '/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+        swaggerOptions: {
+        defaultModelsExpandDepth: -1, // 👈 hide schemas
+        },
+    })
+);
 
 sequelize.sync()
 .then(() => {
