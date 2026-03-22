@@ -3,7 +3,7 @@
  * /api/users:
  *   post:
  *     summary: Create a new user
- *     tags: [Users Module]
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     requestBody:

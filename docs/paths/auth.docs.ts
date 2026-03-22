@@ -3,7 +3,7 @@
  * /api/auth/login:
  *   post:
  *     summary: Login user and return JWT tokens
- *     tags: [Auth Module]
+ *     tags: [Auth]
  *     security: []
  *     requestBody:
  *       required: true

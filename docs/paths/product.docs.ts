@@ -3,7 +3,7 @@
  * /api/products:
  *   post:
  *     summary: Create product with variants and images
- *     tags: [Products Module]
+ *     tags: [Products]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
