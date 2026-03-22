@@ -4,6 +4,7 @@ import { AuditLog, User } from '../models/index';
 export const getAuditLogs = async (req : Request, res : Response, next : NextFunction) => {
     try{
         const auditLogs = await AuditLog.findAll({
+            attributes: { exclude: ["password", "id"] },
             include: [
                 {
                     model: User,

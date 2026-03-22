@@ -40,7 +40,7 @@ export const authenticate = async (
 
         const userData : any = user.toJSON();
 
-        const role = await Role.findByPk(userData.id, {
+        const role = await Role.findByPk(userData.role_id, {
             include: [
                 {
                     model: Permission,
@@ -53,7 +53,7 @@ export const authenticate = async (
 
         req.user = { ...userData, 
             role: {
-                ...role?.toJSON,
+                ...role?.toJSON(),
                 permissions: userPermissions
             }
         };

@@ -6,7 +6,7 @@ import { getAuditLogs } from "../controllers/auditLogController";
 const router = Router();
 
 router.get(
-    '/me',
+    '/',
     authenticate,
     authorizePermission(PERMISSIONS.AUDIT_VIEW_ALL),
     getAuditLogs
