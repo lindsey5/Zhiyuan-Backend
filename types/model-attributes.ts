@@ -39,3 +39,17 @@ export interface VariantAttributes {
     image_url: string;
     sku: string;
 }
+
+export interface AuditLogAttributes{
+    id: number;
+    user_id: number;
+    role: string;
+    action: string;
+    description: string;
+    severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+    ip_address: string;
+    user_agent: string;
+    old_values: Record<string, any> | null;
+    new_values: Record<string, any> | null;
+    createdAt: Date;
+}

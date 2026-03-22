@@ -1,3 +1,4 @@
+import AuditLog from "./AuditLog";
 import Permission from "./Permission";
 import Product from "./Product";
 import Role from "./Role";
@@ -5,7 +6,7 @@ import User from "./User";
 import Variant from "./Variant";
 
 Role.hasMany(User, { foreignKey: 'role_id', as: 'users' });
-User.belongsTo(Role, { foreignKey: 'role_id', as: 'role', onDelete: "SET NULL", });
+User.belongsTo(Role, { foreignKey: "role_id", as: 'role', onDelete: "SET NULL", });
 
 Role.hasMany(Permission, { foreignKey: 'role_id', as: 'permissions' });
 Permission.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
@@ -13,4 +14,13 @@ Permission.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });
 Product.hasMany(Variant, { foreignKey: 'product_id', as: 'variants' });
 Variant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
-export { Role, Permission, User, Product };
+User.hasMany(AuditLog, { foreignKey: 'user_id', as: 'audit_logs' });
+
+AuditLog.belongsTo(User, { foreignKey: 'user_id', as: 'user', onDelete: "SET NULL" });
+export { 
+    Role, 
+    Permission, 
+    User, 
+    Product, 
+    AuditLog
+};

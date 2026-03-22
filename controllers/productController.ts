@@ -5,12 +5,16 @@ import Variant from "../models/Variant";
 import { Op } from "sequelize";
 import { VariantAttributes } from "../types/model-attributes";
 import sequelize from "../config/db";
+import AuditLogService from "../services/AuditLogService";
+import { AuthRequest } from "../types/auth";
 
-export const createProduct = async (req: Request, res: Response, next: NextFunction) => {
+export const createProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const uploadedPublicIds: string[] = [];
 
     try {
-        const variants = typeof req.body.variants === 'string' ? JSON.parse(req.body.variants) : req.body.variants;
+        const variants = typeof req.body.variants === 'string'
+            ? JSON.parse(req.body.variants)
+            : req.body.variants;
 
         const files = req.files as {
             thumbnail?: Express.Multer.File[];
@@ -22,24 +26,30 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
 
         if (!thumbnail) throw new Error("Product thumbnail is required");
 
-        if (variantImages.length === 0) throw new Error("At least one variant image is required");
+        if (variantImages.length === 0)
+            throw new Error("At least one variant image is required");
 
-        if (variants.length !== variantImages.length) throw new Error(
-            `Number of variants (${variants.length}) does not match number of variant images (${variantImages.length})`
-        );
+        if (variants.length !== variantImages.length)
+            throw new Error(
+                `Number of variants (${variants.length}) does not match number of variant images (${variantImages.length})`
+            );
 
-        const { public_id: thumbnailPublicId, secure_url : thumbnailUrl } = await uploadFile(thumbnail.buffer);
+        const { public_id: thumbnailPublicId, secure_url: thumbnailUrl } =
+            await uploadFile(thumbnail.buffer);
+
         uploadedPublicIds.push(thumbnailPublicId);
 
-        const variantImageUrls = await Promise.all(variantImages.map(async (variantImage) => {
-            const uploadedImage = await uploadFile(variantImage.buffer);
-            uploadedPublicIds.push(uploadedImage.public_id);
-            
-            return { 
-                public_id: uploadedImage.public_id,
-                secure_url: uploadedImage.secure_url
-            }
-        }));
+        const variantImageUrls = await Promise.all(
+            variantImages.map(async (variantImage) => {
+                const uploadedImage = await uploadFile(variantImage.buffer);
+                uploadedPublicIds.push(uploadedImage.public_id);
+
+                return {
+                    public_id: uploadedImage.public_id,
+                    secure_url: uploadedImage.secure_url
+                };
+            })
+        );
 
         const product = await Product.create({
             product_name: req.body.product_name,
@@ -50,23 +60,38 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         });
 
         const productVariants = await Variant.bulkCreate(
-            variants.map((
-                variant : any, 
-                i : number
-            ) => ({
+            variants.map((variant: any, i: number) => ({
                 product_id: product.toJSON().id,
                 ...variant,
                 image_url: variantImageUrls[i].secure_url,
                 image_public_id: variantImageUrls[i].public_id
             }))
-        )
+        );
 
-        res.status(201).json({
+        const newProduct = {
+            ...product.toJSON(),
+            variants: productVariants.map(v => v.toJSON())
+        };
+
+
+        await AuditLogService.log({
+            action: "CREATE_PRODUCT",
+            description: `Product "${req.body.product_name}" successfully created.`,
+            ip_address: req.ip || "",
+            role: req?.user?.role.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: Number(req.user.id),
+            old_values: null,
+            new_values: newProduct
+        });
+
+        return res.status(201).json({
             success: true,
             message: "Product created successfully",
-            product: { 
-                ...product.toJSON(), 
-                variants: productVariants.map(variant => variant.toJSON()) 
+            product: {
+                ...product.toJSON(),
+                variants: productVariants.map(variant => variant.toJSON())
             }
         });
 
@@ -78,6 +103,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
                 console.error("Failed to rollback uploaded images:", error);
             }
         }
+
         next(err);
     }
 };
@@ -176,41 +202,55 @@ export const getProductById = async (req : Request, res : Response, next : NextF
     }
 }
 
-export const deleteProduct = async (req : Request, res : Response, next : NextFunction) => {
-    try{
+export const deleteProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
         const product = await Product.findByPk(req.params.id as string, {
             include: [
                 { model: Variant, as: "variants" }
             ]
         });
 
-        if(!product){
+        if (!product) {
             res.status(404).json({
                 success: false,
                 message: 'Product not found.'
-            })
-            return
+            });
+            return;
         }
 
-        await deleteFile(product.toJSON().thumbnail_public_id);
+        const oldValues = product.toJSON();
 
-        for(const variant of (product as any).variants){
+        await deleteFile(oldValues.thumbnail_public_id);
+
+        for (const variant of (product as any).variants) {
             await deleteFile(variant.image_public_id);
         }
 
         await product.destroy();
 
-        res.status(200).json({
+        await AuditLogService.log({
+            action: "DELETE_PRODUCT",
+            description: `Product "${oldValues.product_name}" successfully deleted.`,
+            ip_address: req.ip || "",
+            role: req.user.role.name || "N/A",
+            severity: "HIGH",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user.id,
+            old_values: oldValues,
+            new_values: null
+        });
+
+        return res.status(200).json({
             success: true,
             message: 'Product successfully deleted.'
-        })
+        });
 
-    }catch(err : any){
+    } catch (err: any) {
         next(err);
     }
-}
+};
 
-export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
+export const updateProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const uploadedPublicIds: string[] = [];
     const t = await sequelize.transaction();
 
@@ -229,7 +269,9 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
             });
         }
 
+        const oldValues = product.toJSON();
         const oldVariants = (product as any).variants || [];
+
         const { variants, ...updatedProduct } = req.body;
 
         if (!variants || !Array.isArray(variants)) {
@@ -239,12 +281,11 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         const imagesToDelete: string[] = [];
 
         // UPDATE THUMBNAIL
-        if (updatedProduct.thumbnail_url && updatedProduct.thumbnail_url !== product.toJSON().thumbnail_url) {
-            // Upload new thumbnail if it's a base64 string
+        if (updatedProduct.thumbnail_url && updatedProduct.thumbnail_url !== oldValues.thumbnail_url) {
             if (updatedProduct?.thumbnail_url.startsWith("data:image")) {
                 const { public_id, secure_url } = await uploadBase64(updatedProduct.thumbnail_url);
                 uploadedPublicIds.push(public_id);
-                imagesToDelete.push(product.toJSON().thumbnail_public_id);
+                imagesToDelete.push(oldValues.thumbnail_public_id);
 
                 updatedProduct.thumbnail_public_id = public_id;
                 updatedProduct.thumbnail_url = secure_url;
@@ -261,7 +302,6 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
                     : null;
 
                 if (existingVariant) {
-                    // Only upload new image if it's base64
                     if (variant.image_url?.startsWith("data:image") && variant.image_url !== existingVariant.toJSON().image_url) {
                         const { public_id, secure_url } = await uploadBase64(variant.image_url);
                         uploadedPublicIds.push(public_id);
@@ -275,7 +315,6 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
                     return existingVariant.toJSON();
                 }
 
-                // CREATE NEW VARIANT
                 let newImageUrl = variant.image_url;
                 let newImagePublicId = "";
 
@@ -301,7 +340,9 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         );
 
         // DELETE REMOVED VARIANTS
-        const incomingIds = variants.filter((v: VariantAttributes) => v.id).map((v: VariantAttributes) => v.id);
+        const incomingIds = variants
+            .filter((v: VariantAttributes) => v.id)
+            .map((v: VariantAttributes) => v.id);
 
         for (const oldVariant of oldVariants) {
             if (!incomingIds.includes(oldVariant.id)) {
@@ -315,21 +356,36 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
         // COMMIT TRANSACTION
         await t.commit();
 
-        res.status(200).json({
+        const newValues = {
+            ...product.toJSON(),
+            variants: updatedVariants
+        };
+
+        await AuditLogService.log({
+            action: "UPDATE_PRODUCT",
+            description: `Product "${oldValues.product_name}" successfully updated.`,
+            ip_address: req.ip || "N/A",
+            role: req.user.role.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "N/A",
+            user_id: req.user.id,
+            old_values: oldValues,
+            new_values: newValues
+        });
+
+        return res.status(200).json({
             success: true,
             message: "Product updated successfully",
-            product: {
-                ...product.toJSON(),
-                variants: updatedVariants
-            }
+            product: newValues
         });
 
     } catch (err: any) {
-        console.log(err)
+        console.log(err);
+
         // ROLLBACK DB
         await t.rollback();
 
-        // DELETE any uploaded images (rollback Cloudinary)
+        // ROLLBACK CLOUD STORAGE
         if (uploadedPublicIds.length > 0) {
             try {
                 await deleteFiles(uploadedPublicIds);

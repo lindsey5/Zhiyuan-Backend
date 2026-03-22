@@ -8,6 +8,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import roleRoutes from "./routes/roleRoutes";
 import productRoutes from "./routes/productRoutes";
 import cors from 'cors';
+import auditRoutes from "./routes/auditRoutes";
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/audits', auditRoutes);
 app.use(errorHandler);
 
 sequelize.sync()
