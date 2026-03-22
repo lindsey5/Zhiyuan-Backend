@@ -3,7 +3,7 @@
  * /api/users:
  *   post:
  *     summary: Create a new user
- *     tags: [Users]
+ *     tags: [Users Module]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -11,102 +11,28 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - firstname
- *               - lastname
- *               - email
- *               - password
- *               - role_id
- *             properties:
- *               firstname:
- *                 type: string
- *               lastname:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               role_id:
- *                 type: integer
+ *             $ref: '#/components/schemas/CreateUserRequest'
  *     responses:
  *       201:
  *         description: User successfully created
  *         content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/User'
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CreateUserResponse'
  *
- *       404:
- *         description: Role not found
- */
-
-
-/**
- * @swagger
- * /api/users:
  *   get:
- *     summary: Get all users (excluding current user)
+ *     summary: Get all users (excluding current logged-in user)
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: List of users
+ *         description: Users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetUsersResponse'
  */
-
-
-/**
- * @swagger
- * /api//users/me:
- *   put:
- *     summary: Update own profile
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Profile updated
- */
-
-
-/**
- * @swagger
- * /api/users/{id}:
- *   put:
- *     summary: Update a user
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: User updated
- *       404:
- *         description: User not found
- */
-
-
-/**
- * @swagger
- * /api/users/me:
- *   get:
- *     summary: Get logged-in user
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Current user data
- */
-
 
 /**
  * @swagger
@@ -114,6 +40,8 @@
  *   get:
  *     summary: Get user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -122,25 +50,97 @@
  *           type: integer
  *     responses:
  *       200:
- *         description: User found
+ *         description: User retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetUserByIdResponse'
  *       404:
  *         description: User not found
- */
-
-
-/**
- * @swagger
- * /api/users/{id}:
- *   delete:
- *     summary: Delete a user
+ *
+ *   put:
+ *     summary: Update user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserRequest'
  *     responses:
  *       200:
- *         description: User deleted
+ *         description: User successfully updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateUserResponse'
  *       404:
  *         description: User not found
+ *
+ *   delete:
+ *     summary: Delete user by ID
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteUserResponse'
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /api/users/me:
+ *   get:
+ *     summary: Get logged-in user profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetMeResponse'
+ *
+ *   put:
+ *     summary: Update logged-in user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateOwnUserRequest'
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UpdateOwnUserResponse'
+ *       409:
+ *         description: Email already exists
  */

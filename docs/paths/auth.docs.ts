@@ -1,9 +1,9 @@
 /**
  * @swagger
- * /auth/login:
+ * /api/auth/login:
  *   post:
  *     summary: Login user and return JWT tokens
- *     tags: [Auth]
+ *     tags: [Auth Module]
  *     security: []
  *     requestBody:
  *       required: true

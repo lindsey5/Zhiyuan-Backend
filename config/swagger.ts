@@ -4,15 +4,16 @@ const options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'API',
+            title: 'Zhiyuan Backend APIs',
+            description: "API documentation for Zhiyuan Backend",
             version: '1.0.0',
         },
         components: {
             securitySchemes: {
                 bearerAuth: {
-                type: 'http',
-                scheme: 'bearer',
-                bearerFormat: 'JWT',
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
                 },
             },
         },
