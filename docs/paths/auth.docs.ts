@@ -36,7 +36,7 @@
 
 /**
  * @swagger
- * /api/auth/refresh-token:
+ * /api/auth/refreshToken:
  *   post:
  *     summary: Refresh access token
  *     description: Generates a new access and refresh token using a valid refresh token.
