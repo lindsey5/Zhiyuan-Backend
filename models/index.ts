@@ -15,8 +15,8 @@ Product.hasMany(Variant, { foreignKey: 'product_id', as: 'variants' });
 Variant.belongsTo(Product, { foreignKey: 'product_id', as: 'product' });
 
 User.hasMany(AuditLog, { foreignKey: 'user_id', as: 'audit_logs' });
-
 AuditLog.belongsTo(User, { foreignKey: 'user_id', as: 'user', onDelete: "SET NULL" });
+
 export { 
     Role, 
     Permission, 

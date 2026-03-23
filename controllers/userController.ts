@@ -37,7 +37,7 @@ export const createUser = async (req: AuthRequest, res: Response, next: NextFunc
             user: newUser
         });
 
-    } catch (err: any) {
+    } catch (err: any) {            
         next(err);
     }
 };
