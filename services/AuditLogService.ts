@@ -21,7 +21,11 @@ interface CreateAuditLogParams {
 class AuditLogService {
     static async log (data: CreateAuditLogParams) {
         try{
-            await AuditLog.create(data);
+            await AuditLog.create({
+                ...data,
+                new_values: JSON.stringify(data.new_values),
+                old_values: JSON.stringify(data.old_values)
+            });
 
         }catch(err){
             console.log("AuditLogService Error:", err);

@@ -49,7 +49,7 @@ export interface AuditLogAttributes{
     severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
     ip_address: string;
     user_agent: string;
-    old_values: Record<string, any> | null;
-    new_values: Record<string, any> | null;
+    old_values: string | null;
+    new_values: string | null;
     createdAt: Date;
 }

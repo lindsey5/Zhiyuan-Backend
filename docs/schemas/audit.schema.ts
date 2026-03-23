@@ -5,6 +5,8 @@
  *     AuditLog:
  *       type: object
  *       properties:
+ *         id:
+ *           type: integer
  *         action:
  *           type: string
  *         description:
