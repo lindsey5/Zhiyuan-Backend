@@ -2,7 +2,7 @@
  * @swagger
  * components:
  *   schemas:
- *     LoginResponse:
+ *     AuthResponse:
  *       type: object
  *       properties:
  *         success:
