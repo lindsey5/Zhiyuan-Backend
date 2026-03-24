@@ -10,10 +10,20 @@ const ROLES = {
         name: 'Front Desk',
         description: 'Handles day-to-day front desk operations.',
         permissions: [
-            'user:read:own',
-            'user:update:own',
+            'order:read:all',
+            'order:read',
+            'order:update',
+        ]
+    },
+    INVENTORY_SUPERVISOR: {
+        name: 'Inventory Supervisor',
+        description: 'Supervises and manages inventory operations.',
+        permissions: [
+            'product:create',
+            'product:update',
+            'product:delete',
         ]
     }
 }
 
-export default ROLES
+export default ROLES;

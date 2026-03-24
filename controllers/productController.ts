@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { deleteFile, deleteFiles, uploadBase64, uploadFile } from "../utils/cloudinary";
 import { Product } from '../models/index';
 import Variant from "../models/Variant";
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { VariantAttributes } from "../types/model-attributes";
 import sequelize from "../config/db";
 import AuditLogService from "../services/AuditLogService";
@@ -118,6 +118,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
         const sortBy = req.query.sortBy ? String(req.query.sortBy) : "product_name";
         const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? "DESC" : "ASC";
+
         const categoriesArr = categories
             ? categories.split(',').map(c => c.trim()).filter(c => c !== "")
             : [];
@@ -138,33 +139,46 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
                     category: { [Op.in]: categoriesArr } 
                 })
             },
+
             include: [
                 {
                     model: Variant,
                     as: 'variants',
+                    attributes: [],
                     required: false,
                     ...(Object.keys(priceFilter).length > 0 && {
-                        where: {
-                            price: priceFilter
-                        }
+                        where: { price: priceFilter }
                     })
                 }
             ],
+
+            attributes: {
+                include: [
+                    [Sequelize.fn('MIN', Sequelize.col('variants.price')), 'minPrice']
+                ]
+            },
+
+            group: ['Product.id'],
+
+            order: sortBy === "price"
+                ? [[Sequelize.literal('minPrice'), order]]
+                : [[sortBy, order]],
+
             limit,
             offset: (page - 1) * limit,
-            distinct: true,
-            order: sortBy === "price" 
-                ? [[{ model: Variant, as: 'variants' }, 'price',  order]] 
-                : [[sortBy, order]]
+            subQuery: false
         });
 
-        const totalPages = Math.ceil(count / limit);
+        const total = Array.isArray(count) ? count.length : count;
 
+        const totalPages = Math.ceil(total / limit);
+        
         res.status(200).json({
             success: true,
             page,
             limit,
             totalPages,
+            total,
             products: rows,
         });
 
