@@ -48,3 +48,32 @@ export const getCategories = async (req : Request, res : Response, next : NextFu
         next(err);
     }
 }
+
+export const updateCategory = async (req : Request, res : Response, next : NextFunction) => {
+    try{
+
+        const category = await Category.findByPk(req.params.id as string);
+        console.log(category)
+        if(!category){
+            return res.status(404).json({
+                success: false,
+                message: 'Category not found.'
+            })
+        }
+
+        category.set({
+            name: req.body.name
+        })
+
+        await category.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Category successfully updated',
+            category
+        })
+
+    }catch(err){
+        next(err);
+    }
+}
