@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../config/db";
-import { hashPassword } from "../utils/auth";
-import { UserAttributes } from "../types/model-attributes";
+import sequelize from "../../config/db";
+import { hashPassword } from "../../utils/auth";
+import { UserAttributes } from "../../types/model-attributes";
 import bcrypt from "bcrypt";
 
 interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}

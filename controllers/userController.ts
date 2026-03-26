@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { Permission, Role, User } from '../models/index';
+import { Permission, Role, User } from '../database/models/index';
 import { AuthRequest } from "../types/auth";
 import { Op } from "sequelize";
 import AuditLogService from "../services/AuditLogService";

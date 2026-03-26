@@ -53,3 +53,9 @@ export interface AuditLogAttributes{
     new_values: string | null;
     createdAt: Date;
 }
+
+export interface CategoryAttributes{
+    id: number;
+    name: string;
+    createdAt: Date;
+}

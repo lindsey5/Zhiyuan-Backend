@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { deleteFile, deleteFiles, uploadBase64, uploadFile } from "../utils/cloudinary";
-import { Product } from '../models/index';
-import Variant from "../models/Variant";
+import { Product } from '../database/models/index';
+import Variant from "../database/models/Variant";
 import { Op, Sequelize } from "sequelize";
 import { VariantAttributes } from "../types/model-attributes";
 import sequelize from "../config/db";
@@ -118,7 +118,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
         const sortBy = req.query.sortBy ? String(req.query.sortBy) : "product_name";
         const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? "DESC" : "ASC";
-
+        const category = req.query.category ? String(req.query.category) : "";
         const categoriesArr = categories
             ? categories.split(',').map(c => c.trim()).filter(c => c !== "")
             : [];
@@ -137,15 +137,14 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
                 ...(search && { product_name: { [Op.like]: `%${search}%` } }),
                 ...(categoriesArr.length > 0 && { 
                     category: { [Op.in]: categoriesArr } 
-                })
+                }),
+                ...(category && { category })
             },
 
             include: [
                 {
                     model: Variant,
                     as: 'variants',
-                    attributes: [],
-                    required: false,
                     ...(Object.keys(priceFilter).length > 0 && {
                         where: { price: priceFilter }
                     })

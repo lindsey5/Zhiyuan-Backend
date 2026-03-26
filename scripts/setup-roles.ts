@@ -1,5 +1,5 @@
 import ROLES from "../utils/roles";
-import { Permission, Role } from '../models/index';
+import { Permission, Role } from '../database/models/index';
 import sequelize from "../config/db";
 
 const setupRoles = async () => {

@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../config/db";
-import { PermissionAttributes } from "../types/model-attributes";
-import PERMISSIONS from "../utils/permissions";
+import sequelize from "../../config/db";
+import { PermissionAttributes } from "../../types/model-attributes";
+import PERMISSIONS from "../../utils/permissions";
 
 interface PermissionCreationAttributes extends Optional<PermissionAttributes, "id"> {}
 

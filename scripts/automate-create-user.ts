@@ -1,5 +1,5 @@
 import sequelize from "../config/db";
-import { Role, User } from '../models/index';
+import { Role, User } from '../database/models/index';
 import dotenv from 'dotenv';
 
 dotenv.config();

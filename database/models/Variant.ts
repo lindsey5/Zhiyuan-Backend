@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../config/db";
-import { VariantAttributes } from "../types/model-attributes";
+import sequelize from "../../config/db";
+import { VariantAttributes } from "../../types/model-attributes";
 
 interface VariantCreationAttributes extends Optional<VariantAttributes, "id"> {}
 

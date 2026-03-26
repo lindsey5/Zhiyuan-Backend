@@ -1,6 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../config/db";
-import { AuditLogAttributes } from "../types/model-attributes";
+import sequelize from "../../config/db";
+import { AuditLogAttributes } from "../../types/model-attributes";
 
 interface AuditLogCreationAttributes
   extends Optional<

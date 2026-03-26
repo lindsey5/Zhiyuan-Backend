@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { Role, User } from '../models/index';
+import { Role, User } from '../database/models/index';
 import { generateAccessToken, generateRefreshToken } from "../utils/auth";
 import jwt from 'jsonwebtoken';
 

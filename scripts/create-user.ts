@@ -1,6 +1,6 @@
 import readline from 'readline';
 import sequelize from '../config/db';
-import { Role, User } from '../models/index';
+import { Role, User } from '../database/models/index';
 
 const rl = readline.createInterface({
     input: process.stdin,

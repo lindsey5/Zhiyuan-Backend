@@ -26,5 +26,7 @@ const PERMISSIONS = {
     ORDER_READ_ALL: 'order:read:all',
     ORDER_READ: 'order:read',
     ORDER_UPDATE: 'order:updated',
+
+    CATEGORY_CREATE: 'category:create'
 }
 export default PERMISSIONS

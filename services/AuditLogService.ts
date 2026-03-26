@@ -1,4 +1,4 @@
-import AuditLog from "../models/AuditLog";
+import AuditLog from "../database/models/AuditLog";
 
 type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 

@@ -11,6 +11,7 @@ import cors from 'cors';
 import auditRoutes from "./routes/auditRoutes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
+import categoryRoutes from "./routes/categoryRoutes";
 
 dotenv.config();
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/audits', auditRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use(errorHandler);
 
 app.use(
