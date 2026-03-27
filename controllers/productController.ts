@@ -410,3 +410,28 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
         next(err);
     }
 };
+
+export const searchProduct = async (req: Request, res: Response, next : NextFunction) => {
+    try{
+        const product = await Product.findOne({
+            where: {
+                ...(req.query)
+            }
+        })
+
+        if(!product){
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            })
+        }
+
+        res.status(200).json({
+            success: true,
+            product
+        })
+
+    }catch(err){
+        next(err)
+    }
+}

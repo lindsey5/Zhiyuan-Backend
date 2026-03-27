@@ -22,5 +22,6 @@ export {
     Permission, 
     User, 
     Product, 
-    AuditLog
+    AuditLog,
+    Variant
 };

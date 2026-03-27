@@ -26,6 +26,7 @@ Variant.init(
     variant_name: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
         validate: {
             notNull: { msg: "Variant name is required." },
             notEmpty: { msg: "Variant name cannot be empty." },

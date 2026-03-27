@@ -2,7 +2,7 @@ import { Router } from "express";
 import { handleMulterError, createProductUploads } from "../middlewares/multer";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
-import { createProduct, deleteProduct, getProductById, getProducts, updateProduct } from "../controllers/productController";
+import { createProduct, deleteProduct, getProductById, getProducts, searchProduct, updateProduct } from "../controllers/productController";
 import validateBody from "../middlewares/validateBody";
 import { createProductSchema, updateProductSchema } from "../schema/productSchema";
 
@@ -19,6 +19,13 @@ router.post(
 );
 
 router.get('/', getProducts);
+
+router.get(
+    '/search',
+    authenticate,
+    authorizePermission(PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_UPDATE),
+    searchProduct,
+)
 
 router.get('/:id', getProductById);
 

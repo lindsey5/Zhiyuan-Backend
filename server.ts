@@ -12,6 +12,7 @@ import auditRoutes from "./routes/auditRoutes";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import categoryRoutes from "./routes/categoryRoutes";
+import variantRoutes from "./routes/variantRoutes";
 
 dotenv.config();
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/variants', variantRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use(errorHandler);
@@ -40,7 +42,7 @@ app.use(
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec, {
         swaggerOptions: {
-        defaultModelsExpandDepth: -1, // 👈 hide schemas
+        defaultModelsExpandDepth: -1,
         },
     })
 );
