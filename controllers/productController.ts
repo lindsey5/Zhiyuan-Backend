@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { deleteFile, deleteFiles, uploadBase64, uploadFile } from "../utils/cloudinary";
+import { deleteFiles, uploadBase64, uploadFile } from "../utils/cloudinary";
 import { Product } from '../database/models/index';
 import Variant from "../database/models/Variant";
 import { Op, Sequelize } from "sequelize";
