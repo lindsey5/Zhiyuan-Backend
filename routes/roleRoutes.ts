@@ -18,7 +18,7 @@ router.post(
 router.get(
     '/',
     authenticate,
-    authorizePermission(PERMISSIONS.ROLE_READ_ALL),
+    authorizePermission(PERMISSIONS.ROLE_READ_ALL, PERMISSIONS.AUDIT_VIEW_ALL),
     getAllRoles
 )
 

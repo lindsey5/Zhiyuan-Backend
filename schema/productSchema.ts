@@ -25,7 +25,7 @@ export const createProductSchema = z.object({
 
     description: z.string()
         .min(5, "Description must be at least 5 characters")
-        .max(100, "Description must not exceed 100 characters"),
+        .max(1000, "Description must not exceed 1000 characters"),
 
     category: z.string().nonempty('Category is required'),
 
@@ -72,7 +72,7 @@ export const updateProductSchema = z.object({
 
     description: z.string()
         .min(5, "Description must be at least 5 characters")
-        .max(100, "Description must not exceed 100 characters")
+        .max(1000, "Description must not exceed 1000 characters")
         .optional(),
 
     thumbnail_url: z.string().optional(),

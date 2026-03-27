@@ -32,8 +32,8 @@ Product.init(
         validate: {
             notEmpty: { msg: "description is required." },
             len: {
-                args: [10, 100],
-                msg: "description must be between 10 and 100 characters."
+                args: [5, 1000],
+                msg: "description must be between 5 and 1000 characters."
             }
         }
     },

@@ -52,7 +52,8 @@ export const getCategories = async (req : Request, res : Response, next : NextFu
             where: {
                 ...(search && { name: { [Op.like] : `%${search}%`}}),
                 status: 'active'
-            }
+            },
+            order: [['name', 'ASC']]
         });
 
         res.status(200).json({
