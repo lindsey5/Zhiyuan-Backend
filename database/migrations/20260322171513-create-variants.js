@@ -19,7 +19,6 @@ module.exports = {
         variant_name: {
             type: Sequelize.STRING,
             allowNull: false,
-            unique: true
         },
 
         image_url: {
@@ -45,17 +44,17 @@ module.exports = {
         sku: {
             type: Sequelize.STRING,
             allowNull: false,
-            unique: true,
+        },
+
+        createdAt: {
+            type: Sequelize.DATE,
+            allowNull: false,
+            defaultValue: Sequelize.NOW,
         },
     });
   },
 
   async down (queryInterface, Sequelize) {
-    /**
-     * Add reverting commands here.
-     *
-     * Example:
-     * await queryInterface.dropTable('users');
-     */
+    await queryInterface.dropTable("variants");
   }
 };

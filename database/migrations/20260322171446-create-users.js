@@ -36,15 +36,16 @@ module.exports = {
             type: Sequelize.INTEGER,
             allowNull: false,
         },
+
+        createdAt: {
+            type: Sequelize.DATE,
+            allowNull: false,
+            defaultValue: Sequelize.NOW,
+      },
     });
   },
 
   async down (queryInterface, Sequelize) {
-    /**
-     * Add reverting commands here.
-     *
-     * Example:
-     * await queryInterface.dropTable('users');
-     */
+    await queryInterface.dropTable("users");
   }
 };

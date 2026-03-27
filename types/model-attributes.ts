@@ -8,6 +8,7 @@ export interface RoleAttributes {
     id: number;
     name: string; 
     description: string;
+    createdAt?: Date;
 }
 
 export interface UserAttributes {
@@ -17,6 +18,7 @@ export interface UserAttributes {
     email: string;
     password: string;
     role_id: number;
+    createdAt?: Date;
 }
 
 export interface ProductAttributes {
@@ -27,6 +29,7 @@ export interface ProductAttributes {
     thumbnail_url: string;
     category: string;
     createdAt?: Date;
+    status?: 'active' | 'inactive'
 }
 
 export interface VariantAttributes {
@@ -38,6 +41,7 @@ export interface VariantAttributes {
     image_public_id: string;
     image_url: string;
     sku: string;
+    createdAt?: Date;
 }
 
 export interface AuditLogAttributes{
@@ -57,5 +61,6 @@ export interface AuditLogAttributes{
 export interface CategoryAttributes{
     id: number;
     name: string;
-    createdAt: Date;
+    createdAt?: Date;
+    status?: 'active' | 'inactive'
 }

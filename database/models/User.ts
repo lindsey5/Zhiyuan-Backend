@@ -61,7 +61,13 @@ User.init(
             validate: {
                 notEmpty: { msg: 'role id is required.'}
             }
-        }
+        },
+
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW
+        },
     },
     {
         sequelize,

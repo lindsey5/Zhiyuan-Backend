@@ -26,7 +26,6 @@ Variant.init(
     variant_name: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         validate: {
             notNull: { msg: "Variant name is required." },
             notEmpty: { msg: "Variant name cannot be empty." },
@@ -83,7 +82,6 @@ Variant.init(
     sku: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         validate: {
             notNull: { msg: "SKU is required." },
             notEmpty: { msg: "SKU cannot be empty." },
@@ -93,7 +91,11 @@ Variant.init(
             }
         }
     },
-
+    createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW
+    },
 },
 {
     sequelize,

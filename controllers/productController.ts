@@ -7,11 +7,26 @@ import { VariantAttributes } from "../types/model-attributes";
 import sequelize from "../config/db";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
+import Category from "../database/models/Category";
 
 export const createProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const uploadedPublicIds: string[] = [];
 
     try {
+        const existingCategory = await Category.findOne({
+            where: {
+                name: req.body.category,
+                status: 'active'
+            }
+        })
+
+        if(!existingCategory){
+            return res.status(400).json({
+                success: false,
+                message: 'Category not exist'
+            })
+        }
+
         const variants = typeof req.body.variants === 'string'
             ? JSON.parse(req.body.variants)
             : req.body.variants;
@@ -112,17 +127,26 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
         const search = req.query.search ? String(req.query.search) : "";
         const categories = req.query.categories ? String(req.query.categories) : "";
+        const category = req.query.category ? String(req.query.category) : "";
+
         const minPrice = req.query.minPrice ? Number(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
-        const sortBy = req.query.sortBy ? String(req.query.sortBy) : "product_name";
-        const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? "DESC" : "ASC";
-        const category = req.query.category ? String(req.query.category) : "";
-        const categoriesArr = categories
-            ? categories.split(',').map(c => c.trim()).filter(c => c !== "")
-            : [];
 
+        const sortBy = req.query.sortBy ? String(req.query.sortBy) : "product_name";
+        const order =
+        req.query.order && String(req.query.order).toUpperCase() === "DESC"
+            ? "DESC"
+            : "ASC";
+
+        const categoriesArr = categories
+        ? categories.split(",").map((c) => c.trim()).filter((c) => c !== "")
+        : [];
+
+        // Price filter for variants
         let priceFilter: any = {};
         if (minPrice !== null && maxPrice !== null) {
             priceFilter = { [Op.between]: [minPrice, maxPrice] };
@@ -132,55 +156,71 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
             priceFilter = { [Op.lte]: maxPrice };
         }
 
-        const { count, rows } = await Product.findAndCountAll({
-            where: {
-                ...(search && { product_name: { [Op.like]: `%${search}%` } }),
-                ...(categoriesArr.length > 0 && { 
-                    category: { [Op.in]: categoriesArr } 
-                }),
-                ...(category && { category })
+        // Product where conditions
+        const whereCondition: any = {
+            status: "active",
+        };
+
+        if (search) {
+            whereCondition.product_name = { [Op.like]: `%${search}%` };
+        }
+
+        if (categoriesArr.length > 0) {
+            whereCondition.category = { [Op.in]: categoriesArr };
+        }
+
+        if (category) {
+            whereCondition.category = category;
+        }
+
+        // Count total products (IMPORTANT: no include here)
+        const total = await Product.count({
+            where: whereCondition,
+        });
+
+        // Fetch products with variants
+        const products = await Product.findAll({
+            where: whereCondition,
+
+            attributes: {
+                include: [
+                [
+                    Sequelize.literal(`(
+                    SELECT MIN(price)
+                    FROM variants
+                    WHERE variants.product_id = Product.id
+                    )`),
+                    "minPrice",
+                ],
+                ],
             },
 
             include: [
                 {
                     model: Variant,
-                    as: 'variants',
-                    ...(Object.keys(priceFilter).length > 0 && {
-                        where: { price: priceFilter }
-                    })
-                }
+                    as: "variants",
+                },
             ],
 
-            attributes: {
-                include: [
-                    [Sequelize.fn('MIN', Sequelize.col('variants.price')), 'minPrice']
-                ]
-            },
-
-            group: ['Product.id'],
-
-            order: sortBy === "price"
-                ? [[Sequelize.literal('minPrice'), order]]
+            order:
+                sortBy === "price"
+                ? [[Sequelize.literal("minPrice"), order]]
                 : [[sortBy, order]],
 
             limit,
-            offset: (page - 1) * limit,
-            subQuery: false
+            offset,
         });
 
-        const total = Array.isArray(count) ? count.length : count;
-
         const totalPages = Math.ceil(total / limit);
-        
+
         res.status(200).json({
             success: true,
             page,
             limit,
             totalPages,
             total,
-            products: rows,
+            products,
         });
-
     } catch (err: any) {
         next(err);
     }
@@ -233,13 +273,11 @@ export const deleteProduct = async (req: AuthRequest, res: Response, next: NextF
 
         const oldValues = product.toJSON();
 
-        await deleteFile(oldValues.thumbnail_public_id);
+        product.set({
+            status: 'inactive'
+        })
 
-        for (const variant of (product as any).variants) {
-            await deleteFile(variant.image_public_id);
-        }
-
-        await product.destroy();
+        await product.save();
 
         await AuditLogService.log({
             action: "DELETE_PRODUCT",
@@ -268,6 +306,20 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
     const t = await sequelize.transaction();
 
     try {      
+        const existingCategory = await Category.findOne({
+            where: {
+                name: req.body.category,
+                status: 'active'
+            }
+        })
+
+        if(!existingCategory){
+            return res.status(400).json({
+                success: false,
+                message: 'Category not exist'
+            })
+        }
+
         // FETCH PRODUCT
         const product = await Product.findByPk(req.params.id as string, {
             include: [{ model: Variant, as: "variants" }],
@@ -304,7 +356,6 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
                 updatedProduct.thumbnail_url = secure_url;
             }
         }
-
         await product.update(updatedProduct, { transaction: t });
 
         // UPDATE / CREATE VARIANTS
@@ -413,12 +464,19 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
 
 export const searchProduct = async (req: Request, res: Response, next : NextFunction) => {
     try{
+        const { id, ...query } = req.query;
+
         const product = await Product.findOne({
             where: {
-                ...(req.query)
-            }
-        })
-
+                ...query,
+                ...(id !== undefined && id !== "" && {
+                id: {
+                    [Op.ne]: Number(id),
+                },
+                }),
+                status: "active",
+            },
+        });
         if(!product){
             return res.status(404).json({
                 success: false,

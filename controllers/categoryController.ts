@@ -6,7 +6,8 @@ export const createCategory = async (req : Request, res : Response, next : NextF
     try{
         const existingCategory = await Category.findOne({
             where: {
-                name: req.body.name
+                name: req.body.name,
+                status: 'active'
             }
         })
 
@@ -35,7 +36,8 @@ export const getCategories = async (req : Request, res : Response, next : NextFu
         const search = req.query.search ? String(req.query.search) : "";
         const categories = await Category.findAll({
             where: {
-                ...(search && { name: { [Op.like] : `%${search}%`}})
+                ...(search && { name: { [Op.like] : `%${search}%`}}),
+                status: 'active'
             }
         });
 
@@ -52,8 +54,22 @@ export const getCategories = async (req : Request, res : Response, next : NextFu
 export const updateCategory = async (req : Request, res : Response, next : NextFunction) => {
     try{
 
+        const existingCategory = await Category.findOne({
+            where: {
+                name: req.body.name,
+                status: 'active'
+            }
+        })
+
+        if(existingCategory){
+            return res.status(409).json({
+                success: false,
+                message: 'Category already exist'
+            })
+        }
+
         const category = await Category.findByPk(req.params.id as string);
-        console.log(category)
+
         if(!category){
             return res.status(404).json({
                 success: false,

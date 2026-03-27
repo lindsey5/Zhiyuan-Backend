@@ -22,13 +22,10 @@
  *             properties:
  *               product_name:
  *                 type: string
- *                 example: T-shirt
  *               description:
  *                 type: string
- *                 example: High quality cotton shirt
  *               category:
  *                 type: string
- *                 example: Clothing
  *               thumbnail:
  *                 type: string
  *                 format: binary
@@ -75,7 +72,6 @@
  *         name: categories
  *         schema:
  *           type: string
- *           example: Clothing,Electronics
  *       - in: query
  *         name: minPrice
  *         schema:

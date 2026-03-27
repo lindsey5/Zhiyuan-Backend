@@ -20,17 +20,18 @@ module.exports = {
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.NOW,
       },
+
+      status: {
+        type: Sequelize.ENUM('active', 'inactive'),
+        allowNull: false,
+        defaultValue: 'active'
+      }
     });
   },
 
   async down (queryInterface, Sequelize) {
-    /**
-     * Add reverting commands here.
-     *
-     * Example:
-     * await queryInterface.dropTable('users');
-     */
+    await queryInterface.dropTable("categories");
   }
 };

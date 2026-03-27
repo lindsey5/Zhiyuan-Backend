@@ -27,7 +27,7 @@ export const createProductSchema = z.object({
         .min(5, "Description must be at least 5 characters")
         .max(100, "Description must not exceed 100 characters"),
 
-    category: z.enum(CATEGORIES),
+    category: z.string().nonempty('Category is required'),
 
     variants: z.preprocess((val) => {
         if (typeof val === "string") return JSON.parse(val);
@@ -60,7 +60,7 @@ const updateVariantSchema = z.object({
         .max(100, "SKU must not exceed 100 characters"),
 
     image_url: z.string()
-        .nonempty("Variant image URL or Base64 is required")
+        .nonempty("Variant image URL is required")
         .optional()
 });
 
@@ -77,7 +77,7 @@ export const updateProductSchema = z.object({
 
     thumbnail_url: z.string().optional(),
 
-    category: z.enum(CATEGORIES),
+    category: z.string().nonempty('Category is required'),
 
     variants: z.array(updateVariantSchema),
 })

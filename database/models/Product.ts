@@ -17,7 +17,6 @@ Product.init(
     product_name: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         validate: {
             notEmpty: { msg: "product name is required." },
             len: {
@@ -72,6 +71,11 @@ Product.init(
         allowNull: false,
         defaultValue: DataTypes.NOW
     },
+    status: {
+        type: DataTypes.ENUM('active', 'deleted'),
+        allowNull: false,
+        defaultValue: 'active'
+    }
 },
 {
     sequelize,

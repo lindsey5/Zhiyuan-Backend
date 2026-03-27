@@ -14,7 +14,6 @@ module.exports = {
         product_name: {
             type: Sequelize.STRING,
             allowNull: false,
-            unique: true,
         },
 
         description: {
@@ -42,6 +41,12 @@ module.exports = {
             allowNull: false,
             defaultValue: Sequelize.NOW,
         },
+
+        status: {
+            type: Sequelize.ENUM('active', 'inactive'),
+            allowNull: false,
+            defaultValue: 'active'
+        }
     });
   },
 

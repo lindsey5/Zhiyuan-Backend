@@ -16,7 +16,6 @@ Category.init(
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
             validate: {
                 notEmpty: { msg: "name is required." },
                 len: {
@@ -30,6 +29,11 @@ Category.init(
             allowNull: false,
             defaultValue: DataTypes.NOW
         },
+        status: {
+            type: DataTypes.ENUM('active', 'inactive'),
+            allowNull: false,
+            defaultValue: 'active'
+        }
     },
     {
         sequelize,

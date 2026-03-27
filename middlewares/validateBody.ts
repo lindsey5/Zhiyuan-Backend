@@ -8,6 +8,7 @@ const validateBody = <T extends ZodSchema<any>>(schema: T) => {
             req.body = parsed;
             next();
         } catch (err) {
+            console.log(err)
             if (err instanceof ZodError) {
                 res.status(400).json({
                     message: "Validation failed",
