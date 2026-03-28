@@ -22,7 +22,7 @@ A backend service for managing users, roles, permissions, categories, products, 
 - Cloudinary integration for image/media uploads
 - All API endpoints are validated using Zod
 
-## Folder Structure
+## File Structure
 ```bash
 ├── config/ # Configuration files
 |    ├── cloudinaryConfig.ts
@@ -157,5 +157,24 @@ npm run dev
 npm start
 ```
 
-## 8. Access API documentation
+## Environment Variables
+```bash
+PORT=3000
+
+# JWT SECRET KEYS
+JWT_ACCESS_SECRET=your_access_secret_key
+JWT_REFRESH_SECRET=your_refresh_secret_key
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Database
+SQLITE_PATH=your_sqlite_file_path
+
+# Cloudinary API KEYS
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+## Access API documentation
 #### Open in browser: http://localhost:PORT/docs
