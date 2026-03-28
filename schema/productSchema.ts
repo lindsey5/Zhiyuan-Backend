@@ -1,5 +1,4 @@
 import { z } from "zod";
-import CATEGORIES from "../utils/categories";
 
 const createVariantSchema = z.object({
     variant_name: z.string()
