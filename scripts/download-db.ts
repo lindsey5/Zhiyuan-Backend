@@ -6,38 +6,40 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export async function downloadSQLite(url?: string, saveAs?: string) {
-    try {
-        if(!saveAs) {
-            console.error("SaveAs filename is not provided. Please set the filename in environment variables.");
-            return;
-        }
+    return new Promise<void>((resolve, reject) => {
+        try {
+            if(!saveAs) {
+                console.error("SaveAs filename is not provided. Please set the filename in environment variables.");
+                return;
+            }
 
-        if(!url) {
-            console.error("URL is not provided. Please set the URL in environment variables.");
-            return;
-        }
-        const filePath = path.join(process.cwd(), saveAs);
-        
-        // Make request as stream
-        const response = await axios.get(url, { responseType: "stream" });
+            if(!url) {
+                console.error("URL is not provided. Please set the URL in environment variables.");
+                return;
+            }
+            const filePath = path.join(process.cwd(), saveAs);
+            
+            // Make request as stream
+            axios.get(url, { responseType: "stream" }).then((response) => {
+                // Write to file
+                const writer = fs.createWriteStream(filePath);
+                response.data.pipe(writer);
 
-        // Write to file
-        const writer = fs.createWriteStream(filePath);
-        response.data.pipe(writer);
-
-        return new Promise<void>((resolve, reject) => {
-        writer.on("finish", () => {
-            console.log(`Downloaded SQLite file to: ${filePath}`);
-            resolve();
-        });
-        writer.on("error", (err) => {
-            console.error("Download failed:", err);
+                writer.on("finish", () => {
+                    console.log(`Downloaded SQLite file to: ${filePath}`);
+                    resolve();
+                });
+                writer.on("error", (err) => {
+                    console.error("Download failed:", err);
+                    reject(err);
+                });
+            }).catch((err) => {
+                reject(err);
+            });
+        } catch (err) {
             reject(err);
-        });
-        });
-    } catch (err) {
-        console.error("Download failed:", err);
-    }
+        }
+    });
 }
 
 (async () => {
