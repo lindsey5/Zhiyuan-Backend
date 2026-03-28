@@ -157,6 +157,12 @@ async function insertProducts() {
         await sequelize.sync();
 
         for (const product of productsData) {
+            const existingProduct = await Product.findOne({ where: { product_name: product.product_name } });
+
+            if(existingProduct) {
+                console.log(`Product with name ${product.product_name} already exists. Skipping...`);
+                continue;
+            }
             const { variants, ...productFields } = product;
 
             // Create product

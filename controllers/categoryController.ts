@@ -72,7 +72,8 @@ export const updateCategory = async (req : AuthRequest, res : Response, next : N
         const existingCategory = await Category.findOne({
             where: {
                 name: req.body.name,
-                status: 'active'
+                status: 'active',
+                id: { [Op.ne] : Number(req.params.id) }
             }
         })
 

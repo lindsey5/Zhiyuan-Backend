@@ -13,8 +13,13 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import categoryRoutes from "./routes/categoryRoutes";
 import variantRoutes from "./routes/variantRoutes";
+import path from "path";
+import { watchSQLite } from "./utils/watchDB";
 
 dotenv.config();
+const DB_PATH = path.join(__dirname, process.env.SQLITE_PATH || 'database.sqlite');
+watchSQLite(DB_PATH);
+
 const app = express();
 const PORT = process.env.PORT || 3000; 
 
