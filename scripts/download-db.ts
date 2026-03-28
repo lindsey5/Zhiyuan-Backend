@@ -2,21 +2,23 @@ import fs from "fs";
 import path from "path";
 import axios from "axios";
 import dotenv from "dotenv";
+import { url } from "zod/v4/classic/external.cjs";
 
 dotenv.config();
 
-export async function downloadSQLite(url?: string, saveAs?: string) {
+export async function downloadSQLiteFromCloudinary(publicId?: string, saveAs?: string) {
     try {
         if (!saveAs) {
             console.error("SaveAs filename is not provided. Please set the filename in environment variables.");
             return;
         }
 
-        if (!url) {
-            console.error("URL is not provided. Please set the URL in environment variables.");
+        if (!publicId) {
+            console.error("Public ID is not provided. Please set the Public ID in environment variables.");
             return;
         }
-
+        const url = `https://res.cloudinary.com/${process.env.CLOUD_NAME}/raw/upload/${process.env.CLOUDINARY_DB_FOLDER}/${publicId}`;
+        console.log(url)
         const filePath = path.join(process.cwd(), saveAs);
 
         // Make request as stream
@@ -56,5 +58,5 @@ export async function downloadSQLite(url?: string, saveAs?: string) {
 }
 
 (async () => {
-    await downloadSQLite(process.env.SQLITE_DB_URL, process.env.SQLITE_DB_SAVE_AS);
+    await downloadSQLiteFromCloudinary(process.env.PUBLIC_ID, process.env.SQLITE_DB_SAVE_AS);
 })();

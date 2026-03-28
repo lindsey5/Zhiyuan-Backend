@@ -1,5 +1,8 @@
 import cloudinary from "../config/cloudinaryConfig";
 import { deleteFile } from "./cloudinary";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export default async function backupSQLite(dbPath: string, publicId?: string) {
     try {
@@ -10,7 +13,7 @@ export default async function backupSQLite(dbPath: string, publicId?: string) {
 
         await deleteFile(publicId);
         const result = await cloudinary.uploader.upload(dbPath, {
-            folder: "sqlite_backups",
+            folder: process.env.CLOUDINARY_DB_FOLDER,
             resource_type: "raw", 
             public_id: publicId,
         });
