@@ -115,9 +115,11 @@ A backend service for managing users, roles, permissions, categories, products, 
 |
 └── utils/ # Helper functions
 |    ├── auth.ts
+|    ├── backup.ts # 
 |    ├── cloudinary.ts
 |    ├── permissions.ts
-|    └── roles.ts
+|    ├── roles.ts
+|    └── watchDB.ts
 ```
 
 ## Quick Install (Recommended)
@@ -170,6 +172,14 @@ JWT_REFRESH_EXPIRES_IN=7d
 
 # Database
 SQLITE_PATH=your_sqlite_file_path
+
+# For backup and restore
+SQLITE_DB_SAVE_AS=
+PUBLIC_ID=
+SQLITE_DB_URL=
+
+# Enable watcher for automatic backup and restore
+ENABLE_WATCHER=true
 
 # Cloudinary API KEYS
 CLOUDINARY_CLOUD_NAME=your_cloud_name

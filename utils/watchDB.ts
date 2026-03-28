@@ -5,6 +5,11 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export function watchSQLite(dbPath: string) {
+    if(process.env.ENABLE_WATCHER !== "true") {
+        console.log("SQLite watcher is disabled. Set ENABLE_WATCHER=true in .env to enable it.");
+        return;
+    }
+
     // Debounce to avoid multiple triggers per write
     let backupTimeout: NodeJS.Timeout | null = null;
 
