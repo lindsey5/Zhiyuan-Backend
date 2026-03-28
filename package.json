@@ -38,10 +38,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon --watch . --exec ts-node server.ts",
-    "build": "npm install && ts-node scripts/setup-roles.ts && ts-node scripts/automate-create-user.ts && tsc",
+    "build": "npm install && ts-node scripts/setup-roles.ts && ts-node scripts/automate-create-user.ts && ts-node scripts/insert-products.ts && tsc",
     "start": "cross-env NODE_ENV=production node dist/server.js",
     "setup-roles": "ts-node scripts/setup-roles.ts",
-    "create-user": "ts-node scripts/create-user.ts"
+    "create-user": "ts-node scripts/create-user.ts",
+    "insert-products" : "ts-node scripts/insert-products.ts"
   },
   "author": "",
   "license": "ISC",
