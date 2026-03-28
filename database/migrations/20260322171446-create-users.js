@@ -35,9 +35,6 @@ module.exports = {
         role_id: {
             type: Sequelize.INTEGER,
             allowNull: true,
-            references: { model: 'products', key: 'id' },
-            onDelete: 'NULL',
-            onUpdate: 'NULL',
         },
 
         createdAt: {
