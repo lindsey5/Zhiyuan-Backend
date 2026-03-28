@@ -154,6 +154,7 @@ npm run create-user
 npm run dev
 
 # For production
+npm build
 npm start
 ```
 
