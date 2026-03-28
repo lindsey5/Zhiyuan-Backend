@@ -2,59 +2,68 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("variants", {
-        id: {
-            type: Sequelize.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-            allowNull: false,
-        },
+    async up(queryInterface, Sequelize) {
+        await queryInterface.createTable("variants", {
+            id: {
+                type: Sequelize.INTEGER,
+                primaryKey: true,
+                autoIncrement: true,
+                allowNull: false,
+            },
 
-        product_id: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
+            product_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                references: { model: 'products', key: 'id' },
+                onDelete: 'CASCADE',
+                onUpdate: 'CASCADE',
+            },
 
-        variant_name: {
-            type: Sequelize.STRING,
-            allowNull: false,
-        },
+            variant_name: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
 
-        image_url: {
-            type: Sequelize.STRING,
-            allowNull: false,
-        },
+            image_url: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
 
-        image_public_id: {
-            type: Sequelize.STRING,
-            allowNull: false,
-        },
+            image_public_id: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
 
-        stock: {
-            type: Sequelize.INTEGER,
-            allowNull: false,
-        },
+            stock: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+            },
 
-        price: {
-            type: Sequelize.FLOAT,
-            allowNull: false,
-        },
+            price: {
+                type: Sequelize.FLOAT,
+                allowNull: false,
+            },
 
-        sku: {
-            type: Sequelize.STRING,
-            allowNull: false,
-        },
+            sku: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
 
-        createdAt: {
-            type: Sequelize.DATE,
-            allowNull: false,
-            defaultValue: Sequelize.NOW,
-        },
-    });
-  },
+            createdAt: {
+                type: Sequelize.DATE,
+                allowNull: false,
+                defaultValue: Sequelize.NOW,
+            },
 
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable("variants");
-  }
+            status: {
+                type: Sequelize.ENUM('active', 'inactive'),
+                allowNull: false,
+                defaultValue: 'active'
+            }
+        });
+    },
+
+    async down (queryInterface, Sequelize) {
+        await queryInterface.dropTable("variants");
+    }
 };

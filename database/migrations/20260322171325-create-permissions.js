@@ -19,11 +19,14 @@ module.exports = {
             role_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
+                references: { model: 'roles', key: 'id' },
+                onDelete: 'CASCADE',
+                onUpdate: 'CASCADE',
             },
         });
     },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable("products");
+    await queryInterface.dropTable("permissions");
   }
 };

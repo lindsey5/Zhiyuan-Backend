@@ -68,6 +68,38 @@ export const authenticate = async (
     }
 };
 
+export const hasAnyPermission = (...anyPermissions: string []) => {
+    return async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        if (!req.user) return res.status(403).json({ 
+            success: false,
+            message: "Forbidden: insufficient rights"
+         });
+
+        const userPermissions = req.user.role?.permissions || [];
+
+        if (userPermissions.length === 0) return res.status(403).json({ 
+            success: false,
+            message: "Forbidden: no permission assigned" 
+        });
+
+        const hasAnyPermission = anyPermissions.some(permission => 
+            userPermissions.includes(permission)
+        );
+
+        if (!hasAnyPermission) {
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: insufficient permissions",
+            });
+        }
+        next();
+    }
+}
+
 export const authorizePermission = (...requiredPermissions: string[]) => {
     return async (
         req: AuthRequest,
@@ -94,8 +126,6 @@ export const authorizePermission = (...requiredPermissions: string[]) => {
             return res.status(403).json({
                 success: false,
                 message: "Forbidden: insufficient permissions",
-                required: requiredPermissions,
-                current: userPermissions
             });
         }
 

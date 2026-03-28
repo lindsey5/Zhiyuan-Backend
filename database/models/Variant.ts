@@ -91,6 +91,11 @@ Variant.init(
             }
         }
     },
+    status: {
+        type: DataTypes.ENUM('active', 'deleted'),
+        allowNull: false,
+        defaultValue: 'active'
+    },
     createdAt: {
         type: DataTypes.DATE,
         allowNull: false,

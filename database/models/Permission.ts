@@ -16,7 +16,7 @@ Permission.init(
     },
 
     action: {
-        type: DataTypes.ENUM(...Object.values(PERMISSIONS)),
+        type: DataTypes.STRING,
         allowNull: false,
         validate: {
             notEmpty: { msg: "action is required." },

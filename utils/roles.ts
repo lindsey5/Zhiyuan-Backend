@@ -13,6 +13,8 @@ const ROLES = {
             'order:read:all',
             'order:read',
             'order:update',
+            'product:read:all',
+            'category:read:all'
         ]
     },
     INVENTORY_SUPERVISOR: {

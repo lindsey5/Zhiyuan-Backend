@@ -199,6 +199,9 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
                 {
                     model: Variant,
                     as: "variants",
+                    where: {
+                        status: 'active'
+                    }
                 },
             ],
 

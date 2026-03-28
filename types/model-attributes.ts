@@ -41,6 +41,7 @@ export interface VariantAttributes {
     image_public_id: string;
     image_url: string;
     sku: string;
+    status?: 'active' | 'inactive',
     createdAt?: Date;
 }
 

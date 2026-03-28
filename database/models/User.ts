@@ -69,10 +69,7 @@ User.init(
 
         role_id: {
             type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                notEmpty: { msg: 'role id is required.'}
-            }
+            allowNull: true,
         },
 
         createdAt: {

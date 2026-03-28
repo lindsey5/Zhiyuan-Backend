@@ -18,6 +18,7 @@ const PERMISSIONS = {
     ROLE_DELETE: 'role:delete',
 
     // Product management
+    PRODUCT_READ_ALL: 'product:read:all',
     PRODUCT_CREATE: 'product:create',
     PRODUCT_UPDATE: 'product:update',
     PRODUCT_DELETE: 'product:delete',
@@ -28,6 +29,7 @@ const PERMISSIONS = {
     ORDER_UPDATE: 'order:updated',
 
     //Category management
+    CATEGORY_READ_ALL: 'category:read:all',
     CATEGORY_CREATE: 'category:create',
     CATEGORY_UPDATE: 'category:update',
     CATEGORY_DELETE: 'category:delete'

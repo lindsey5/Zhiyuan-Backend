@@ -83,5 +83,4 @@ export const updateProductSchema = z.object({
 .refine((data) => !data.variants || data.variants.length > 0, {
     message: "At least one variant is required",
     path: ["variants"]
-})
-.strict();
+});

@@ -1,9 +1,21 @@
 import { Router } from "express";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
-import { searchVariant } from "../controllers/variantController";
+import { getVariants, searchVariant } from "../controllers/variantController";
 
 const router = Router();
+
+router.get(
+    '/',
+    authenticate,
+    hasAnyPermission(
+        PERMISSIONS.PRODUCT_CREATE, 
+        PERMISSIONS.PRODUCT_READ_ALL, 
+        PERMISSIONS.PRODUCT_UPDATE, 
+        PERMISSIONS.PRODUCT_DELETE
+    ),
+    getVariants
+)
 
 router.get(
     '/search',
