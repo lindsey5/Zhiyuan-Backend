@@ -45,7 +45,8 @@
     "start": "cross-env NODE_ENV=production node dist/server.js",
     "setup-roles": "ts-node scripts/setup-roles.ts",
     "create-user": "ts-node scripts/create-user.ts",
-    "insert-products": "ts-node scripts/insert-products.ts"
+    "insert-products": "ts-node scripts/insert-products.ts",
+    "automate-create-user": "ts-node scripts/automate-create-user.ts"
   },
   "author": "",
   "license": "ISC",
