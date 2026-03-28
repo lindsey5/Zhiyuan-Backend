@@ -19,9 +19,9 @@ Category.init(
             validate: {
                 notEmpty: { msg: "name is required." },
                 len: {
-                args: [3, 100],
-                msg: "name must be between 3 and 100 characters."
-            }
+                    args: [3, 100],
+                    msg: "name must be between 3 and 100 characters."
+                }
             },
         },
         createdAt: {

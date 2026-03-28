@@ -26,6 +26,10 @@ User.init(
             allowNull: false,
             validate: {
                 notEmpty: { msg: "firstname is required." },
+                len: {
+                    args: [1, 100],
+                    msg: "firstname must be between 1 and 100 characters."
+                }
         },
         },
 
@@ -34,6 +38,10 @@ User.init(
             allowNull: false,
             validate: {
                 notEmpty: { msg: "lastname is required." },
+                len: {
+                    args: [1, 100],
+                    msg: "lastname must be between 1 and 100 characters."
+                }
             },
         },
 
@@ -43,7 +51,11 @@ User.init(
             unique: true,
             validate: {
                 notEmpty: { msg: "email is required." },
-                isEmail: { msg: "invalid email address" }
+                isEmail: { msg: "invalid email address" },
+                len: {
+                    args: [5, 100],
+                    msg: "email must be between 5 and 100 characters."
+                }
             },
         },
 

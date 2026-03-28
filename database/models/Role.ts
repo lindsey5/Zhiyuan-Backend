@@ -20,9 +20,9 @@ Role.init(
             validate: {
                 notEmpty: { msg: "name is required." },
                 len: {
-                args: [3, 100],
-                msg: "name must be between 3 and 50 characters."
-            }
+                    args: [3, 100],
+                    msg: "name must be between 3 and 50 characters."
+                }
             },
         },
         description: {

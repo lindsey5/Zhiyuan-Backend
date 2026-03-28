@@ -10,7 +10,7 @@ export const createUserSchema = z.object({
         .max(50, "Lastname must not exceed 50 characters"),
 
     email: z.string()
-        .min(1, "Email is required")
+        .min(3, "Email must be at least 3 characters")
         .email("Invalid email address")
         .max(100, "Email must not exceed 100 characters"),
 
@@ -36,7 +36,7 @@ export const updateUserSchema = z.object({
 
     email: z.string()
         .email("Invalid email address")
-        .min(1, "Email cannot be empty")
+        .min(5, "Email must be at least 3 characters")
         .max(100, "Email must not exceed 100 characters")
         .optional(),
 

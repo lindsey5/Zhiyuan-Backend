@@ -30,7 +30,8 @@ Product.init(
         type: DataTypes.TEXT,
         allowNull: false,
         validate: {
-            notEmpty: { msg: "description is required." },
+             notNull: { msg: "description is required" },
+            notEmpty: { msg: "description cannot be empty." },
             len: {
                 args: [5, 1000],
                 msg: "description must be between 5 and 1000 characters."
