@@ -1,37 +1,53 @@
-## Quick install (recommended)
+# Zhiyuan Backend
+A backend service for managing users, roles, permissions, categories, products, orders, user reviews and audit logs. Built with Node.js, Typescript, Express, Sequelize, and SQLite. Includes full Swagger API documentation.
 
-1. Clone repository
+## Features
 
+- User management
+- Role and permission management
+- Category and product management
+- Order management
+- Audit logs
+- JWT authentication and authorization
+- Full API documentation via Swagger at `/docs`
+- Supports SQLite for easy setup
+
+## Quick Install (Recommended)
+
+## 1. Clone the repository
 ```bash
-   git clone https://github.com/lindsey5/Zhiyuan-Backend.git
+git clone https://github.com/lindsey5/Zhiyuan-Backend.git
 ```
 
-2. Install dependencies
-
+## 2. Install dependencies
 ```bash
-   npm install
+npm install
 ```
 
-3. Create .env
-
+## 3. Create .env file
 ```bash
-   # Copy `.env.example` (if present) or create `.env` and set required values:
-   cp .env.example .env
+cp .env.example .env
 ```
 
-4. Setup database roles and user
+## 5. Run database migrations (auto-creates database.sqlite)
+```bash
+npx sequelize-cli db:migrate
+```
 
+## 6. Setup database roles and initial user
 ```bash
 npm run setup-roles
 npm run create-user
 ```
 
-5. Start the server
-
+## 7. Start the server
 ```bash
-# development
+# For development
 npm run dev
 
-# production
+# For production
 npm start
 ```
+
+## 8. Access API documentation
+#### Open in browser: http://localhost:PORT/docs
