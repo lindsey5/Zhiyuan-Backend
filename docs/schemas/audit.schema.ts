@@ -32,6 +32,25 @@
  *           type: string
  *           format: date-time
  *         user:
- *           type: object
+ *           $ref: '#/components/schemas/User'
  *           description: Associated user data
+ *     GetAuditLogsResponse:
+ *          type: object
+ *          properties:
+ *              success:
+ *                  type: boolean
+ *                  example: true
+ *              page:
+ *                  type: integer
+ *                  example: 1
+ *              limit:
+ *                  type: integer
+ *                  example: 10
+ *              totalPages:
+ *                  type: integer
+ *                  example: 5
+ *              auditLogs:
+ *                  type: array
+ *                  items:
+ *                      $ref: '#/components/schemas/AuditLog' 
  */

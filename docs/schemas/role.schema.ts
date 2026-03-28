@@ -2,6 +2,30 @@
  * @swagger
  * components:
  *   schemas:
+ *     PermissionAction:
+ *       type: string
+ *       example:
+ *         - dashboard:view
+ *         - audit:view:all
+ *         - user:create
+ *         - user:read
+ *         - user:read:all
+ *         - user:update
+ *         - user:delete
+ *         - role:create
+ *         - role:read
+ *         - role:read:all
+ *         - role:update
+ *         - role:delete
+ *         - product:create
+ *         - product:update
+ *         - product:delete
+ *         - order:read:all
+ *         - order:read
+ *         - order:updated
+ *         - category:create
+ *         - category:update
+ *         - category:delete
  *     Permission:
  *       type: object
  *       properties:
@@ -45,7 +69,7 @@
  *         permissions:
  *           type: array
  *           items:
- *             type: string
+ *              $ref: '#/components/schemas/PermissionAction'
  *
  *     CreateRoleResponse:
  *       type: object
@@ -61,7 +85,7 @@
  *         permissions:
  *           type: array
  *           items:
- *             $ref: '#/components/schemas/Permission'
+ *             type: string
  *
  *     UpdateRoleRequest:
  *       type: object
@@ -73,7 +97,7 @@
  *         permissions:
  *           type: array
  *           items:
- *             type: string
+ *             $ref: '#/components/schemas/PermissionAction'
  *
  *     UpdateRoleResponse:
  *       type: object

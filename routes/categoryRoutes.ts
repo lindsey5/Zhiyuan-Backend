@@ -1,7 +1,7 @@
 import { Router } from "express";
 import validateBody from "../middlewares/validateBody";
 import { categorySchema } from "../schema/categorySchema";
-import { createCategory, getCategories, updateCategory } from "../controllers/categoryController";
+import { createCategory, deleteCategory, getCategories, updateCategory } from "../controllers/categoryController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 
@@ -21,6 +21,13 @@ router.put('/:id',
     authorizePermission(PERMISSIONS.CATEGORY_UPDATE),
     validateBody(categorySchema),
     updateCategory
+)
+
+router.delete(
+    '/:id',
+    authenticate,
+    authorizePermission(PERMISSIONS.CATEGORY_DELETE),
+    deleteCategory
 )
 
 const categoryRoutes = router;
