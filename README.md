@@ -21,6 +21,91 @@ A backend service for managing users, roles, permissions, categories, products, 
 - Supports SQLite for easy setup
 - Cloudinary integration for image/media uploads
 - All API endpoints are validated using Zod
+- Automatically backup and restore SQLite database
+
+## Backup Feature
+The system can upload a copy of your SQLite database file to Cloudinary as a raw file.
+
+## Restore Feature
+The system can restore the database by downloading the backup file from Cloudinary and replacing the current SQLite database.
+
+Required Environment Variables (Backup & Restore):
+
+```bash
+# SQLite DB file path
+SQLITE_PATH=your_database_path_here
+
+# Backup file name in Cloudinary
+SQLITE_DB_SAVE_AS=your_backup_path_here
+
+# Cloudinary backup reference
+PUBLIC_ID=your_public_id_here
+CLOUDINARY_DB_FOLDER=your_cloudinary_folder_here
+```
+
+## Automatic Backup Watcher (Optional)
+
+If enabled, the system can automatically watch the SQLite file for changes and upload a backup.
+
+Enable watcher:
+```bash
+ENABLE_WATCHER=true
+```
+Disable watcher:
+```bash
+ENABLE_WATCHER=false
+```
+
+## NPM Scripts
+
+This project includes useful scripts for development, production build, database setup, and automation.
+```bash
+"scripts": {
+    "dev": "cross-env NODE_ENV=development ts-node scripts/download-db.ts && nodemon --watch . --exec ts-node server.ts",
+    "build": "npm install && ts-node scripts/download-db.ts && npx sequelize-cli db:migrate && ts-node scripts/setup-roles.ts && ts-node scripts/automate-create-user.ts && ts-node scripts/insert-products.ts && tsc",
+    "start": "cross-env NODE_ENV=production node dist/server.js",
+    "setup-roles": "ts-node scripts/setup-roles.ts",
+    "create-user": "ts-node scripts/create-user.ts",
+    "insert-products": "ts-node scripts/insert-products.ts",
+    "automate-create-user": "ts-node scripts/automate-create-user.ts"
+}
+```
+
+## Script Descriptions
+- npm run dev
+
+Runs the backend in development mode. Automatically downloads the latest database backup before starting the server.
+- npm run build
+
+Builds the project for production. It installs dependencies, downloads the database backup, runs migrations, sets up roles, creates the default admin user, inserts demo products, and compiles TypeScript.
+
+- npm start
+
+    Starts the backend server in production mode using the compiled output in dist/.
+
+- npm run setup-roles
+
+    Creates default roles and permissions.
+
+- npm run create-user
+
+    Creates a user manually via terminal input.
+
+    Add these to your .env file:
+    ```bash
+    FIRSTNAME=user_firstname
+    LASTNAME=user_lastname
+    EMAIL=user_email
+    PASSWORD=user_password
+    ```
+
+- npm run automate-create-user
+
+    Automatically creates the default admin user.
+
+- npm run insert-products
+
+    Inserts demo products into the database.
 
 ## File Structure
 ```bash
@@ -101,9 +186,11 @@ A backend service for managing users, roles, permissions, categories, products, 
 |    └── userSchema.ts
 |
 ├── scripts/ # Utility scripts
-|    ├── automate-create-user.ts
-|    ├── create-user.ts
-|    └── setup-roles.ts
+|    ├── automate-create-user.ts  # Automatically creates the default admin user (used during build/setup)
+|    ├── create-user.ts           # Creates a user manually via terminal input (interactive)
+|    ├── download-db.ts           # Downloads/restores the SQLite database backup from Cloudinary before server startup
+|    ├── insert-products.ts       # Inserts demo/sample products into the database
+|    └── setup-roles.ts           # Creates default roles and permissions required by the system
 |
 ├── services/ # Business logic / service layer
 |    └── AuditLogService.ts
@@ -114,12 +201,12 @@ A backend service for managing users, roles, permissions, categories, products, 
 |    └── model-attributes.ts
 |
 └── utils/ # Helper functions
-|    ├── auth.ts
-|    ├── backup.ts # 
-|    ├── cloudinary.ts
-|    ├── permissions.ts
-|    ├── roles.ts
-|    └── watchDB.ts
+|    ├── auth.ts         # JWT helper functions
+|    ├── backup.ts       # Handles SQLite database backup
+|    ├── cloudinary.ts   # Cloudinary utility functions (upload and delete helpers)
+|    ├── permissions.ts  
+|    ├── roles.ts        
+|    └── watchDB.ts      # Watches SQLite file changes and automatically triggers database backup
 ```
 
 ## Quick Install (Recommended)
@@ -170,21 +257,23 @@ JWT_REFRESH_SECRET=your_refresh_secret_key
 JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
-# Database
-SQLITE_PATH=your_sqlite_file_path
+# SQLite DB file path
+SQLITE_PATH=your_database_path_here
 
-# For backup and restore
-SQLITE_DB_SAVE_AS=
-PUBLIC_ID=
-SQLITE_DB_URL=
+# Backup file name in Cloudinary
+SQLITE_DB_SAVE_AS=your_backup_path_here
+
+# Cloudinary backup reference
+PUBLIC_ID=your_public_id_here
+CLOUDINARY_DB_FOLDER=your_cloudinary_folder_here
 
 # Enable watcher for automatic backup and restore
 ENABLE_WATCHER=true
 
 # Cloudinary API KEYS
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+CLOUD_NAME=
+CLOUD_API_KEY=
+CLOUD_API_SECRET=
 ```
 
 ## Access API documentation
