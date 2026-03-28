@@ -6,40 +6,53 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export async function downloadSQLite(url?: string, saveAs?: string) {
-    return new Promise<void>((resolve, reject) => {
-        try {
-            if(!saveAs) {
-                console.error("SaveAs filename is not provided. Please set the filename in environment variables.");
-                return;
-            }
+    try {
+        if (!saveAs) {
+            console.error("SaveAs filename is not provided. Please set the filename in environment variables.");
+            return;
+        }
 
-            if(!url) {
-                console.error("URL is not provided. Please set the URL in environment variables.");
-                return;
-            }
-            const filePath = path.join(process.cwd(), saveAs);
-            
-            // Make request as stream
-            axios.get(url, { responseType: "stream" }).then((response) => {
-                // Write to file
-                const writer = fs.createWriteStream(filePath);
-                response.data.pipe(writer);
+        if (!url) {
+            console.error("URL is not provided. Please set the URL in environment variables.");
+            return;
+        }
 
-                writer.on("finish", () => {
-                    console.log(`Downloaded SQLite file to: ${filePath}`);
-                    resolve();
-                });
-                writer.on("error", (err) => {
-                    console.error("Download failed:", err);
-                    reject(err);
-                });
-            }).catch((err) => {
+        const filePath = path.join(process.cwd(), saveAs);
+
+        // Make request as stream
+        const response = await axios.get(url, {
+            responseType: "stream",
+            validateStatus: (status) => status < 500, // Don't throw on 4xx
+        });
+
+        // Handle non-2xx responses (e.g. 404)
+        if (response.status !== 200) {
+            console.warn(`URL returned status ${response.status}. Skipping download.`);
+            response.data.destroy(); // Release the stream
+            return;
+        }
+
+        // Write to file
+        const writer = fs.createWriteStream(filePath);
+        response.data.pipe(writer);
+
+        return new Promise<void>((resolve, reject) => {
+            writer.on("finish", () => {
+                console.log(`Downloaded SQLite file to: ${filePath}`);
+                resolve();
+            });
+            writer.on("error", (err) => {
+                console.error("Download failed:", err);
                 reject(err);
             });
-        } catch (err) {
-            reject(err);
+        });
+    } catch (err) {
+        if (axios.isAxiosError(err)) {
+            console.warn(`Request failed: ${err.message}. Skipping download.`);
+        } else {
+            console.error("Unexpected error:", err);
         }
-    });
+    }
 }
 
 (async () => {
