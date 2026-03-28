@@ -10,8 +10,8 @@ export function watchSQLite(dbPath: string) {
 
     const watcher = chokidar.watch(dbPath, {
         persistent: true,
-        usePolling: true, // better for SQLite
-        interval: 1000,   // check every 1s
+        usePolling: true, 
+        interval: 1000,  
     });
 
     watcher.on("change", (filePath) => {
@@ -19,7 +19,7 @@ export function watchSQLite(dbPath: string) {
         if (backupTimeout) clearTimeout(backupTimeout);
             backupTimeout = setTimeout(async () => {
             console.log(`Backing up ${filePath}...`);
-            await backupSQLite(filePath, process.env.CLOUDINARY_PUBLIC_ID);
+            await backupSQLite(filePath, process.env.PUBLIC_ID);
         }, 2000); 
     });
 

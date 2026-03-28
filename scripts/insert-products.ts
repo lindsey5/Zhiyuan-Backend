@@ -170,10 +170,17 @@ async function insertProducts() {
 
             // Create all variants for this product
             for (const variant of variants) {
-                await Variant.create({
-                ...variant,
-                product_id: createdProduct.toJSON().id,
-                });
+              const existingVariant = await Variant.findOne({ where: { sku: variant.sku } });
+
+              if(existingVariant) {
+                console.log(`Variant with SKU ${variant.sku} already exists. Skipping...`);
+                continue;
+              }
+              
+              await Variant.create({
+              ...variant,
+              product_id: createdProduct.toJSON().id,
+              });
             }
         }
         console.log("Products and variants inserted successfully!");
