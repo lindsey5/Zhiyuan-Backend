@@ -5,11 +5,13 @@ import PERMISSIONS from "../utils/permissions";
 import { createProduct, deleteProduct, getProductById, getProducts, searchProduct, updateProduct } from "../controllers/productController";
 import validateBody from "../middlewares/validateBody";
 import { createProductSchema, updateProductSchema } from "../schema/productSchema";
+import createRateLimiter from "../utils/rate-limit";
 
 const router = Router();
 
 router.post(
     '/', 
+    createRateLimiter(60 * 1000, 20),
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_CREATE),
     createProductUploads,
@@ -18,7 +20,11 @@ router.post(
     createProduct
 );
 
-router.get('/', getProducts);
+router.get(
+    '/', 
+    createRateLimiter(5 * 1000, 100), 
+    getProducts
+);
 
 router.get(
     '/search',
@@ -27,10 +33,11 @@ router.get(
     searchProduct,
 )
 
-router.get('/:id', getProductById);
+router.get('/:id', createRateLimiter(5 * 1000, 100), getProductById);
 
 router.delete(
     '/:id', 
+    createRateLimiter(60 * 1000, 20),
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_DELETE),
     deleteProduct
@@ -38,6 +45,7 @@ router.delete(
 
 router.put(
     '/:id',
+    createRateLimiter(60 * 1000, 20),
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_UPDATE),
     validateBody(updateProductSchema),

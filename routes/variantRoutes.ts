@@ -2,11 +2,13 @@ import { Router } from "express";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import { getVariants, searchVariant } from "../controllers/variantController";
+import createRateLimiter from "../utils/rate-limit";
 
 const router = Router();
 
 router.get(
     '/',
+    createRateLimiter(5 * 1000, 100),
     authenticate,
     hasAnyPermission(
         PERMISSIONS.PRODUCT_CREATE, 

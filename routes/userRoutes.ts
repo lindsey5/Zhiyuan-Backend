@@ -4,11 +4,13 @@ import { authenticate, authorizePermission } from "../middlewares/authMiddleware
 import PERMISSIONS from "../utils/permissions";
 import validateBody from "../middlewares/validateBody";
 import { createUserSchema, updateUserSchema } from "../schema/userSchema";
+import createRateLimiter from "../utils/rate-limit";
 
 const router = Router();
 
 router.post(
     '/', 
+    createRateLimiter(60 * 1000, 20),
     authenticate, 
     authorizePermission(PERMISSIONS.USER_CREATE),
     validateBody(createUserSchema),
@@ -17,6 +19,7 @@ router.post(
 
 router.get(
     '/', 
+    createRateLimiter(5 * 1000, 100),
     authenticate,
     authorizePermission(PERMISSIONS.USER_READ_ALL),
     getUsers
@@ -24,6 +27,7 @@ router.get(
 
 router.put(
     '/me',
+    createRateLimiter(5 * 1000, 100),
     authenticate,
     validateBody(updateUserSchema),
     userUpdateOwn
@@ -31,6 +35,7 @@ router.put(
 
 router.put(
     '/:id',
+    createRateLimiter(60 * 1000, 20),
     authenticate,
     authorizePermission(PERMISSIONS.USER_UPDATE),
     validateBody(updateUserSchema),
@@ -39,12 +44,14 @@ router.put(
 
 router.get(
     '/me',
+    createRateLimiter(5 * 1000, 100),
     authenticate,
     userGetOwn
 )
 
 router.get(
     '/:id',
+    createRateLimiter(60 * 1000, 20),
     authenticate,
     authorizePermission(PERMISSIONS.USER_READ),
     getUserById
@@ -52,6 +59,7 @@ router.get(
 
 router.delete(
     '/:id',
+    createRateLimiter(60 * 1000, 20),
     authenticate,
     authorizePermission(PERMISSIONS.USER_DELETE),
     deleteUser
