@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import backupSQLite from "../utils/backup";
 import dotenv from "dotenv";
+import backupSQLiteDebounced from "../utils/backup";
 
 dotenv.config();
 
@@ -16,7 +16,7 @@ export default function backupOnWrite(dbPath: string) {
             console.log(`[Backup Trigger] ${req.method} request detected on ${req.originalUrl}`);
 
             // Run backup in the background without blocking the request
-            backupSQLite(dbPath, process.env.PUBLIC_ID).catch((err) => {
+            backupSQLiteDebounced(dbPath, process.env.PUBLIC_ID).catch((err) => {
                 console.error("[Backup Trigger] Failed to backup SQLite:", err);
             });
         }
