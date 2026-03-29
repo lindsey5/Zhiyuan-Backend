@@ -27,7 +27,7 @@ router.get(
 
 router.get(
     '/me',
-    createRateLimiter(5 * 1000, 10),
+    createRateLimiter(5 * 1000, 100),
     authenticate,
     getOwnRole
 )
