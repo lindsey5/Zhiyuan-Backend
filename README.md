@@ -61,20 +61,21 @@ ENABLE_WATCHER=false
 This project includes useful scripts for development, production build, database setup, and automation.
 ```bash
 "scripts": {
-    "dev": "cross-env NODE_ENV=development ts-node scripts/download-db.ts && nodemon --watch . --exec ts-node server.ts",
+    "dev": "cross-env NODE_ENV=development nodemon --watch . --exec ts-node server.ts",
     "build": "npm install && ts-node scripts/download-db.ts && npx sequelize-cli db:migrate && ts-node scripts/setup-roles.ts && ts-node scripts/automate-create-user.ts && ts-node scripts/insert-products.ts && tsc",
     "start": "cross-env NODE_ENV=production node dist/server.js",
     "setup-roles": "ts-node scripts/setup-roles.ts",
     "create-user": "ts-node scripts/create-user.ts",
     "insert-products": "ts-node scripts/insert-products.ts",
-    "automate-create-user": "ts-node scripts/automate-create-user.ts"
+    "automate-create-user": "ts-node scripts/automate-create-user.ts",
+    "download-backup" : "ts-node scripts/download-db.ts"
 }
 ```
 
 ## Script Descriptions
 - npm run dev
 
-Runs the backend in development mode. Automatically downloads the latest database backup before starting the server.
+Runs the backend in development mode.
 - npm run build
 
 Builds the project for production. It installs dependencies, downloads the database backup, runs migrations, sets up roles, creates the default admin user, inserts demo products, and compiles TypeScript.
@@ -106,6 +107,11 @@ Builds the project for production. It installs dependencies, downloads the datab
 - npm run insert-products
 
     Inserts demo products into the database.
+  
+- npm run download-backup
+
+    Downloads database backup from Cloudinary.
+  
 
 ## File Structure
 ```bash
