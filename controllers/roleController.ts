@@ -199,6 +199,10 @@ export const getAllRoles = async (req : Request, res : Response, next : NextFunc
                 {
                     model: Permission,
                     as: 'permissions'
+                },
+                {
+                    model: User,
+                    as: 'users'
                 }
             ]
         })
