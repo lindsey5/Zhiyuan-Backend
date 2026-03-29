@@ -18,7 +18,12 @@ import orderRoutes from "./routes/orderRoutes";
 import backupOnWrite from "./middlewares/backupTrigger";
 
 dotenv.config();
-const DB_PATH = path.join(__dirname, process.env.SQLITE_PATH || 'database.sqlite');
+const DB_PATH = path.resolve(
+  __dirname,
+  process.env.NODE_ENV !== "development"
+    ? process.env.PRODUCTION_SQLITE_PATH || "./database.sqlite"
+    : process.env.SQLITE_PATH || "./database.sqlite"
+);
 
 const app = express();
 const PORT = process.env.PORT || 3000; 
