@@ -26,6 +26,7 @@ export default function backupSQLiteDebounced(dbPath: string, publicId?: string,
                     public_id: publicId,
                     overwrite: true,
                     invalidate: true,
+                    type: "private",
                 });
                 console.log(`Backup successful! File uploaded to Cloudinary: ${result.secure_url}`);
                 resolve(result.secure_url);
