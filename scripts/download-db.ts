@@ -18,7 +18,7 @@ export async function downloadSQLiteFromCloudinary(publicId?: string, saveAs?: s
         }
         const url = `https://res.cloudinary.com/${process.env.CLOUD_NAME}/raw/upload/${process.env.CLOUDINARY_DB_FOLDER}/${publicId}`;
 
-        const filePath = path.join(process.cwd(), saveAs);
+        const filePath = path.join(process.cwd(), "data", saveAs);
 
         // Make request as stream
         const response = await axios.get(url, {
