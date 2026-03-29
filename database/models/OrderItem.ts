@@ -15,7 +15,6 @@ OrderItem.init({
     order_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        unique: true,
     },
     variant_id: {
         type: DataTypes.INTEGER,

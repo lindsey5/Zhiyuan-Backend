@@ -19,7 +19,6 @@ module.exports = {
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
-        unique: true, 
       },
       variant_id: {
         type: Sequelize.INTEGER,
