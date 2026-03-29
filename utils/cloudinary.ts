@@ -51,6 +51,7 @@ export const deleteFiles = async (publicIds: string[]) => {
 
     try {
         const result = await cloudinary.api.delete_resources(publicIds);
+        console.log(result)
         return result;
     } catch (error) {
         console.error("Bulk delete failed:", error);

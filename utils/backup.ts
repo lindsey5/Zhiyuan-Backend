@@ -1,5 +1,5 @@
 import cloudinary from "../config/cloudinaryConfig";
-import { deleteFile } from "./cloudinary";
+import { deleteFiles } from "./cloudinary";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -20,15 +20,13 @@ export default function backupSQLiteDebounced(dbPath: string, publicId?: string,
 
                 console.log(`Starting backup for SQLite file: ${dbPath}`);
 
-                await deleteFile(`${process.env.CLOUDINARY_DB_FOLDER}/${publicId}`);
-                console.log(`Previous backup with PUBLIC_ID=${publicId} deleted.`);
-
                 const result = await cloudinary.uploader.upload(dbPath, {
                     folder: process.env.CLOUDINARY_DB_FOLDER,
                     resource_type: "raw",
                     public_id: publicId,
+                    overwrite: true,
+                    invalidate: true,
                 });
-
                 console.log(`Backup successful! File uploaded to Cloudinary: ${result.secure_url}`);
                 resolve(result.secure_url);
             } catch (err) {
