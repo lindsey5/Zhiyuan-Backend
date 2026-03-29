@@ -38,6 +38,7 @@ export const uploadBase64 = async (image: string): Promise<UploadApiResponse> =>
 export const deleteFile = async (publicId: string) => {
     try {
         const result = await cloudinary.uploader.destroy(publicId);
+        console.log(result)
         return result;
     } catch (error) {
         console.error('Cloudinary deletion error:', error);
