@@ -1,4 +1,6 @@
 import AuditLog from "./AuditLog";
+import Order from "./Order";
+import OrderItem from "./OrderItem";
 import Permission from "./Permission";
 import Product from "./Product";
 import Role from "./Role";
@@ -47,11 +49,26 @@ AuditLog.belongsTo(User, {
     onDelete: "SET NULL"
  });
 
+ Order.hasMany(OrderItem, {
+    foreignKey: 'order_id',
+    as: 'order_items',
+    onDelete: 'CASCADE',
+    hooks: true
+ })
+
+OrderItem.belongsTo(Order, {    
+    foreignKey: 'order_id',
+    as: 'order',
+    onDelete: 'CASCADE'
+})
+
 export { 
     Role, 
     Permission, 
     User, 
     Product, 
     AuditLog,
-    Variant
+    Variant,
+    Order,
+    OrderItem
 };

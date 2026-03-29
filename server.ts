@@ -15,6 +15,7 @@ import categoryRoutes from "./routes/categoryRoutes";
 import variantRoutes from "./routes/variantRoutes";
 import path from "path";
 import { watchSQLite } from "./utils/watchDB";
+import orderRoutes from "./routes/orderRoutes";
 
 dotenv.config();
 const DB_PATH = path.join(__dirname, process.env.SQLITE_PATH || 'database.sqlite');
@@ -43,6 +44,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/variants', variantRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/orders', orderRoutes);
 app.use(errorHandler);
 
 app.use(

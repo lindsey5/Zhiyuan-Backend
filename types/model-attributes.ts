@@ -1,3 +1,5 @@
+import { int } from "zod";
+
 export interface PermissionAttributes {
     id: number;
     action: string;
@@ -64,4 +66,25 @@ export interface CategoryAttributes{
     name: string;
     createdAt?: Date;
     status?: 'active' | 'inactive'
+}
+
+export interface OrderAttributes {
+    id: number;
+    order_id: string;
+    customer_name: string;
+    status: 'pending' | 'processing' | 'completed' | 'cancelled';
+    total_amount: number;
+    order_date: Date;
+    delivery_type: 'pickup' | 'delivery';
+    payment_method: 'COD' | 'GCash' | 'Card';
+    payment_status: 'paid' | 'unpaid';
+}
+
+export interface OrderItemAttributes {
+    id: number;
+    order_id: number;
+    variant_id: number;
+    quantity: number;
+    amount: number;
+    price: number;
 }
