@@ -5,44 +5,44 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('orders', {
       id: {
-        type: DataTypes.INTEGER,
+        type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
       },
       order_id: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
         unique: true,
       },
       customer_name: {
-        type: DataTypes.STRING,
+        type: Sequelize.STRING,
         allowNull: false,
       },
       status: {
-        type: DataTypes.ENUM('pending', 'processing', 'completed', 'cancelled'),
+        type: Sequelize.ENUM('pending', 'processing', 'completed', 'cancelled'),
         allowNull: false,
         defaultValue: 'pending',
       },
       total_amount: {
-        type: DataTypes.FLOAT,
+        type: Sequelize.FLOAT,
         allowNull: false,
       },
       order_date: {
-        type: DataTypes.DATE,
+        type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.NOW,
       },
       delivery_type: {
-        type: DataTypes.ENUM('pickup', 'delivery'),
+        type: Sequelize.ENUM('pickup', 'delivery'),
         allowNull: false,
       },
       payment_method: {
-        type: DataTypes.ENUM('COD', 'GCash', 'Card'),
+        type: Sequelize.ENUM('COD', 'GCash', 'Card'),
         allowNull: false,
       },
       payment_status: {
-        type: DataTypes.ENUM('paid', 'unpaid'),
+        type: Sequelize.ENUM('paid', 'unpaid'),
         allowNull: false,
         defaultValue: 'unpaid',
       },
