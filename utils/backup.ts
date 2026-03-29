@@ -17,6 +17,7 @@ export default async function backupSQLite(dbPath: string, publicId?: string) {
             resource_type: "raw", 
             public_id: publicId,
         });
+        console.log(`Backup successful! File uploaded to Cloudinary: ${result.secure_url}`);
         return result.secure_url;
     } catch (err) {
         console.error('Failed to upload SQLite backup:', err);

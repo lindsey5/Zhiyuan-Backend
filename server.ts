@@ -14,12 +14,11 @@ import { swaggerSpec } from "./config/swagger";
 import categoryRoutes from "./routes/categoryRoutes";
 import variantRoutes from "./routes/variantRoutes";
 import path from "path";
-import { watchSQLite } from "./utils/watchDB";
 import orderRoutes from "./routes/orderRoutes";
+import backupOnWrite from "./middlewares/backupTrigger";
 
 dotenv.config();
 const DB_PATH = path.join(__dirname, process.env.SQLITE_PATH || 'database.sqlite');
-watchSQLite(DB_PATH);
 
 const app = express();
 const PORT = process.env.PORT || 3000; 
@@ -29,6 +28,8 @@ app.use(cors({
   methods: ['*'],
   credentials: true,
 }));
+
+app.use(backupOnWrite(DB_PATH));
 app.use(morgan('dev'));
 app.use(express.static('public'));
 app.use(express.json({ limit: '200mb' }));
