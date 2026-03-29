@@ -20,7 +20,7 @@ export default function backupSQLiteDebounced(dbPath: string, publicId?: string,
 
                 console.log(`Starting backup for SQLite file: ${dbPath}`);
 
-                await deleteFile(publicId);
+                await deleteFile(`${process.env.CLOUDINARY_DB_FOLDER}/${publicId}`);
                 console.log(`Previous backup with PUBLIC_ID=${publicId} deleted.`);
 
                 const result = await cloudinary.uploader.upload(dbPath, {
