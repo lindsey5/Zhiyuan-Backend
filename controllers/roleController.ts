@@ -3,6 +3,7 @@ import { Permission, Role, User } from "../database/models/index";
 import PERMISSIONS from "../utils/permissions";
 import { AuthRequest } from "../types/auth";
 import AuditLogService from "../services/AuditLogService";
+import { col, fn } from "sequelize";
 
 export const createRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -192,30 +193,37 @@ export const getRoleById = async (req : Request, res : Response, next : NextFunc
     }
 }
 
-export const getAllRoles = async (req : Request, res : Response, next : NextFunction) => {
-    try{
+export const getAllRoles = async (req: Request, res: Response, next: NextFunction) => {
+    try {
         const roles = await Role.findAll({
             include: [
                 {
-                    model: Permission,
-                    as: 'permissions'
+                model: Permission,
+                as: "permissions",
                 },
                 {
-                    model: User,
-                    as: 'users'
-                }
-            ]
-        })
+                model: User,
+                as: "users",
+                attributes: [],
+                },
+            ],
+            attributes: {
+                include: [
+                // Count number of users per role
+                [fn("COUNT", col("users.id")), "usersCount"],
+                ],
+            },
+            group: ["Role.id", "permissions.id"], // group by role & permission to allow count
+        });
 
         res.status(200).json({
             success: true,
-            roles
-        })
-
-    }catch (err) {
+            roles,
+        });
+    } catch (err) {
         next(err);
     }
-}
+};
 
 export const deleteRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
