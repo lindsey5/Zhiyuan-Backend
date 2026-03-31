@@ -3,7 +3,7 @@ import { Permission, Role, User } from "../database/models/index";
 import PERMISSIONS from "../utils/permissions";
 import { AuthRequest } from "../types/auth";
 import AuditLogService from "../services/AuditLogService";
-import { col, fn } from "sequelize";
+import { col, fn, Op } from "sequelize";
 
 export const createRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -34,6 +34,19 @@ export const createRole = async (req: AuthRequest, res: Response, next: NextFunc
                 allowed: Object.values(PERMISSIONS)
             });
             return;
+        }
+
+        const existingRole = await Role.findOne({
+            where: {
+                name: rest.name
+            }
+        })
+
+        if(existingRole){
+            return res.status(409).json({
+                success: false,
+                message: 'Role already exists'
+            })
         }
 
         const newRole = await Role.create(rest);
@@ -183,9 +196,12 @@ export const getRoleById = async (req : Request, res : Response, next : NextFunc
             ]
         })
 
-        res.status(200).json({ 
+        const { permissions, ...roleData } = role?.toJSON() as any;
+
+        res.status(200).json({
             success: true,
-            role
+            role: roleData,
+            permissions: permissions.map((permission : any) => permission.action)
         })
 
     }catch (err) {
@@ -268,6 +284,7 @@ export const deleteRole = async (req: AuthRequest, res: Response, next: NextFunc
 };
 
 export const getOwnRole = async (req : AuthRequest, res : Response, next : NextFunction) => {
+
     try{
         const user = await User.findByPk(req.user.id);
 

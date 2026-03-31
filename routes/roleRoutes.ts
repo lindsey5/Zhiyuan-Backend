@@ -36,7 +36,7 @@ router.get(
     '/:id',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.ROLE_READ),
+    authorizePermission(PERMISSIONS.ROLE_UPDATE),
     getRoleById
 )
 

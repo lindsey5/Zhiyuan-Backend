@@ -12,7 +12,6 @@ const PERMISSIONS = {
 
     // Role management
     ROLE_CREATE: 'role:create',
-    ROLE_READ: 'role:read',
     ROLE_READ_ALL: 'role:read:all',
     ROLE_UPDATE: 'role:update',
     ROLE_DELETE: 'role:delete',
