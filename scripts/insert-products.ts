@@ -161,7 +161,7 @@ async function insertProducts() {
     console.log("Database connected.");
 
     for (const product of productsData) {
-      const existingProduct = await Product.findOne({ product_name: product.product_name });
+      const existingProduct = await Product.findOne({ product_name: product.product_name, status: 'active' });
 
       if (existingProduct) {
         console.log(`Product with name ${product.product_name} already exists. Skipping...`);
