@@ -16,7 +16,6 @@ import variantRoutes from "./routes/variantRoutes";
 import path from "path";
 import orderRoutes from "./routes/orderRoutes";
 import backupOnWrite from "./middlewares/backupTrigger";
-import distributorRoutes from "./routes/distributorRoutes";
 
 dotenv.config();
 const DB_PATH = path.resolve(
@@ -52,7 +51,6 @@ app.use('/api/variants', variantRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/distributors', distributorRoutes);
 app.use(errorHandler);
 
 app.use(

@@ -1,6 +1,6 @@
 import { Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { Role, User, Permission, Distributor } from "../database/models/index";
+import { Role, User, Permission } from "../database/models/index";
 import { AuthRequest } from "../types/auth";
 import PERMISSIONS from "../utils/permissions";
 
