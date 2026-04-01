@@ -4,11 +4,17 @@ import { AuthRequest } from "../types/auth";
 import { generatePassword } from "../utils/utils";
 import { Op } from "sequelize";
 import { sendDistributorAccountEmail } from "../services/EmailService";
-import { success } from "zod";
 
 export const createDistributor = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
-        const existingDistributor = await Distributor.findByPk(req.user.id);
+        const existingDistributor = await Distributor.findByPk(req.body.parent_distributor_id);
+
+        if(req.body.parent_distributor_id && !existingDistributor){
+            return res.status(404).json({
+                success: false,
+                message: 'Parent distributor id not found'
+            })
+        }
 
         const password = generatePassword(10);
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorizeDistributorCreation, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import { createDistributor, getDistributors, updateDistributor } from "../controllers/distributorController";
@@ -13,7 +13,7 @@ router.post(
     createRateLimiter(60 * 1000, 20),
     validateBody(createDistributorSchema),
     authenticate,
-    authorizeDistributorCreation(),
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_CREATE),
     createDistributor
 )
 

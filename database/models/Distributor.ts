@@ -3,10 +3,16 @@ import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../../config/db";
 import { DistributorAttributes } from "../../types/model-attributes";
 import { hashPassword } from "../../utils/auth";
+import bcrypt from 'bcrypt';
 
 interface DistributorCreationAttributes extends Optional<DistributorAttributes, "id"> {}
 
-class Distributor extends Model<DistributorAttributes, DistributorCreationAttributes> {}
+class Distributor extends Model<DistributorAttributes, DistributorCreationAttributes> {
+
+    public async matchPassword(plainPassword: string): Promise<boolean> {
+        return await bcrypt.compare(plainPassword, this.toJSON().password);
+    }
+}
 
 Distributor.init(
     {
@@ -36,6 +42,7 @@ Distributor.init(
         },
         commission_rate: {
             type: DataTypes.FLOAT,
+            defaultValue: 5,
             allowNull: false,
         },
         wallet_balance: {

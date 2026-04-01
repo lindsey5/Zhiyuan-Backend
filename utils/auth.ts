@@ -36,3 +36,17 @@ export const generateRefreshToken = (user_id: number): string => {
     } as SignOptions
   );
 };
+
+export const generateDistributorAccessToken = (distributor_id: number): string => {
+  if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_ACCESS_EXPIRES_IN) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+  }
+  
+  return jwt.sign(
+    { id: distributor_id },
+    process.env.JWT_ACCESS_SECRET,
+    {
+      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN as SignOptions, 
+    } as SignOptions
+  );
+};

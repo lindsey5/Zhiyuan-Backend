@@ -8,10 +8,8 @@ export const createDistributorSchema = z.object({
         .email('Invalid email ')
         .min(1, "Email is required")
         .max(100, "Email must not exceed 100 characters"),
-    
-    commission_rate: z.coerce.number()
-        .positive('Commission Rate must be positive')
-        .max(99.99, "Commission rate cannot be 100% or more")
+    parent_distributor_id: z.number()
+        .optional()
 }).strict();
 
 export const updateDistributorSchema = z.object({
@@ -24,9 +22,4 @@ export const updateDistributorSchema = z.object({
         .min(1, "Email is required")
         .max(100, "Email must not exceed 100 characters")
         .optional(),
-    
-    commission_rate: z.coerce.number()
-        .positive('Commission Rate must be positive')
-        .max(99.99, "Commission rate cannot be 100% or more")
-        .optional()
 })
