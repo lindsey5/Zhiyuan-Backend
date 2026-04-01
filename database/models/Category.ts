@@ -1,46 +1,29 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../config/db";
+import mongoose, { Schema, Document, Types, Model } from "mongoose";
 import { CategoryAttributes } from "../../types/model-attributes";
 
-interface CategoryCreationAttributes extends Optional<CategoryAttributes, "id"> {}
-
-class Category extends Model<CategoryAttributes, CategoryCreationAttributes> {}
-
-Category.init(
+const CategorySchema: Schema<CategoryAttributes> = new Schema(
     {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-        },
         name: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                notEmpty: { msg: "name is required." },
-                len: {
-                    args: [3, 100],
-                    msg: "name must be between 3 and 100 characters."
-                }
-            },
+            type: String,
+            required: [true, "name is required."],
+            minlength: [3, "name must be at least 3 characters."],
+            maxlength: [100, "name must be at most 100 characters."],
+            trim: true,
         },
-        createdAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW
-        },
+
         status: {
-            type: DataTypes.ENUM('active', 'deleted'),
-            allowNull: false,
-            defaultValue: 'active'
-        }
+            type: String,
+            enum: ["active", "deleted"],
+            default: "active",
+            required: true,
+        },
     },
-    {
-        sequelize,
-        modelName: "Category",
-        tableName: "categories",
-        timestamps: false,
-    }
+    { timestamps: true } 
+);
+
+const Category: Model<CategoryAttributes> = mongoose.model(
+    "Category",
+    CategorySchema
 );
 
 export default Category;

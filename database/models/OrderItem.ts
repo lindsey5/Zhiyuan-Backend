@@ -1,44 +1,50 @@
-import { DataTypes, Model, Optional, Order } from "sequelize";
-import sequelize from "../../config/db";
-import { OrderItemAttributes } from "../../types/model-attributes";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
-interface OrderItemCreationAttributes extends Optional<OrderItemAttributes, "id"> {}
-
-class OrderItem extends Model<OrderItemAttributes, OrderItemCreationAttributes> {}
-
-OrderItem.init({
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-    },
-    order_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    variant_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    quantity: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-    },
-    amount: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-    },
-    price: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-    },
-},
-{
-    sequelize,
-    modelName: "OrderItem",
-    tableName: "order_items",
-    timestamps: false,
+export interface OrderItemAttributes extends Document {
+    order_id: Types.ObjectId;
+    variant_id: Types.ObjectId;
+    quantity: number;
+    amount: number;
+    price: number;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
+
+const OrderItemSchema: Schema<OrderItemAttributes> = new Schema(
+    {
+        order_id: {
+            type: Schema.Types.ObjectId,
+            ref: "Order",
+            required: true,
+        },
+
+        variant_id: {
+            type: Schema.Types.ObjectId,
+            ref: "Variant",
+            required: true,
+        },
+
+        quantity: {
+            type: Number,
+            required: true,
+        },
+
+        amount: {
+            type: Number,
+            required: true,
+        },
+
+        price: {
+            type: Number,
+            required: true,
+        },
+    },
+    { timestamps: true } 
+);
+
+const OrderItem: Model<OrderItemAttributes> = mongoose.model(
+    "OrderItem",
+    OrderItemSchema
 );
 
 export default OrderItem;

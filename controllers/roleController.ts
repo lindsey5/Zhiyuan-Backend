@@ -1,25 +1,20 @@
 import { NextFunction, Request, Response } from "express";
-import { Permission, Role, User } from "../database/models/index";
 import PERMISSIONS from "../utils/permissions";
 import { AuthRequest } from "../types/auth";
 import AuditLogService from "../services/AuditLogService";
-import { col, fn, Op } from "sequelize";
+import Role from "../database/models/Role";
+import Permission from "../database/models/Permission";
+import User from "../database/models/User";
 
 export const createRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const { permissions, ...rest } = req.body;
 
-        if (!Array.isArray(permissions)) {
-            res.status(400).json({ success: false, message: "Permissions must be an array" });
-            return;
-        }
-
-        if (permissions.length === 0) {
-            res.status(400).json({
+        if (!Array.isArray(permissions) || permissions.length === 0) {
+            return res.status(400).json({
                 success: false,
-                message: "Role must have at least one permission."
+                message: "Role must have at least one permission.",
             });
-            return;
         }
 
         const invalidPermissions = permissions.filter(
@@ -27,61 +22,51 @@ export const createRole = async (req: AuthRequest, res: Response, next: NextFunc
         );
 
         if (invalidPermissions.length > 0) {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: "Some permissions are invalid",
                 invalid: invalidPermissions,
-                allowed: Object.values(PERMISSIONS)
+                allowed: Object.values(PERMISSIONS),
             });
-            return;
         }
 
-        const existingRole = await Role.findOne({
-            where: {
-                name: rest.name
-            }
-        })
-
-        if(existingRole){
-            return res.status(409).json({
-                success: false,
-                message: 'Role already exists'
-            })
+        const existingRole = await Role.findOne({ name: rest.name });
+        if (existingRole) {
+            return res.status(409).json({ success: false, message: "Role already exists" });
         }
 
         const newRole = await Role.create(rest);
 
-        const newPermissions = await Permission.bulkCreate(
-            permissions.map(permission => ({
-                action: permission,
-                role_id: newRole.toJSON().id
+        const newPermissions = await Permission.insertMany(
+            permissions.map((action) => ({
+                action,
+                role_id: newRole._id,
             }))
         );
 
         const roleData = {
-            ...newRole.toJSON(),
-            permissions: newPermissions.map(p => p.toJSON())
+            ...newRole,
+            permissions: newPermissions
         };
 
         await AuditLogService.log({
             action: "CREATE_ROLE",
             description: `Role "${roleData.name}" successfully created with ${permissions.length} permissions.`,
             ip_address: req.ip || "N/A",
-            role: req.user.role.name|| "N/A",
+            role: req.user.role.name || "N/A",
             severity: "HIGH",
-            user_agent: req?.headers["user-agent"] || "N/A",
-            user_id: req.user.id,
+            user_agent: req.headers["user-agent"] || "N/A",
+            user_id: req.user._id,
             old_values: null,
-            new_values: roleData
+            new_values: roleData,
         });
 
-        return res.status(201).json({
+        res.status(201).json({
             success: true,
-            message: 'Role successfully created',
+            message: "Role successfully created",
             role: newRole,
             permissions: newPermissions,
         });
-
     } catch (err) {
         next(err);
     }
@@ -91,72 +76,40 @@ export const updateRole = async (req: AuthRequest, res: Response, next: NextFunc
     try {
         const { permissions, ...rest } = req.body;
 
-        const role = await Role.findByPk(req.params.id as string);
+        const role = await Role.findById(req.params.id);
+        if (!role) return res.status(404).json({ message: "Role not found" });
 
-        if (!role) {
-            res.status(404).json({
-                message: 'Role not found.'
-            });
-            return;
+        if (!Array.isArray(permissions) || permissions.length === 0) {
+         return res.status(400).json({ success: false, message: "Role must have at least one permission." });
         }
 
-        if (!Array.isArray(permissions)) {
-            res.status(400).json({
-                success: false,
-                message: "Permissions must be an array"
-            });
-            return;
-        }
-
-        if (permissions.length === 0) {
-            res.status(400).json({
-                success: false,
-                message: "Role must have at least one permission."
-            });
-            return;
-        }
-
-        const invalidPermissions = permissions.filter(
-            (permission: string) => !Object.values(PERMISSIONS).includes(permission)
-        );
-
+        const invalidPermissions = permissions.filter((permission: string) => !Object.values(PERMISSIONS).includes(permission));
+        
         if (invalidPermissions.length > 0) {
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: "Some permissions are invalid",
                 invalid: invalidPermissions,
-                allowed: Object.values(PERMISSIONS)
+                allowed: Object.values(PERMISSIONS),
             });
-            return;
         }
 
-        const oldValues = {
-            ...role.toJSON()
-        };
+        const oldValues = role.toObject();
+        const oldPermissions = await Permission.find({ role_id: role._id });
 
-        const oldPermissions = await Permission.findAll({
-            where: { role_id: role.toJSON().id }
-        });
-
-        role.set(rest);
-        await Permission.destroy({
-            where: {
-                role_id: role.toJSON().id
-            }
-        });
-
+        // Update role
+        Object.assign(role, rest);
         await role.save();
 
-        const updatedPermissions = await Permission.bulkCreate(
-            permissions.map(permission => ({
-                action: permission,
-                role_id: role.toJSON().id,
-            }))
+        // Replace permissions
+        await Permission.deleteMany({ role: role._id });
+        const updatedPermissions = await Permission.insertMany(
+            permissions.map((action) => ({ action, role_id: role._id }))
         );
 
         const newValues = {
-            ...role.toJSON(),
-            permissions: updatedPermissions.map(p => p.toJSON())
+            ...role.toObject(),
+            permissions: updatedPermissions
         };
 
         await AuditLogService.log({
@@ -165,77 +118,50 @@ export const updateRole = async (req: AuthRequest, res: Response, next: NextFunc
             ip_address: req.ip || "N/A",
             role: req.user.role.name || "N/A",
             severity: "MEDIUM",
-            user_agent: req?.headers["user-agent"] || "N/A",
-            user_id: req.user.id,
+            user_agent: req.headers["user-agent"] || "N/A",
+            user_id: req.user._id,
             old_values: {
                 ...oldValues,
-                permissions: oldPermissions.map(p => p.toJSON())
+                permissions: oldPermissions,
             },
-            new_values: newValues
+            new_values: newValues,
         });
 
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
-            message: 'Role successfully updated',
-            role: newValues
+            message: "Role successfully updated",
+            role: newValues,
         });
-
     } catch (err) {
         next(err);
     }
 };
 
-export const getRoleById = async (req : Request, res : Response, next : NextFunction) => {
-    try{
-        const role = await Role.findByPk(req.params.id as string, {
-            include: [
-                {
-                    model: Permission,
-                    as: 'permissions'
-                }
-            ]
-        })
+export const getRoleById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const role = await Role.findById(req.params.id).populate("permissions");
+        if (!role) return res.status(404).json({ success: false, message: "Role not found" });
 
-        const { permissions, ...roleData } = role?.toJSON() as any;
-
-        res.status(200).json({
+        const { permissions, ...roleData } = role.toObject();
+            res.status(200).json({
             success: true,
             role: roleData,
-            permissions: permissions.map((permission : any) => permission.action)
-        })
-
-    }catch (err) {
+            permissions: permissions?.map((p: any) => p.action) || [],
+        });
+    } catch (err) {
         next(err);
     }
-}
+    };
 
 export const getAllRoles = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const roles = await Role.findAll({
-            include: [
-                {
-                model: Permission,
-                as: "permissions",
-                },
-                {
-                model: User,
-                as: "users",
-                attributes: [],
-                },
-            ],
-            attributes: {
-                include: [
-                // Count number of users per role
-                [fn("COUNT", col("users.id")), "usersCount"],
-                ],
-            },
-            group: ["Role.id", "permissions.id"], // group by role & permission to allow count
-        });
+        const roles = await Role.find().populate("permissions").populate("users", "_id"); // populate users for count
+        const rolesWithUserCount = roles.map((role: any) => ({
+            ...role.toObject(),
+            usersCount: role.users?.length || 0,
+        }));
 
-        res.status(200).json({
-            success: true,
-            roles,
-        });
+        res.status(200).json({ success: true, roles: rolesWithUserCount });
     } catch (err) {
         next(err);
     }
@@ -243,23 +169,11 @@ export const getAllRoles = async (req: Request, res: Response, next: NextFunctio
 
 export const deleteRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const role = await Role.findByPk(req.params.id as string, {
-            include: [{ model: Permission, as: "permissions" }]
-        });
+        const role = await Role.findById(req.params.id).populate("permissions");
+        if (!role) return res.status(404).json({ success: false, message: "Role not found." });
 
-        if (!role) {
-            res.status(404).json({
-                success: false,
-                message: 'Role not found.'
-            });
-            return;
-        }
-
-        const oldValues = {
-            ...role.toJSON()
-        };
-
-        await role.destroy();
+        const oldValues = role;
+        await role.deleteOne();
 
         await AuditLogService.log({
             action: "DELETE_ROLE",
@@ -267,58 +181,34 @@ export const deleteRole = async (req: AuthRequest, res: Response, next: NextFunc
             ip_address: req.ip || "N/A",
             role: req.user?.role?.name || "N/A",
             severity: "HIGH",
-            user_agent: req?.headers["user-agent"] || "N/A",
-            user_id: req.user.id,
+            user_agent: req.headers["user-agent"] || "N/A",
+            user_id: req.user._id,
             old_values: oldValues,
-            new_values: null
+            new_values: null,
         });
 
-        return res.status(200).json({
-            success: true,
-            message: 'Role successfully deleted.'
-        });
-
+        res.status(200).json({ success: true, message: "Role successfully deleted." });
     } catch (err) {
         next(err);
     }
 };
 
-export const getOwnRole = async (req : AuthRequest, res : Response, next : NextFunction) => {
+export const getOwnRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    try{
-        const user = await User.findByPk(req.user.id);
+        const role = await Role.findById(user.role_id).populate("permissions");
+        if (!role) return res.status(404).json({ success: false, message: "No role found." });
 
-        if(!user){
-            res.status(404).json({ success: false, message: 'User not found' });
-            return;
-        }
-
-        const role = await Role.findByPk(user.toJSON().role_id, {
-            include: [
-                {
-                    model: Permission,
-                    as: 'permissions'
-                }
-            ]
-        })
-
-        if(!role){
-            res.status(404).json({
-                success: false,
-                message: 'No role found.',
-            }); 
-            return
-        }
-
-        const { permissions, ...roleData } = role?.toJSON() as any;
+        const { permissions, ...roleData } = role;
 
         res.status(200).json({
             success: true,
             role: roleData,
-            permissions: permissions.map((permission : any) => permission.action)
-        })
-
-    }catch(err){
+            permissions: permissions?.map((p: any) => p.action) || [],
+        });
+    } catch (err) {
         next(err);
     }
-}
+};

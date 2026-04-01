@@ -1,70 +1,59 @@
 import { Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { Role, User, Permission } from "../database/models/index";
 import { AuthRequest } from "../types/auth";
-import PERMISSIONS from "../utils/permissions";
+import User from "../database/models/User";
+import Role from "../database/models/Role";
 
 export const authenticate = async (
-    req: AuthRequest,
-    res: Response,
-    next: NextFunction
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
 ) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith("Bearer ")) {
-        res.status(401).json({ 
-            success: false, 
-            message: "Access token required"
+        return res.status(401).json({
+            success: false,
+            message: "Access token required",
         });
-        return;
     }
 
     const token = authHeader.split(" ")[1];
 
     try {
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_ACCESS_SECRET as string
-        ) as JwtPayload;
-
-        const user = await User.findByPk(decoded.id, {
-            attributes: { exclude: ["password"] }
-        });
-
+        // Verify JWT token
+        const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as JwtPayload;
+        // Fetch user from MongoDB
+        const user = await User.findById(decoded.id).select("-password").lean();
         if (!user) {
-            res.status(401).json({ 
-                success: false,
-                message: "Invalid token" 
-            });
-            return;
+        return res.status(401).json({
+            success: false,
+            message: "Invalid token",
+        });
         }
 
-        const userData : any = user.toJSON();
+        // Fetch role with permissions
+        const role = await Role.findById(user.role_id)
+        .populate({ path: "permissions", select: "action -_id" })
+        .lean();
 
-        const role = await Role.findByPk(userData.role_id, {
-            include: [
-                {
-                    model: Permission,
-                    as: 'permissions'
-                }
-            ]
-        })
+        const userPermissions = role?.permissions?.map((p: any) => p.action) || [];
 
-        const userPermissions = (role?.toJSON() as any)?.permissions?.map((permission : any) => permission.action) || [];
-
-        req.user = { ...userData, 
+        // Attach user and role info to request
+        req.user = {
+            ...user,
             role: {
-                ...role?.toJSON(),
-                permissions: userPermissions
-            }
+                ...role,
+                permissions: userPermissions,
+            },
         };
 
         next();
-    } catch (error : any) {
-        console.log(error)
-        res.status(401).json({ 
+    } catch (error: any) {
+        console.log(error);
+        return res.status(401).json({
             success: false,
-            message: error.message || 'Unauthorized'
+            message: error.message || "Unauthorized",
         });
     }
 };

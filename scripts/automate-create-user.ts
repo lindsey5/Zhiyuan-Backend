@@ -1,13 +1,16 @@
-import sequelize from "../config/db";
-import { Role, User } from '../database/models/index';
+import Role from '../database/models/Role';
+import User from '../database/models/User';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
 (async () => {
-    try {
-        await sequelize.sync();
-        console.log("Database synced.");
+  try {
+        // Connect to MongoDB
+        console.log(process.env.MONGO_URI)
+        await mongoose.connect(process.env.MONGO_URI || "");
+        console.log("Database connected.");
 
         // Get user info from environment variables
         const firstname = process.env.FIRSTNAME;
@@ -19,14 +22,13 @@ dotenv.config();
             throw new Error("Missing environment variables: FIRSTNAME, LASTNAME, EMAIL, or PASSWORD");
         }
 
-        // Get the first role in the database
-        const role = await Role.findOne({
-            order: [['id', 'ASC']]
-        });
+        // Get the first role in the database (sorted by creation time)
+        const role = await Role.findOne().sort({ _id: 1 }).lean();
 
         if (!role) {
             throw new Error("No roles found in the database. Please create a role first.");
         }
+
 
         // Create the new user
         const newUser = await User.create({
@@ -34,14 +36,14 @@ dotenv.config();
             lastname,
             email,
             password,
-            role_id: role.toJSON().id,
+            role_id: role._id,
         });
 
-        console.log("New user created:", newUser.toJSON());
+        console.log("New user created:", newUser);
     } catch (err: any) {
         console.error("Error creating user:", err.message);
     } finally {
-        await sequelize.close();
+        await mongoose.disconnect();
         console.log("Database connection closed.");
     }
 })();

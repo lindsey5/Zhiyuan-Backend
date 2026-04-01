@@ -1,47 +1,30 @@
-import { NextFunction, Request, Response } from "express";
-import { Role, User } from '../database/models/index';
-import { generateAccessToken, generateDistributorAccessToken, generateRefreshToken } from "../utils/auth";
-import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import User from "../database/models/User";
+import { generateAccessToken, generateRefreshToken } from "../utils/auth";
 
-export const login = async (req : Request, res : Response, next : NextFunction) => {
-    try{
+export const login = async (req: Request, res: Response, next: NextFunction) => {
+    try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({
-            where: {
-                email,
-                status: 'active'
-            },
-            include: [
-                {
-                    model: Role,
-                    as: 'role'
-                }
-            ]
-        })
+        // Find user and populate role
+        const user = await User.findOne({ email, status: "active" }).populate("role");
 
-        if(!user){
-            res.status(401).json({ 
-                success: false,
-                message: 'User not found.' 
-            });
-            return;   
+        if (!user) {
+            return res.status(401).json({ success: false, message: "User not found." });
         }
 
-        if(!(await user.matchPassword(password))){
-            res.status(401).json({ 
-                success: false,
-                message: 'Incorrect password.' 
-            });
-            return;
+        // Check password
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: "Incorrect password." });
         }
 
-        const userData : any = user.toJSON();
-        const accessToken = generateAccessToken(userData.id, userData.role_id);
-        const refreshToken = generateRefreshToken(userData.id);
+        const accessToken = generateAccessToken(user._id, user.role?._id);
+        const refreshToken = generateRefreshToken(user._id);
 
-        const { password : userPassword, id, role, ...rest } = userData
-        
+        const { password: userPassword, role, _id, ...rest } = user.toObject();
+
         res.status(200).json({
             success: true,
             user: {
@@ -50,60 +33,50 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
             },
             token: {
                 accessToken,
-                refreshToken
-            }
-        })
-
-    }catch(err : any){
+                refreshToken,
+            },
+        });
+    } catch (err) {
         next(err);
     }
-}
+};
 
-export const refreshAccessToken = async (req : Request, res : Response, next : NextFunction) => {
-    try{
-        const refreshToken = req.body.refreshToken;
+export const refreshAccessToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { refreshToken } = req.body;
 
-        if(!refreshToken){
-            res.status(401).json({ success: false, message: 'Refresh token required' });
-            return;
+        if (!refreshToken) {
+            return res.status(401).json({ success: false, message: "Refresh token required" });
         }
 
-        const decoded : any = jwt.verify(
+        const decoded: any = jwt.verify(
             refreshToken,
-            process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret-key'
+            process.env.JWT_REFRESH_SECRET || "test-jwt-refresh-secret-key"
         );
-        const user = await User.findByPk(decoded.id as string, {
-            include: [
-                {
-                    model: Role,
-                    as: 'role'
-                }
-            ]
-        });
+
+        const user = await User.findById(decoded.id).populate("role");
 
         if (!user) {
-            res.status(404).json({ success: false, message: 'User not found' });
-            return;
+            return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        const userData : any = user.toJSON();
-        const newRefreshToken = generateRefreshToken(Number(decoded.id));
-        const newAccessToken = generateAccessToken(Number(decoded.id), userData.role_id);
+        const newAccessToken = generateAccessToken(user._id, user.role?._id);
+        const newRefreshToken = generateRefreshToken(user._id);
 
-        const { password : userPassword, id, role, ...rest } = userData
+        const { password: userPassword, role, _id, ...rest } = user.toObject();
         
         res.status(200).json({
             success: true,
             user: {
                 ...rest,
-                role: role?.name
+                role: role?.name,
             },
             token: {
                 accessToken: newAccessToken,
-                refreshToken: newRefreshToken
-            }
-        })
-    }catch(err : any){
+                refreshToken: newRefreshToken,
+            },
+        });
+    } catch (err) {
         next(err);
     }
-}
+};

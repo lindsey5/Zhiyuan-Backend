@@ -1,52 +1,36 @@
-import { NextFunction, Request, Response } from "express";
-import { Op } from "sequelize";
-import { Order, OrderItem } from "../database/models/index";
+import { Request, Response, NextFunction } from "express";
+import Order from "../database/models/Order";
 
-export const getOrders = async (req : Request, res : Response, next : NextFunction) => {
-    try{
+export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
+    try {
         const limit = req.query.limit ? Number(req.query.limit) : 10;
         const page = req.query.page ? Number(req.query.page) : 1;
-        const offset = (page - 1) * limit;
+        const skip = (page - 1) * limit;
         const search = req.query.search ? String(req.query.search) : "";
         const status = req.query.status ? String(req.query.status) : "";
         const paymentMethod = req.query.paymentMethod ? String(req.query.paymentMethod) : "";
         const paymentStatus = req.query.paymentStatus ? String(req.query.paymentStatus) : "";
 
-        const whereCondition : any = {}
+        const filter: any = {};
 
-        if(search){
-            whereCondition[Op.or] = [
-                { customer_name: { [Op.like] : `%${search}%`}},
-                { order_id: { [Op.like] : `%${search}%`}}
-            ]
+        if (search) {
+            filter.$or = [
+                { customer_name: { $regex: search, $options: "i" } },
+                { order_id: { $regex: search, $options: "i" } },
+            ];
         }
 
-        if(status){
-            whereCondition.status = status;
-        }
+        if (status) filter.status = status;
+        if (paymentMethod) filter.payment_method = paymentMethod;
+        if (paymentStatus) filter.payment_status = paymentStatus;
 
-        if(paymentMethod){
-            whereCondition.payment_method = paymentMethod;
-        }
+        const total = await Order.countDocuments(filter);
 
-        if(paymentStatus){
-            whereCondition.payment_status = paymentStatus;
-        }
-
-        const total = await Order.count({ where: whereCondition });
-
-        const orders = await Order.findAll({
-            where: whereCondition,
-            include: [
-                {
-                    model: OrderItem,
-                    as: 'order_items'
-                }
-            ],
-            order: [['order_date', 'DESC']],
-            limit,
-            offset
-        })
+        const orders = await Order.find(filter)
+            .populate("order_items") 
+            .sort({ order_date: -1 })
+            .skip(skip)
+            .limit(limit)
 
         const totalPages = Math.ceil(total / limit);
 
@@ -57,9 +41,8 @@ export const getOrders = async (req : Request, res : Response, next : NextFuncti
             totalPages,
             total,
             orders,
-        })
-
-    }catch(err){
+        });
+    } catch (err) {
         next(err);
     }
-}
+};

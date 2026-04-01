@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
 import jwt, { SignOptions } from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 // Hash a plain password
 export const hashPassword = async (password : string) => {
@@ -8,7 +9,7 @@ export const hashPassword = async (password : string) => {
 };
 
 // Generate JWT Access Token
-export const generateAccessToken = (user_id: number, role: string): string => {
+export const generateAccessToken = (user_id : mongoose.Types.ObjectId, role : mongoose.Types.ObjectId): string => {
   if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_ACCESS_EXPIRES_IN) {
     throw new Error('JWT_SECRET is not defined in environment variables');
   }
@@ -23,7 +24,7 @@ export const generateAccessToken = (user_id: number, role: string): string => {
 };
 
 // Generate JWT Refresh Token
-export const generateRefreshToken = (user_id: number): string => {
+export const generateRefreshToken = (user_id: mongoose.Types.ObjectId): string => {
   if (!process.env.JWT_REFRESH_SECRET || !process.env.JWT_REFRESH_EXPIRES_IN) {
     throw new Error('JWT_SECRET is not defined in environment variables');
   }
@@ -33,20 +34,6 @@ export const generateRefreshToken = (user_id: number): string => {
     process.env.JWT_REFRESH_SECRET as string,
     {
       expiresIn: process.env.JWT_REFRESH_EXPIRES_IN, 
-    } as SignOptions
-  );
-};
-
-export const generateDistributorAccessToken = (distributor_id: number): string => {
-  if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_ACCESS_EXPIRES_IN) {
-    throw new Error('JWT_SECRET is not defined in environment variables');
-  }
-  
-  return jwt.sign(
-    { id: distributor_id },
-    process.env.JWT_ACCESS_SECRET,
-    {
-      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN as SignOptions, 
     } as SignOptions
   );
 };

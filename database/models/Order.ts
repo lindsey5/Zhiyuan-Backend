@@ -1,61 +1,55 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../config/db";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 import { OrderAttributes } from "../../types/model-attributes";
 
-interface OrderCreationAttributes extends Optional<OrderAttributes, "id"> {}
+const OrderSchema: Schema<OrderAttributes> = new Schema(
+    {
+        order_id: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+        },
 
-class Order extends Model<OrderAttributes, OrderCreationAttributes> {}
+        customer_name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
 
-Order.init(
-{
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
+        status: {
+            type: String,
+            enum: ["pending", "processing", "completed", "cancelled"],
+            default: "pending",
+            required: true,
+        },
+
+        total_amount: {
+            type: Number,
+            required: true,
+        },
+
+        delivery_type: {
+            type: String,
+            enum: ["pickup", "delivery"],
+            required: true,
+        },
+
+        payment_method: {
+            type: String,
+            enum: ["COD", "GCash", "Card"],
+            required: true,
+        },
+
+        payment_status: {
+            type: String,
+            enum: ["paid", "unpaid"],
+            default: "unpaid",
+            required: true,
+        },
     },
-    order_id: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-    },
-    customer_name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    status: {
-        type: DataTypes.ENUM('pending', 'processing', 'completed', 'cancelled'),
-        allowNull: false,
-        defaultValue: 'pending',
-    },
-    total_amount: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-    },
-    order_date: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW,
-    },
-    delivery_type: {
-        type: DataTypes.ENUM('pickup', 'delivery'),
-        allowNull: false,
-    },
-    payment_method: {
-        type: DataTypes.ENUM('COD', 'GCash', 'Card'),
-        allowNull: false,
-    },
-    payment_status: {
-        type: DataTypes.ENUM('paid', 'unpaid'),
-        allowNull: false,        
-        defaultValue: 'unpaid',
-    },
-},
-{
-    sequelize,
-    modelName: "Order",
-    tableName: "orders",
-    timestamps: false,
-}
+    { timestamps: true } 
 );
+
+const Order: Model<OrderAttributes> = mongoose.model("Order", OrderSchema);
 
 export default Order;

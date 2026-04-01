@@ -41,8 +41,8 @@ export const createProductSchema = z.object({
 
 
 const updateVariantSchema = z.object({
-    id: z.number().optional(),
-
+    _id: z.string().optional(),
+    product_id: z.string().optional(),
     variant_name: z.string()
         .min(3, "Variant name must be at least 3 characters")
         .max(100, "Variant name must not exceed 100 characters"),
@@ -60,7 +60,8 @@ const updateVariantSchema = z.object({
 
     image_url: z.string()
         .nonempty("Variant image URL is required")
-        .optional()
+        .optional(),
+    image_public_id: z.string().optional()
 });
 
 export const updateProductSchema = z.object({

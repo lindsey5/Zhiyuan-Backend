@@ -1,7 +1,6 @@
 import express from "express";
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import sequelize from "./config/db";
 import userRoutes from "./routes/userRoutes";
 import authRoutes from "./routes/authRoutes";
 import { errorHandler } from "./middlewares/errorHandler";
@@ -13,17 +12,10 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger";
 import categoryRoutes from "./routes/categoryRoutes";
 import variantRoutes from "./routes/variantRoutes";
-import path from "path";
 import orderRoutes from "./routes/orderRoutes";
-import backupOnWrite from "./middlewares/backupTrigger";
+import connectDb from "./config/db";
 
 dotenv.config();
-const DB_PATH = path.resolve(
-  __dirname,
-  process.env.NODE_ENV !== "development"
-    ? process.env.PRODUCTION_SQLITE_PATH || "./database.sqlite"
-    : process.env.SQLITE_PATH || "./database.sqlite"
-);
 
 const app = express();
 const PORT = process.env.PORT || 3000; 
@@ -34,7 +26,6 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(backupOnWrite(DB_PATH));
 app.use(morgan('dev'));
 app.use(express.static('public'));
 app.use(express.json({ limit: "1gb" }));
@@ -63,11 +54,8 @@ app.use(
     })
 );
 
-sequelize.sync()
-.then(() => {
-    console.log("Database synced");
+connectDb();
 
-    app.listen(3000, () => {
-        console.log(`Server running on port ${PORT}`);
-    });
+app.listen(3000, () => {
+    console.log(`Server running on port ${PORT}`);
 });

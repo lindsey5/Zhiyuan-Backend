@@ -23,8 +23,8 @@ class AuditLogService {
         try{
             await AuditLog.create({
                 ...data,
-                new_values: JSON.stringify(data.new_values),
-                old_values: JSON.stringify(data.old_values)
+                new_values: data.new_values,
+                old_values: data.old_values
             });
 
         }catch(err){

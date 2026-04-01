@@ -1,39 +1,45 @@
 import readline from 'readline';
-import sequelize from '../config/db';
-import { Role, User } from '../database/models/index';
+import Role from '../database/models/Role';
+import mongoose from 'mongoose';
+import User from '../database/models/User';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
+  input: process.stdin,
+  output: process.stdout,
 });
 
 const question = (q: string) =>
-    new Promise<string>((resolve) => rl.question(q, resolve));
+  new Promise<string>((resolve) => rl.question(q, resolve));
 
 (async () => {
     try {
-        await sequelize.sync();
-        console.log("Database synced.");
+        await mongoose.connect(process.env.MONGO_URI || "");
+        console.log("Database connected.");
 
         const firstname = await question("Enter firstname: ");
         const lastname = await question("Enter lastname: ");
         const email = await question("Enter email: ");
         const password = await question("Enter password: ");
 
-        const existingRoles = await Role.findAll();
+        const existingRoles = await Role.find().lean();
         if (!existingRoles.length) {
-            console.log("No roles found. Seed roles first.");
-            rl.close();
-            return;
+        console.log("No roles found. Seed roles first.");
+        rl.close();
+        return;
         }
 
         const rolesMap = existingRoles.reduce((acc, role) => {
-            const r = role.toJSON();
-            acc[r.name] = r.id;
-            return acc;
-        }, {} as Record<string, number>);
+        acc[role.name] = role._id;
+        return acc;
+        }, {} as Record<string, mongoose.Types.ObjectId>);
 
-        const roleInput = await question(`Select role:\n${Object.keys(rolesMap).map((r) => `- ${r}`).join("\n")}\n> `);
+        const roleInput = await question(
+        `Select role:\n${Object.keys(rolesMap)
+            .map((r) => `- ${r}`)
+            .join("\n")}\n> `
+        );
 
         if (!rolesMap[roleInput]) {
             console.log("Invalid role selected.");
@@ -41,11 +47,11 @@ const question = (q: string) =>
             return;
         }
 
-        const existingUser = await User.findOne({ where: { email } });
+        const existingUser = await User.findOne({ email });
         if (existingUser) {
-            console.log("Email already exists. Try a different one.");
-            rl.close();
-            return;
+        console.log("Email already exists. Try a different one.");
+        rl.close();
+        return;
         }
 
         const newUser = await User.create({
@@ -57,11 +63,12 @@ const question = (q: string) =>
         });
 
         console.log("User created successfully:");
-        console.log(newUser.toJSON());
+        console.log(newUser);
 
     } catch (err: any) {
         console.error(err);
     } finally {
         rl.close();
+        await mongoose.disconnect();
     }
 })();

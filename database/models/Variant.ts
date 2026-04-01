@@ -1,113 +1,78 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../config/db";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 import { VariantAttributes } from "../../types/model-attributes";
 
-interface VariantCreationAttributes extends Optional<VariantAttributes, "id"> {}
+const VariantSchema: Schema<VariantAttributes> = new Schema(
+    {
+        product_id: {
+            type: Schema.Types.ObjectId,
+            ref: "Product",
+            required: [true, "Product ID is required."],
+        },
 
-class Variant extends Model<VariantAttributes, VariantCreationAttributes> {}
+        variant_name: {
+            type: String,
+            required: [true, "Variant name is required."],
+            minlength: [2, "Variant name must be at least 2 characters."],
+            maxlength: [100, "Variant name must be at most 100 characters."],
+            trim: true,
+        },
 
-Variant.init(
-{
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-    },
+        image_url: {
+            type: String,
+            required: [true, "Variant image URL is required."],
+            trim: true,
+        },
 
-    product_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Product ID is required." },
-            isInt: { msg: "Product ID must be an integer." }
-        }
-    },
+        image_public_id: {
+            type: String,
+            required: [true, "Variant image public id is required."],
+            trim: true,
+        },
 
-    variant_name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Variant name is required." },
-            notEmpty: { msg: "Variant name cannot be empty." },
-            len: {
-                args: [2, 100],
-                msg: "Variant name must be between 2 and 100 characters."
-            }
-        }
-    },
+        stock: {
+            type: Number,
+            required: [true, "Stock is required."],
+            min: [0, "Stock cannot be negative."],
+        },
 
-    image_url: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Variant image url is required." },
-            notEmpty: { msg: "Variant image url cannot be empty." },
-            isUrl: { msg: "Variant image url must be a valid URL." }
-        }
-    },
+        price: {
+            type: Number,
+            required: [true, "Price is required."],
+            min: [0, "Price cannot be negative."],
+        },
 
-    image_public_id: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Variant image public id is required." },
-            notEmpty: { msg: "Variant image public id cannot be empty." },
-        }
-    },
-    
-    stock: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Stock is required." },
-            isInt: { msg: "Stock must be a number." },
-            min: {
-                args: [0],
-                msg: "Stock cannot be negative."
-            }
-        }
-    },
-    price: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Price is required." },
-            min: {
-                args: [0],
-                msg: "Price cannot be negative."
-            }
-        }
-    },
+        sku: {
+            type: String,
+            required: [true, "SKU is required."],
+            minlength: [3, "SKU must be at least 3 characters."],
+            maxlength: [100, "SKU must be at most 100 characters."],
+            trim: true,
+        },
 
-    sku: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "SKU is required." },
-            notEmpty: { msg: "SKU cannot be empty." },
-            len: {
-                args: [3, 100],
-                msg: "SKU must be between 3 and 100 characters."
-            }
-        }
+        status: {
+            type: String,
+            enum: ["active", "deleted"],
+            default: "active",
+            required: true,
+        },
     },
-    status: {
-        type: DataTypes.ENUM('active', 'deleted'),
-        allowNull: false,
-        defaultValue: 'active'
-    },
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
-    },
-},
-{
-    sequelize,
-    modelName: "Variant",
-    tableName: "variants",
-    timestamps: false
-}
+    { timestamps: true } 
+);
+
+VariantSchema.virtual("product", {
+    ref: "Product",          
+    localField: "product_id", 
+    foreignField: "_id",      
+    match: { status: 'active' },
+    justOne: true,           
+});
+
+VariantSchema.set("toObject", { virtuals: true });
+VariantSchema.set("toJSON", { virtuals: true });
+
+const Variant: Model<VariantAttributes> = mongoose.model(
+    "Variant",
+    VariantSchema
 );
 
 export default Variant;

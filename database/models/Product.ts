@@ -1,89 +1,65 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../config/db";
+import mongoose, { Schema, Document, Model } from "mongoose";
 import { ProductAttributes } from "../../types/model-attributes";
 
-interface ProductCreationAttributes extends Optional<ProductAttributes, "id"> {}
+const ProductSchema: Schema<ProductAttributes> = new Schema(
+    {
+        product_name: {
+            type: String,
+            required: [true, "product name is required."],
+            minlength: [3, "product name must be at least 3 characters."],
+            maxlength: [100, "product name must be at most 100 characters."],
+            trim: true,
+        },
 
-class Product extends Model<ProductAttributes, ProductCreationAttributes> {}
+        description: {
+            type: String,
+            required: [true, "description is required."],
+            minlength: [5, "description must be at least 5 characters."],
+            maxlength: [1000, "description must be at most 1000 characters."],
+            trim: true,
+        },
 
-Product.init(
-{
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
+        thumbnail_public_id: {
+            type: String,
+            required: [true, "Thumbnail Public Id is required."],
+            trim: true,
+        },
+
+        thumbnail_url: {
+            type: String,
+            required: [true, "Thumbnail URL is required."],
+            trim: true,
+        },
+
+        category: {
+            type: String,
+            required: [true, "Category is required."],
+            trim: true,
+        },
+
+        status: {
+            type: String,
+            enum: ["active", "deleted"],
+            default: "active",
+            required: true,
+        },
     },
+    { timestamps: true } 
+);
 
-    product_name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notEmpty: { msg: "product name is required." },
-            len: {
-                args: [3, 100],
-                msg: "product name must be between 3 and 50 characters."
-            }
-        }
-    },
+ProductSchema.virtual("variants", {
+    ref: "Variant",
+    localField: "_id",
+    foreignField: "product_id",
+    match: { status: "active" },
+});
 
-    description: {
-        type: DataTypes.TEXT,
-        allowNull: false,
-        validate: {
-             notNull: { msg: "description is required" },
-            notEmpty: { msg: "description cannot be empty." },
-            len: {
-                args: [5, 1000],
-                msg: "description must be between 5 and 1000 characters."
-            }
-        }
-    },
+ProductSchema.set("toObject", { virtuals: true });
+ProductSchema.set("toJSON", { virtuals: true });
 
-    thumbnail_public_id: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Thumbnail Public Id is required." },
-            notEmpty: { msg: "Thumbnail Public Id cannot be empty." },
-        }
-    },
-
-    thumbnail_url: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Thumbnail URL is required." },
-            notEmpty: { msg: "Thumbnail URL cannot be empty." },
-            isUrl: { msg: "Thumbnail URL must be a valid URL." }
-        }
-    },
-
-    category: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-            notNull: { msg: "Category is required." },
-            notEmpty: { msg: "Category cannot be empty." },
-        }
-    },
-
-    createdAt: {
-        type: DataTypes.DATE,
-        allowNull: false,
-        defaultValue: DataTypes.NOW
-    },
-    status: {
-        type: DataTypes.ENUM('active', 'deleted'),
-        allowNull: false,
-        defaultValue: 'active'
-    }
-},
-{
-    sequelize,
-    modelName: "Product",
-    tableName: "products",
-    timestamps: false
-}
+const Product: Model<ProductAttributes> = mongoose.model(
+    "Product",
+    ProductSchema
 );
 
 export default Product;

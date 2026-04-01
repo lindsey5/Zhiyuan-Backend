@@ -1,86 +1,74 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../config/db";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 import { AuditLogAttributes } from "../../types/model-attributes";
 
-interface AuditLogCreationAttributes
-  extends Optional<
-    AuditLogAttributes,"id" | "old_values" | "new_values" | "createdAt"
-  > {}
-
-class AuditLog extends Model<AuditLogAttributes, AuditLogCreationAttributes> {}
-
-AuditLog.init(
+const AuditLogSchema: Schema<AuditLogAttributes> = new Schema(
     {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-        },
-
         user_id: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
+            type: Schema.Types.ObjectId,
+            ref: "User",
+            required: true
         },
 
         role: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                notEmpty: { msg: "role is required." },
-            },
+            type: String,
+            required: [true, "role is required."],
+            trim: true,
         },
 
         action: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                notEmpty: { msg: "action is required." },
-            },
+            type: String,
+            required: [true, "action is required."],
+            trim: true,
         },
 
         description: {
-            type: DataTypes.TEXT,
-            allowNull: false,
+            type: String,
+            required: true,
         },
 
         severity: {
-            type: DataTypes.ENUM("LOW", "MEDIUM", "HIGH", "CRITICAL"),
-            allowNull: false,
-            defaultValue: "LOW",
+            type: String,
+            enum: ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+            default: "LOW",
+            required: true,
         },
 
         ip_address: {
-            type: DataTypes.STRING,
-            allowNull: false,
+            type: String,
+            required: true,
         },
 
         user_agent: {
-            type: DataTypes.STRING,
-            allowNull: false,
+            type: String,
+            required: true,
         },
 
         old_values: {
-            type: DataTypes.JSON,
-            allowNull: true,
+            type: Schema.Types.Mixed, 
+            default: null,
         },
 
         new_values: {
-            type: DataTypes.JSON,
-            allowNull: true,
-        },
-
-        createdAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW,
+            type: Schema.Types.Mixed, 
+            default: null,
         },
     },
-    {
-        sequelize,
-        modelName: "AuditLog",
-        tableName: "audit_logs",
-        timestamps: false,
-    }
+    { timestamps: true } 
+);
+
+AuditLogSchema.virtual("user", {
+    ref: "User",
+    localField: "user_id",
+    foreignField: "_id",
+    justOne: true,  
+});
+
+AuditLogSchema.set("toObject", { virtuals: true });
+AuditLogSchema.set("toJSON", { virtuals: true });
+
+const AuditLog: Model<AuditLogAttributes> = mongoose.model(
+    "AuditLog",
+    AuditLogSchema
 );
 
 export default AuditLog;

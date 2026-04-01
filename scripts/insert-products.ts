@@ -1,5 +1,8 @@
-import sequelize from "../config/db";
-import { Product, Variant } from "../database/models";
+import mongoose from "mongoose";
+import Product from "../database/models/Product";
+import Variant from "../database/models/Variant";
+import dotenv from 'dotenv';
+dotenv.config();
 
 const productsData = [
     {
@@ -153,42 +156,47 @@ const productsData = [
   ]
 
 async function insertProducts() {
-    try {
-        await sequelize.sync();
+  try {
+    await mongoose.connect(process.env.MONGO_URI || "");
+    console.log("Database connected.");
 
-        for (const product of productsData) {
-            const existingProduct = await Product.findOne({ where: { product_name: product.product_name } });
+    for (const product of productsData) {
+      const existingProduct = await Product.findOne({ product_name: product.product_name });
 
-            if(existingProduct) {
-                console.log(`Product with name ${product.product_name} already exists. Skipping...`);
-                continue;
-            }
-            const { variants, ...productFields } = product;
+      if (existingProduct) {
+        console.log(`Product with name ${product.product_name} already exists. Skipping...`);
+        continue;
+      }
 
-            // Create product
-            const createdProduct = await Product.create(productFields);
+      const { variants, ...productFields } = product;
 
-            // Create all variants for this product
-            for (const variant of variants) {
-              const existingVariant = await Variant.findOne({ where: { sku: variant.sku } });
+      // Create product
+      const createdProduct = await Product.create(productFields);
 
-              if(existingVariant) {
-                console.log(`Variant with SKU ${variant.sku} already exists. Skipping...`);
-                continue;
-              }
-              
-              await Variant.create({
-              ...variant,
-              product_id: createdProduct.toJSON().id,
-              });
-            }
+      // Create all variants for this product
+      for (const variant of variants) {
+        const existingVariant = await Variant.findOne({ sku: variant.sku });
+
+        if (existingVariant) {
+          console.log(`Variant with SKU ${variant.sku} already exists. Skipping...`);
+          continue;
         }
-        console.log("Products and variants inserted successfully!");
-        process.exit(0);
-    } catch (error) {
-        console.error("Error inserting products:", error);
-        process.exit(1);
+
+        await Variant.create({
+          ...variant,
+          product_id: createdProduct._id,
+        });
+      }
     }
+
+    console.log("Products and variants inserted successfully!");
+    process.exit(0);
+  } catch (error) {
+    console.error("Error inserting products:", error);
+    process.exit(1);
+  } finally {
+    await mongoose.disconnect();
+  }
 }
 
 insertProducts();

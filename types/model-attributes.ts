@@ -1,138 +1,80 @@
-export interface PermissionAttributes {
-    id: number;
+import { Document, Types } from "mongoose";
+
+export interface PermissionAttributes extends Document {
     action: string;
-    role_id: number;
+    role_id: Types.ObjectId;
 }
 
-export interface RoleAttributes {
-    id: number;
-    name: string; 
+export interface RoleAttributes extends Document {
+    name: string;
     description: string;
-    createdAt?: Date;
+    permissions?: PermissionAttributes[];
 }
 
-export interface UserAttributes {
-    id: number;
+export interface UserAttributes extends Document {
     firstname: string;
     lastname: string;
     email: string;
     password: string;
-    role_id: number;
-    status?: 'active' | 'deleted';
-    createdAt?: Date;
+    role_id: Types.ObjectId;
+    status?: "active" | "deleted";
+    matchPassword(plainPassword: string): Promise<boolean>
+    role: RoleAttributes;
 }
 
-export interface ProductAttributes {
-    id: number;
+export interface ProductAttributes extends Document {
     product_name: string;
     description: string;
     thumbnail_public_id: string;
     thumbnail_url: string;
     category: string;
-    createdAt?: Date;
-    status?: 'active' | 'inactive'
+    status?: "active" | "deleted";
+    variants?: VariantAttributes[];
 }
 
-export interface VariantAttributes {
-    id: number;
-    product_id: number;
+export interface VariantAttributes extends Document {
+    product_id: Types.ObjectId;
     variant_name: string;
     stock: number;
     price: number;
     image_public_id: string;
     image_url: string;
     sku: string;
-    status?: 'active' | 'inactive',
-    createdAt?: Date;
+    status?: "active" | "deleted";
 }
 
-export interface AuditLogAttributes{
-    id: number;
-    user_id: number;
+export interface AuditLogAttributes extends Document {
+    user_id: Types.ObjectId;
     role: string;
     action: string;
     description: string;
     severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
     ip_address: string;
     user_agent: string;
-    old_values: string | null;
-    new_values: string | null;
-    createdAt: Date;
+    old_values: Record<string, any> | null; 
+    new_values: Record<string, any> | null;
+    user: UserAttributes;
 }
 
-export interface CategoryAttributes{
-    id: number;
+export interface CategoryAttributes extends Document {
     name: string;
-    createdAt?: Date;
-    status?: 'active' | 'inactive'
+    status?: "active" | "inactive";
 }
 
-export interface OrderAttributes {
-    id: number;
+export interface OrderAttributes extends Document {
     order_id: string;
     customer_name: string;
-    status: 'pending' | 'processing' | 'completed' | 'cancelled';
+    status: "pending" | "processing" | "completed" | "cancelled";
     total_amount: number;
-    order_date: Date;
-    delivery_type: 'pickup' | 'delivery';
-    payment_method: 'COD' | 'GCash' | 'Card';
-    payment_status: 'paid' | 'unpaid';
+    delivery_type: "pickup" | "delivery";
+    payment_method: "COD" | "GCash" | "Card";
+    payment_status: "paid" | "unpaid";
 }
 
-export interface OrderItemAttributes {
-    id: number;
-    order_id: number;
-    variant_id: number;
+export interface OrderItemAttributes extends Document {
+    order_id: Types.ObjectId;
+    variant_id: Types.ObjectId;
     quantity: number;
     amount: number;
     price: number;
-}
-
-export interface DistributorAttributes {
-    id: number;
-    parent_distributor_id?: number;
-    creator?: number;
-    distributor_name: string;
-    email: string;
-    password: string;
-    commission_rate: number;
-    wallet_balance: number;
-    status: 'active' | 'deleted',
-    createdAt: Date;
-}
-
-export interface DistributorStockAttributes {
-    id: number;
-    distributor_id: number;
-    variant_id: number;
-    quantity: number;
-}
-
-export interface StockTransferAttributes {
-    id: number;
-    transfer_id: number;
-    user_id?: number;
-    sender_id?: number;
-    receiver_id: number;
-    quantity: number;
-    variant_id: number;
-    price: number;
-    createdAt: Date;
-}
-
-export interface DistributorSaleAttributes {
-    id: number;
-    seller_id: number;
-    quantity: number;
-    total_amount: number;
-    createdAt: Date;
-}
-
-export interface CommissionLogAttributes {
-    id: number;
-    sale_id: number;
-    receiver_id: number;
-    commission_rate: number;
-    commission_amount: number;
-    createdAt: Date;
 }

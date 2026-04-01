@@ -1,53 +1,43 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../config/db";
+import mongoose, { Schema, Document, Model } from "mongoose";
 import { RoleAttributes } from "../../types/model-attributes";
 
-interface RoleCreationAttributes extends Optional<RoleAttributes, "id"> {}
-
-class Role extends Model<RoleAttributes, RoleCreationAttributes> {}
-
-Role.init(
+const RoleSchema: Schema<RoleAttributes> = new Schema(
     {
-        id: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            autoIncrement: true,
-        },
         name: {
-            type: DataTypes.STRING,
-            allowNull: false,
+            type: String,
+            required: [true, "name is required."],
             unique: true,
-            validate: {
-                notEmpty: { msg: "name is required." },
-                len: {
-                    args: [3, 100],
-                    msg: "name must be between 3 and 50 characters."
-                }
-            },
+            minlength: [3, "name must be at least 3 characters."],
+            maxlength: [100, "name must be at most 100 characters."],
+            trim: true,
         },
+
         description: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                notEmpty: { msg: "description is required." },
-                len: {
-                args: [3, 100],
-                msg: "description must be between 10 and 100 characters."
-            }
-            },
-        },
-        createdAt: {
-            type: DataTypes.DATE,
-            allowNull: false,
-            defaultValue: DataTypes.NOW
+            type: String,
+            required: [true, "description is required."],
+            minlength: [10, "description must be at least 10 characters."],
+            maxlength: [100, "description must be at most 100 characters."],
+            trim: true,
         },
     },
-    {
-        sequelize,
-        modelName: "Role",
-        tableName: "roles",
-        timestamps: false,
-    }
+    { timestamps: true }
 );
+
+RoleSchema.virtual("permissions", {
+    ref: "Permission",
+    localField: "_id",
+    foreignField: "role_id",
+});
+
+RoleSchema.virtual("users", {
+    ref: "User",
+    localField: "_id",
+    foreignField: "role_id",
+});
+
+RoleSchema.set("toObject", { virtuals: true });
+RoleSchema.set("toJSON", { virtuals: true });
+
+const Role: Model<RoleAttributes> = mongoose.model("Role", RoleSchema);
 
 export default Role;

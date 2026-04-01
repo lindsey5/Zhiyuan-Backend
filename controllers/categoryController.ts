@@ -1,160 +1,143 @@
-import { NextFunction, Request, Response } from "express";
-import Category from "../database/models/Category";
-import { Op } from "sequelize";
+import { Request, Response, NextFunction } from "express";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
+import Category from "../database/models/Category";
 
-export const createCategory = async (req : AuthRequest, res : Response, next : NextFunction) => {
-    try{
+export const createCategory = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
         const existingCategory = await Category.findOne({
-            where: {
-                name: req.body.name,
-                status: 'active'
-            }
-        })
+            name: req.body.name,
+            status: "active",
+        });
 
-        if(existingCategory){
+        if (existingCategory) {
             return res.status(409).json({
                 success: false,
-                message: 'Category already exists.'
-            })
+                message: "Category already exists.",
+            });
         }
 
-        const category = await Category.create(req.body);
+        const category = new Category(req.body);
+        await category.save();
 
         await AuditLogService.log({
             action: "CREATE_CATEGORY",
-            description: `Category "${category.toJSON().name}" successfully created.`,
+            description: `Category "${category.name}" successfully created.`,
             ip_address: req.ip || "",
-            role: req?.user?.role.name || "N/A",
+            role: req?.user?.role?.name || "N/A",
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
-            user_id: Number(req.user.id),
+            user_id: req.user._id,
             old_values: null,
-            new_values: category.toJSON()
+            new_values: category,
         });
 
         res.status(201).json({
             success: true,
-            message: 'Category successfully created.',
-            category
-        })
-
-    }catch(err){
+            message: "Category successfully created.",
+            category,
+        });
+    } catch (err) {
         next(err);
     }
-}
+};
 
-export const getCategories = async (req : Request, res : Response, next : NextFunction) => {
-    try{
+export const getCategories = async (req: Request, res: Response, next: NextFunction) => {
+    try {
         const search = req.query.search ? String(req.query.search) : "";
-        const categories = await Category.findAll({
-            where: {
-                ...(search && { name: { [Op.like] : `%${search}%`}}),
-                status: 'active'
-            },
-            order: [['name', 'ASC']]
-        });
+        const categories = await Category.find({
+            ...(search ? { name: { $regex: search, $options: "i" } } : {}),
+            status: "active",
+        }).sort({ name: 1 });
 
         res.status(200).json({
             success: true,
-            categories
-        })
-
-    }catch(err){
+            categories,
+        });
+    } catch (err) {
         next(err);
     }
-}
+};
 
-export const updateCategory = async (req : AuthRequest, res : Response, next : NextFunction) => {
-    try{
-
+export const updateCategory = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
         const existingCategory = await Category.findOne({
-            where: {
-                name: req.body.name,
-                status: 'active',
-                id: { [Op.ne] : Number(req.params.id) }
-            }
-        })
+            name: req.body.name,
+            status: "active",
+            _id: { $ne: req.params.id },
+        });
 
-        if(existingCategory){
+        if (existingCategory) {
             return res.status(409).json({
                 success: false,
-                message: 'Category already exist'
-            })
+                message: "Category already exists",
+            });
         }
 
-        const category = await Category.findByPk(req.params.id as string);
-
-        if(!category){
+        const category = await Category.findById(req.params.id);
+        if (!category) {
             return res.status(404).json({
                 success: false,
-                message: 'Category not found.'
-            })
+                message: "Category not found.",
+            });
         }
 
         const oldCategory = category;
 
-        category.set({
-            name: req.body.name
-        })
-
+        category.name = req.body.name;
         await category.save();
 
         await AuditLogService.log({
             action: "UPDATE_CATEGORY",
             description: `Category successfully updated.`,
             ip_address: req.ip || "",
-            role: req?.user?.role.name || "N/A",
+            role: req?.user?.role?.name || "N/A",
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
-            user_id: Number(req.user.id),
-            old_values: oldCategory?.toJSON(),
-            new_values: category.toJSON()
+            user_id: req.user._id,
+            old_values: oldCategory,
+            new_values: category,
         });
 
         res.status(200).json({
-            success: true,
-            message: 'Category successfully updated',
-            category
-        })
-
-    }catch(err){
+        success: true,
+        message: "Category successfully updated",
+        category,
+        });
+    } catch (err) {
         next(err);
     }
-}
+};
 
-export const deleteCategory = async (req : AuthRequest, res : Response, next : NextFunction) => {
-    try{
-        const category = await Category.findByPk(req.params.id as string);
-
-        if(!category){
+export const deleteCategory = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const category = await Category.findById(req.params.id);
+        if (!category) {
             return res.status(404).json({
                 success: false,
-                message: 'Category not found.'
-            })
+                message: "Category not found.",
+            });
         }
 
-        await category.destroy();
+        await category.deleteOne();
 
         await AuditLogService.log({
-            action: "UPDATE_CATEGORY",
-            description: `Category "${category.toJSON().name}" successfully deleted.`,
+            action: "DELETE_CATEGORY",
+            description: `Category "${category.name}" successfully deleted.`,
             ip_address: req.ip || "",
-            role: req?.user?.role.name || "N/A",
+            role: req?.user?.role?.name || "N/A",
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
-            user_id: Number(req.user.id),
-            old_values: category.toJSON(),
-            new_values: null
+            user_id: req.user._id,
+            old_values: category,
+            new_values: null,
         });
 
         res.status(200).json({
             success: true,
-            message: 'Category successfully deleted'
-        })
-
-    }catch(err){
+            message: "Category successfully deleted",
+        });
+    } catch (err) {
         next(err);
     }
-}
+};

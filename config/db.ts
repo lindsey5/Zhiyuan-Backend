@@ -1,19 +1,16 @@
-import { Sequelize } from "sequelize";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const sequelize = new Sequelize({
-  dialect: "sqlite",
-  storage: process.env.SQLITE_PATH,
-  logging: false,
-});
+const connectDB = async () => {
+  dotenv.config();
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI || "");
+    console.log(`MongoDB connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+};
 
-(async () => {
-    await sequelize.authenticate();
-    // Enable foreign key enforcement
-    await sequelize.query("PRAGMA foreign_keys = ON;");
-    console.log("Foreign key enforcement enabled!");
-})();
-
-export default sequelize;
+export default connectDB;

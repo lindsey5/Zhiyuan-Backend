@@ -1,32 +1,30 @@
 import { NextFunction, Request, Response } from "express";
 import { deleteFiles, uploadBase64, uploadFile } from "../utils/cloudinary";
-import { Product } from '../database/models/index';
 import Variant from "../database/models/Variant";
-import { Op, Sequelize } from "sequelize";
-import { VariantAttributes } from "../types/model-attributes";
-import sequelize from "../config/db";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
 import Category from "../database/models/Category";
+import Product from "../database/models/Product";
+import mongoose from "mongoose";
 
 export const createProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const uploadedPublicIds: string[] = [];
 
     try {
-        const existingCategory = await Category.findOne({
-            where: {
-                name: req.body.category,
-                status: 'active'
-            }
-        })
+        // Check if category exists
+        const existingCategory = await Category.findOne({ 
+            name: req.body.category, 
+            status: 'active' 
+        });
 
-        if(!existingCategory){
+        if (!existingCategory) {
             return res.status(400).json({
                 success: false,
-                message: 'Category not exist'
-            })
+                message: 'Category does not exist'
+            });
         }
 
+        // Parse variants if needed
         const variants = typeof req.body.variants === 'string'
             ? JSON.parse(req.body.variants)
             : req.body.variants;
@@ -40,20 +38,16 @@ export const createProduct = async (req: AuthRequest, res: Response, next: NextF
         const variantImages = files.variant_images || [];
 
         if (!thumbnail) throw new Error("Product thumbnail is required");
+        if (variantImages.length === 0) throw new Error("At least one variant image is required");
+        if (variants.length !== variantImages.length) throw new Error(
+            `Number of variants (${variants.length}) does not match number of variant images (${variantImages.length})`
+        );
 
-        if (variantImages.length === 0)
-            throw new Error("At least one variant image is required");
-
-        if (variants.length !== variantImages.length)
-            throw new Error(
-                `Number of variants (${variants.length}) does not match number of variant images (${variantImages.length})`
-            );
-
-        const { public_id: thumbnailPublicId, secure_url: thumbnailUrl } =
-            await uploadFile(thumbnail.buffer);
-
+        // Upload thumbnail
+        const { public_id: thumbnailPublicId, secure_url: thumbnailUrl } = await uploadFile(thumbnail.buffer);
         uploadedPublicIds.push(thumbnailPublicId);
 
+        // Upload variant images
         const variantImageUrls = await Promise.all(
             variantImages.map(async (variantImage) => {
                 const uploadedImage = await uploadFile(variantImage.buffer);
@@ -66,29 +60,25 @@ export const createProduct = async (req: AuthRequest, res: Response, next: NextF
             })
         );
 
-        const product = await Product.create({
+        // Create product
+        const product = new Product({
             product_name: req.body.product_name,
             description: req.body.description,
             thumbnail_public_id: thumbnailPublicId,
             thumbnail_url: thumbnailUrl,
-            category: req.body.category
+            category: req.body.category,
         });
 
-        const productVariants = await Variant.bulkCreate(
-            variants.map((variant: any, i: number) => ({
-                product_id: product.toJSON().id,
-                ...variant,
-                image_url: variantImageUrls[i].secure_url,
-                image_public_id: variantImageUrls[i].public_id
-            }))
-        );
 
-        const newProduct = {
-            ...product.toJSON(),
-            variants: productVariants.map(v => v.toJSON())
-        };
+        const newVariants = await Variant.insertMany(variants.map((variant: any, i: number) => ({
+            product_id: product._id,
+            ...variant,
+            image_url: variantImageUrls[i].secure_url,
+            image_public_id: variantImageUrls[i].public_id
+        })))
+        await product.save();
 
-
+        // Audit log
         await AuditLogService.log({
             action: "CREATE_PRODUCT",
             description: `Product "${req.body.product_name}" successfully created.`,
@@ -96,21 +86,22 @@ export const createProduct = async (req: AuthRequest, res: Response, next: NextF
             role: req?.user?.role.name || "N/A",
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
-            user_id: Number(req.user.id),
+            user_id: req.user?._id,
             old_values: null,
-            new_values: newProduct
+            new_values: {
+                ...product.toObject(),
+                variants: newVariants
+            }
         });
 
         return res.status(201).json({
             success: true,
             message: "Product created successfully",
-            product: {
-                ...product.toJSON(),
-                variants: productVariants.map(variant => variant.toJSON())
-            }
+            product
         });
 
     } catch (err: any) {
+        // Rollback uploaded images if error occurs
         if (uploadedPublicIds.length > 0) {
             try {
                 await deleteFiles(uploadedPublicIds);
@@ -127,7 +118,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
     try {
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
+        const skip = (page - 1) * limit;
 
         const search = req.query.search ? String(req.query.search) : "";
         const categories = req.query.categories ? String(req.query.categories) : "";
@@ -137,82 +128,60 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const maxPrice = req.query.maxPrice ? Number(req.query.maxPrice) : null;
 
         const sortBy = req.query.sortBy ? String(req.query.sortBy) : "product_name";
-        const order =
-        req.query.order && String(req.query.order).toUpperCase() === "DESC"
-            ? "DESC"
-            : "ASC";
+        const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? -1 : 1;
 
         const categoriesArr = categories
-        ? categories.split(",").map((c) => c.trim()).filter((c) => c !== "")
-        : [];
+            ? categories.split(",").map((c) => c.trim()).filter((c) => c !== "")
+            : [];
 
-        // Price filter for variants
-        let priceFilter: any = {};
-        if (minPrice !== null && maxPrice !== null) {
-            priceFilter = { [Op.between]: [minPrice, maxPrice] };
-        } else if (minPrice !== null) {
-            priceFilter = { [Op.gte]: minPrice };
-        } else if (maxPrice !== null) {
-            priceFilter = { [Op.lte]: maxPrice };
-        }
-
-        // Product where conditions
-        const whereCondition: any = {
-            status: "active",
-        };
+        // Build main product filter
+        const filter: any = { status: "active" };
 
         if (search) {
-            whereCondition.product_name = { [Op.like]: `%${search}%` };
+            filter.product_name = { $regex: search, $options: "i" };
         }
 
         if (categoriesArr.length > 0) {
-            whereCondition.category = { [Op.in]: categoriesArr };
+            filter.category = { $in: categoriesArr };
         }
 
         if (category) {
-            whereCondition.category = category;
+            filter.category = category;
         }
 
-        // Count total products (IMPORTANT: no include here)
-        const total = await Product.count({
-            where: whereCondition,
-        });
+        // Count total products
+        const total = await Product.countDocuments(filter);
 
-        // Fetch products with variants
-        const products = await Product.findAll({
-            where: whereCondition,
-
-            attributes: {
-                include: [
-                [
-                    Sequelize.literal(`(
-                    SELECT MIN(price)
-                    FROM variants
-                    WHERE variants.product_id = Product.id
-                    )`),
-                    "minPrice",
-                ],
-                ],
-            },
-
-            include: [
-                {
-                    model: Variant,
+        // Build aggregate pipeline to include minPrice from variants
+        const pipeline: any[] = [
+            { $match: filter },
+            {
+                $lookup: {
+                    from: "variants",
+                    localField: "_id",
+                    foreignField: "product_id",
                     as: "variants",
-                    where: {
-                        status: 'active'
-                    }
+                    pipeline: [{ $match: { status: "active" } }],
                 },
-            ],
+            },
+            {
+                $addFields: {
+                    minPrice: { $min: "$variants.price" },
+                },
+            },
+        ];
 
-            order:
-                sortBy === "price"
-                ? [[Sequelize.literal("minPrice"), order]]
-                : [[sortBy, order]],
+        // Apply sorting
+        if (sortBy === "price") {
+            pipeline.push({ $sort: { minPrice: order } });
+        } else {
+            pipeline.push({ $sort: { [sortBy]: order } });
+        }
 
-            limit,
-            offset,
-        });
+        // Pagination
+        pipeline.push({ $skip: skip }, { $limit: limit });
+
+        const products = await Product.aggregate(pipeline);
 
         const totalPages = Math.ceil(total / limit);
 
@@ -224,64 +193,58 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
             total,
             products,
         });
-    } catch (err: any) {
+    } catch (err) {
         next(err);
     }
 };
 
-export const getProductById = async (req : Request, res : Response, next : NextFunction) => {
-    try{
-        const product = await Product.findByPk(req.params.id as string, {
-            include: [
-                {
-                    model: Variant,
-                    as: 'variants'
-                }
-            ]
-        });
+export const getProductById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const product = await Product.findById(req.params.id)
+            .populate({
+                path: "variants", 
+                match: { status: "active" }
+            });
 
-        if(!product){
-            res.status(404).json({
+        if (!product) {
+            return res.status(404).json({
                 success: false,
-                message: 'Product not found.'
-            })
-            return
+                message: "Product not found."
+            });
         }
 
         res.status(200).json({
             success: true,
             product
-        })
-
-    } catch(err : any){
+        });
+    } catch (err) {
         next(err);
     }
-}
+};
 
 export const deleteProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const product = await Product.findByPk(req.params.id as string, {
-            include: [
-                { model: Variant, as: "variants" }
-            ]
-        });
+        const product = await Product.findById(req.params.id).populate("variants");
 
         if (!product) {
-            res.status(404).json({
+            return res.status(404).json({
                 success: false,
-                message: 'Product not found.'
+                message: "Product not found."
             });
-            return;
         }
+        const oldValues = product.toObject();
 
-        const oldValues = product.toJSON();
-
-        product.set({
-            status: 'inactive'
-        })
+        // Mark as deleted
+        product.status = "deleted";
 
         await product.save();
 
+        await Variant.updateMany(
+            { product_id: product._id },
+            { $set: { status: 'deleted' }}
+        )
+
+        // Log the action
         await AuditLogService.log({
             action: "DELETE_PRODUCT",
             description: `Product "${oldValues.product_name}" successfully deleted.`,
@@ -289,57 +252,54 @@ export const deleteProduct = async (req: AuthRequest, res: Response, next: NextF
             role: req.user.role.name || "N/A",
             severity: "HIGH",
             user_agent: req?.headers["user-agent"] || "",
-            user_id: req.user.id,
+            user_id: req.user._id,
             old_values: oldValues,
             new_values: null
         });
 
         return res.status(200).json({
             success: true,
-            message: 'Product successfully deleted.'
+            message: "Product successfully deleted."
         });
-
-    } catch (err: any) {
+    } catch (err) {
         next(err);
     }
 };
 
 export const updateProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const uploadedPublicIds: string[] = [];
-    const t = await sequelize.transaction();
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    try {      
+    try {
+        // Validate category
         const existingCategory = await Category.findOne({
-            where: {
-                name: req.body.category,
-                status: 'active'
-            }
-        })
+            name: req.body.category,
+            status: "active"
+        }).session(session);
 
-        if(!existingCategory){
+        if (!existingCategory) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(400).json({
                 success: false,
-                message: 'Category not exist'
-            })
+                message: "Category does not exist"
+            });
         }
 
-        // FETCH PRODUCT
-        const product = await Product.findByPk(req.params.id as string, {
-            include: [{ model: Variant, as: "variants" }],
-            transaction: t
-        });
-
+        // Fetch product
+        const product = await Product.findById(req.params.id).populate("variants").session(session);
         if (!product) {
-            await t.rollback();
+            await session.abortTransaction();
+            session.endSession();
             return res.status(404).json({
                 success: false,
                 message: "Product not found."
             });
         }
 
-        const oldValues = product.toJSON();
-        const oldVariants = (product as any).variants || [];
-
+        const oldValues = product.toObject();
+        const oldVariants = oldValues?.variants || [];
         const { variants, ...updatedProduct } = req.body;
 
         if (!variants || !Array.isArray(variants)) {
@@ -350,81 +310,84 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
 
         // UPDATE THUMBNAIL
         if (updatedProduct.thumbnail_url && updatedProduct.thumbnail_url !== oldValues.thumbnail_url) {
-            if (updatedProduct?.thumbnail_url.startsWith("data:image")) {
+            if (updatedProduct.thumbnail_url.startsWith("data:image")) {
                 const { public_id, secure_url } = await uploadBase64(updatedProduct.thumbnail_url);
                 uploadedPublicIds.push(public_id);
-                imagesToDelete.push(oldValues.thumbnail_public_id);
+                if (oldValues.thumbnail_public_id) imagesToDelete.push(oldValues.thumbnail_public_id);
 
                 updatedProduct.thumbnail_public_id = public_id;
                 updatedProduct.thumbnail_url = secure_url;
             }
         }
-        await product.update(updatedProduct, { transaction: t });
 
-        // UPDATE / CREATE VARIANTS
+        // Update product fields
+        product.set(updatedProduct);
+        await product.save({ session });
+
+        // Update/create variants
         const updatedVariants = await Promise.all(
-            variants.map(async (variant: VariantAttributes) => {
-                let existingVariant = variant.id 
-                    ? await Variant.findByPk(variant.id, { transaction: t })
-                    : null;
+            variants.map(async (variant) => {
+                let existingVariant: any = null;
+
+                if (variant._id) {
+                    existingVariant = await Variant.findById(variant._id).session(session);
+                }
 
                 if (existingVariant) {
-                    if (variant.image_url?.startsWith("data:image") && variant.image_url !== existingVariant.toJSON().image_url) {
+                    if (variant.image_url?.startsWith("data:image") && variant.image_url !== existingVariant.image_url) {
                         const { public_id, secure_url } = await uploadBase64(variant.image_url);
                         uploadedPublicIds.push(public_id);
-                        imagesToDelete.push(existingVariant.toJSON().image_public_id);
+                        if (existingVariant.image_public_id) imagesToDelete.push(existingVariant.image_public_id);
 
                         variant.image_public_id = public_id;
                         variant.image_url = secure_url;
                     }
-
-                    await existingVariant.update(variant, { transaction: t });
-                    return existingVariant.toJSON();
+                    existingVariant.set(variant);
+                    await existingVariant.save({ session });
+                    return existingVariant;
                 }
 
+                // Create new variant
                 let newImageUrl = variant.image_url;
                 let newImagePublicId = "";
 
-                if (variant?.image_url.startsWith("data:image")) {
+                if (variant.image_url.startsWith("data:image")) {
                     const { public_id, secure_url } = await uploadBase64(variant.image_url);
                     uploadedPublicIds.push(public_id);
                     newImagePublicId = public_id;
                     newImageUrl = secure_url;
                 }
 
-                const newVariant = await Variant.create({
-                    product_id: product.toJSON().id,
+                const newVariant = await Variant.create([{
+                    product_id: product._id,
                     variant_name: variant.variant_name,
                     price: variant.price,
                     stock: variant.stock,
                     sku: variant.sku,
                     image_public_id: newImagePublicId,
                     image_url: newImageUrl
-                }, { transaction: t });
+                }], { session });
 
-                return newVariant.toJSON();
+                return newVariant[0];
             })
         );
 
-        // DELETE REMOVED VARIANTS
-        const incomingIds = variants
-            .filter((v: VariantAttributes) => v.id)
-            .map((v: VariantAttributes) => v.id);
-
+        // Delete removed variants
+        const incomingIds = variants.filter(v => v._id).map(v => v._id);
         for (const oldVariant of oldVariants) {
-            if (!incomingIds.includes(oldVariant.id)) {
-                imagesToDelete.push(oldVariant.image_public_id);
-                await oldVariant.destroy({ transaction: t });
+            if (!incomingIds.includes(String(oldVariant._id))) {
+                await Variant.updateOne({ _id: oldVariant._id}, { $set: { status: 'deleted'}}).session(session);
             }
         }
 
         await deleteFiles(imagesToDelete);
 
-        // COMMIT TRANSACTION
-        await t.commit();
+        // Commit transaction
+        await session.commitTransaction();
+        session.endSession();
 
         const newValues = {
-            ...product.toJSON(),
+            ...product.toObject(),
             variants: updatedVariants
         };
 
@@ -435,8 +398,11 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
             role: req.user.role.name || "N/A",
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "N/A",
-            user_id: req.user.id,
-            old_values: oldValues,
+            user_id: req.user._id,
+            old_values: {
+                ...oldValues,
+                variants: oldVariants
+            },
             new_values: newValues
         });
 
@@ -446,13 +412,12 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
             product: newValues
         });
 
-    } catch (err: any) {
+    } catch (err) {
         console.log(err);
+        await session.abortTransaction();
+        session.endSession();
 
-        // ROLLBACK DB
-        await t.rollback();
-
-        // ROLLBACK CLOUD STORAGE
+        // Rollback uploaded images
         if (uploadedPublicIds.length > 0) {
             try {
                 await deleteFiles(uploadedPublicIds);
@@ -465,34 +430,35 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
     }
 };
 
-export const searchProduct = async (req: Request, res: Response, next : NextFunction) => {
-    try{
+export const searchProduct = async (req: Request, res: Response, next: NextFunction) => {
+    try {
         const { id, ...query } = req.query;
 
-        const product = await Product.findOne({
-            where: {
-                ...query,
-                ...(id !== undefined && id !== "" && {
-                id: {
-                    [Op.ne]: Number(id),
-                },
-                }),
-                status: "active",
-            },
-        });
-        if(!product){
+        // Build Mongoose filter
+        const filter: any = {
+            ...query,
+            status: "active"
+        };
+
+        if (id !== undefined && id !== "") {
+            filter._id = { $ne: id };
+        }
+
+        const product = await Product.findOne(filter);
+
+        if (!product) {
             return res.status(404).json({
                 success: false,
-                message: 'Product not found'
-            })
+                message: "Product not found"
+            });
         }
 
         res.status(200).json({
             success: true,
             product
-        })
+        });
 
-    }catch(err){
-        next(err)
+    } catch (err) {
+        next(err);
     }
 }

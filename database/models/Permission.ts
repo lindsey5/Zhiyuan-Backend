@@ -1,42 +1,28 @@
-import { DataTypes, Model, Optional } from "sequelize";
-import sequelize from "../../config/db";
-import { PermissionAttributes } from "../../types/model-attributes";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 import PERMISSIONS from "../../utils/permissions";
+import { PermissionAttributes } from "../../types/model-attributes";
 
-interface PermissionCreationAttributes extends Optional<PermissionAttributes, "id"> {}
+const PermissionSchema: Schema<PermissionAttributes> = new Schema(
+    {
+        action: {
+            type: String,
+            enum: Object.values(PERMISSIONS), 
+            required: [true, "action is required."],
+            trim: true,
+        },
 
-class Permission extends Model<PermissionAttributes, PermissionCreationAttributes> {}
-
-Permission.init(
-{
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true,
-    },
-
-    action: {
-        type: DataTypes.ENUM(...Object.values(PERMISSIONS)),
-        allowNull: false,
-        validate: {
-            notEmpty: { msg: "action is required." },
+        role_id: {
+            type: Schema.Types.ObjectId,
+            ref: "Role",
+            required: [true, "role id is required."],
         },
     },
+    { timestamps: true } 
+);
 
-    role_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        validate: {
-            notEmpty: { msg: "role id is required." },
-        },
-    },
-},
-{
-    sequelize,
-    modelName: "Permission",
-    tableName: "permissions",
-    timestamps: false,
-}
+const Permission: Model<PermissionAttributes> = mongoose.model(
+    "Permission",
+    PermissionSchema
 );
 
 export default Permission;
