@@ -31,6 +31,12 @@ const PERMISSIONS = {
     CATEGORY_READ_ALL: 'category:read:all',
     CATEGORY_CREATE: 'category:create',
     CATEGORY_UPDATE: 'category:update',
-    CATEGORY_DELETE: 'category:delete'
+    CATEGORY_DELETE: 'category:delete',
+
+    //Distributor management
+    DISTRIBUTOR_READ_ALL: 'distributor:read:all',
+    DISTRIBUTOR_CREATE: 'distributor:create',
+    DISTRIBUTOR_UPDATE: 'distributor:update',
+    DISTRIBUTOR_DELETE: 'distributor:delete'
 }
 export default PERMISSIONS

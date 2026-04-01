@@ -1,5 +1,3 @@
-import { int } from "zod";
-
 export interface PermissionAttributes {
     id: number;
     action: string;
@@ -20,6 +18,7 @@ export interface UserAttributes {
     email: string;
     password: string;
     role_id: number;
+    status?: 'active' | 'deleted';
     createdAt?: Date;
 }
 
@@ -87,4 +86,53 @@ export interface OrderItemAttributes {
     quantity: number;
     amount: number;
     price: number;
+}
+
+export interface DistributorAttributes {
+    id: number;
+    parent_distributor_id?: number;
+    creator?: number;
+    distributor_name: string;
+    email: string;
+    password: string;
+    commission_rate: number;
+    wallet_balance: number;
+    status: 'active' | 'deleted',
+    createdAt: Date;
+}
+
+export interface DistributorStockAttributes {
+    id: number;
+    distributor_id: number;
+    variant_id: number;
+    quantity: number;
+}
+
+export interface StockTransferAttributes {
+    id: number;
+    transfer_id: number;
+    user_id?: number;
+    sender_id?: number;
+    receiver_id: number;
+    quantity: number;
+    variant_id: number;
+    price: number;
+    createdAt: Date;
+}
+
+export interface DistributorSaleAttributes {
+    id: number;
+    seller_id: number;
+    quantity: number;
+    total_amount: number;
+    createdAt: Date;
+}
+
+export interface CommissionLogAttributes {
+    id: number;
+    sale_id: number;
+    receiver_id: number;
+    commission_rate: number;
+    commission_amount: number;
+    createdAt: Date;
 }

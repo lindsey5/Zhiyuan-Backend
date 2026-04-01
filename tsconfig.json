@@ -116,5 +116,5 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "include": ["**/*.ts", "types/**/*.ts", "types.d.ts", "database/migrations/create-audit-logs.js", "../frontend/src/types/product.ts"]
+  "include": ["**/*.ts", "types/**/*.ts", "types.d.ts", "database/migrations/create-audit-logs.js", "../frontend/src/types/product.type.ts"]
 }

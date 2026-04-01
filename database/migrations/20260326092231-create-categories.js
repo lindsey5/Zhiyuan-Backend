@@ -2,36 +2,32 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("categories", {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.createTable('categories', {
       id: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-        autoIncrement: true,
         primaryKey: true,
-      },
-
-      name: {
-        type: Sequelize.STRING,
+        autoIncrement: true,
         allowNull: false,
-        unique: true,
       },
-
+      name: {
+        type: Sequelize.STRING(100),
+        allowNull: false,
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.NOW,
       },
-
       status: {
-        type: Sequelize.ENUM('active', 'inactive'),
+        type: Sequelize.ENUM('active', 'deleted'),
         allowNull: false,
-        defaultValue: 'active'
-      }
+        defaultValue: 'active',
+      },
     });
   },
 
-  async down (queryInterface, Sequelize) {
-    await queryInterface.dropTable("categories");
-  }
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.dropTable('categories');
+  },
 };

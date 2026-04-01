@@ -3,37 +3,38 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('order_items', {
+    await queryInterface.createTable('commission_logs', {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
       },
-      order_id: {
+      sale_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      variant_id: {
+      receiver_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      quantity: {
-        type: Sequelize.INTEGER,
+      commission_rate: {
+        type: Sequelize.DECIMAL(5, 2),
         allowNull: false,
       },
-      amount: {
-        type: Sequelize.FLOAT,
+      commission_amount: {
+        type: Sequelize.DECIMAL(12, 2),
         allowNull: false,
       },
-      price: {
-        type: Sequelize.FLOAT,
+      createdAt: {
+        type: Sequelize.DATE,
         allowNull: false,
+        defaultValue: Sequelize.NOW,
       },
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('order_items');
+    await queryInterface.dropTable('commission_logs');
   },
 };

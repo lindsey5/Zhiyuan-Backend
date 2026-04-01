@@ -3,17 +3,12 @@
 const usersData =[
   {
     firstname: 'System',
-    lastname: 'Admin',
-    email: 'admin123@gmail.com',
-    password: 'admin123',
-    role_id: 1,
-  },
-  {
-    firstname: 'System',
     lastname: 'Front Desk',
     email: 'frontdesk123@gmail.com',
     password: 'frontdesk123',
     role_id: 2,
+    status: 'active',
+    createdAt: new Date(Date.now())
   },
   {
     firstname: 'System',
@@ -21,13 +16,19 @@ const usersData =[
     email: 'inventory123@gmail.com',
     password: 'inventory123',
     role_id: 3,
+    status: 'active',
+    createdAt: new Date(Date.now())
   },
 ]
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.bulkInsert('users', usersData, {});
+    try{
+      await queryInterface.bulkInsert('users', usersData, {})
+    }catch(err){
+      console.log(err)
+    }
   },
 
   async down (queryInterface, Sequelize) {

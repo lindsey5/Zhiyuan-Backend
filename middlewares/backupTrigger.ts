@@ -1,8 +1,29 @@
 import { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import backupSQLiteDebounced from "../utils/backup";
+import fs from 'fs';
 
 dotenv.config();
+
+let lastModified : any = null;
+
+const hasFileChanged = (filePath : string) => {
+    const stats = fs.statSync(filePath);
+    const currentModified = stats.mtimeMs;
+
+    if (lastModified === null) {
+        lastModified = currentModified;
+        return false;
+    }
+
+    if (currentModified !== lastModified) {
+        lastModified = currentModified;
+        return true;
+    }
+
+    return false;
+};
+
 
 export default function backupOnWrite(dbPath: string) {
     return (req: Request, res: Response, next: NextFunction) => {

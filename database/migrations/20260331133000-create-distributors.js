@@ -3,49 +3,47 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('audit_logs', {
+    await queryInterface.createTable('distributors', {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
         allowNull: false,
       },
-      user_id: {
+      parent_distributor_id: {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
-      role: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      action: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      description: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
-      severity: {
-        type: Sequelize.ENUM('LOW', 'MEDIUM', 'HIGH', 'CRITICAL'),
-        allowNull: false,
-        defaultValue: 'LOW',
-      },
-      ip_address: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      user_agent: {
-        type: Sequelize.STRING,
-        allowNull: false,
-      },
-      old_values: {
-        type: Sequelize.JSON,
+      creator: {
+        type: Sequelize.INTEGER,
         allowNull: true,
       },
-      new_values: {
-        type: Sequelize.JSON,
-        allowNull: true,
+      distributor_name: {
+        type: Sequelize.STRING(100),
+        allowNull: false,
+      },
+      commission_rate: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+      },
+      wallet_balance: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      email: {
+        type: Sequelize.STRING(100),
+        allowNull: false,
+        unique: true,
+      },
+      password: {
+        type: Sequelize.STRING(100),
+        allowNull: false,
+      },
+      status: {
+        type: Sequelize.ENUM('active', 'deleted'),
+        allowNull: false,
+        defaultValue: 'active',
       },
       createdAt: {
         type: Sequelize.DATE,
@@ -56,6 +54,6 @@ up: async (queryInterface, Sequelize) => {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('audit_logs');
+    await queryInterface.dropTable('distributors');
   },
 };

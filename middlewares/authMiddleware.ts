@@ -1,7 +1,8 @@
 import { Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { Role, User, Permission } from "../database/models";
+import { Role, User, Permission, Distributor } from "../database/models/index";
 import { AuthRequest } from "../types/auth";
+import PERMISSIONS from "../utils/permissions";
 
 export const authenticate = async (
     req: AuthRequest,
@@ -130,5 +131,39 @@ export const authorizePermission = (...requiredPermissions: string[]) => {
         }
 
         next();
+    };
+};
+
+export const authorizeDistributorCreation = () => {
+    return async (
+        req: AuthRequest,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            const hasPermission = await Permission.findOne({
+                where: {
+                    id: req.user.id,
+                    action: PERMISSIONS.DISTRIBUTOR_CREATE
+                }
+            });
+
+            const existingDistributor = await Distributor.findByPk(req.user.id);
+
+            if (!hasPermission && !existingDistributor) {
+                return res.status(403).json({
+                    success: false,
+                    message: "You do not have permission to create a distributor."
+                });
+            }
+
+            next();
+        } catch (error) {
+            console.error("Error in authorizeDistributorCreation:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Internal server error."
+            });
+        }
     };
 };

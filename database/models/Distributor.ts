@@ -1,50 +1,48 @@
+
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../../config/db";
+import { DistributorAttributes } from "../../types/model-attributes";
 import { hashPassword } from "../../utils/auth";
-import { UserAttributes } from "../../types/model-attributes";
-import bcrypt from "bcrypt";
 
-interface UserCreationAttributes extends Optional<UserAttributes, "id"> {}
+interface DistributorCreationAttributes extends Optional<DistributorAttributes, "id"> {}
 
-class User extends Model<UserAttributes, UserCreationAttributes> {
+class Distributor extends Model<DistributorAttributes, DistributorCreationAttributes> {}
 
-    public async matchPassword(plainPassword: string): Promise<boolean> {
-        return await bcrypt.compare(plainPassword, this.toJSON().password);
-    }
-}
-
-User.init(
+Distributor.init(
     {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
         },
-
-        firstname: {
+        parent_distributor_id: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        creator: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        distributor_name: {
             type: DataTypes.STRING,
             allowNull: false,
             validate: {
-                notEmpty: { msg: "firstname is required." },
+                notEmpty: { msg: "agent name is required." },
                 len: {
                     args: [1, 100],
-                    msg: "firstname must be between 1 and 100 characters."
-                }
-        },
-        },
-
-        lastname: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                notEmpty: { msg: "lastname is required." },
-                len: {
-                    args: [1, 100],
-                    msg: "lastname must be between 1 and 100 characters."
+                    msg: "agent name must be between 1 and 100 characters."
                 }
             },
         },
-
+        commission_rate: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
+        },
+        wallet_balance: {
+            type: DataTypes.FLOAT,
+            allowNull: false,
+            defaultValue: 0,
+        },
         email: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -58,26 +56,22 @@ User.init(
                 }
             },
         },
-
         password: {
             type: DataTypes.STRING,
             allowNull: false,
             validate: {
-                notEmpty: { msg: "password is required." },
-            },
+            notEmpty: { msg: 'password is required'},
+                len: {
+                    args: [5, 100],
+                    msg: "password must be between 6 to 50 characters."
+                }
+            }
         },
-
-        role_id: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-
         status: {
             type: DataTypes.ENUM('active', 'deleted'),
             allowNull: false,
-            defaultValue :'active'
+            defaultValue: 'active'
         },
-
         createdAt: {
             type: DataTypes.DATE,
             allowNull: false,
@@ -86,12 +80,11 @@ User.init(
     },
     {
         sequelize,
-        modelName: "User",
-        tableName: "users",
+        modelName: "Distributor",
+        tableName: "distributors",
         timestamps: false,
-
         hooks: {
-            beforeCreate: async (account: User) => {
+            beforeCreate: async (account: Distributor) => {
                 console.log("account about to be created & saved:", account);
 
                 if (account.toJSON().password) account.set({ password: await hashPassword(account.toJSON().password)});
@@ -100,4 +93,4 @@ User.init(
     }
 );
 
-export default User;
+export default Distributor;

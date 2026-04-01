@@ -2,8 +2,8 @@
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-    async up(queryInterface, Sequelize) {
-        await queryInterface.createTable("variants", {
+      up: async (queryInterface, Sequelize) => {
+        await queryInterface.createTable('variants', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -14,13 +14,10 @@ module.exports = {
             product_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: { model: 'products', key: 'id' },
-                onDelete: 'CASCADE',
-                onUpdate: 'CASCADE',
             },
 
             variant_name: {
-                type: Sequelize.STRING,
+                type: Sequelize.STRING(100),
                 allowNull: false,
             },
 
@@ -37,6 +34,7 @@ module.exports = {
             stock: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
+                defaultValue: 0,
             },
 
             price: {
@@ -45,8 +43,15 @@ module.exports = {
             },
 
             sku: {
-                type: Sequelize.STRING,
+                type: Sequelize.STRING(100),
                 allowNull: false,
+                unique: true,
+            },
+
+            status: {
+                type: Sequelize.ENUM('active', 'deleted'),
+                allowNull: false,
+                defaultValue: 'active',
             },
 
             createdAt: {
@@ -54,16 +59,10 @@ module.exports = {
                 allowNull: false,
                 defaultValue: Sequelize.NOW,
             },
-
-            status: {
-                type: Sequelize.ENUM('active', 'inactive'),
-                allowNull: false,
-                defaultValue: 'active'
-            }
         });
     },
 
-    async down (queryInterface, Sequelize) {
-        await queryInterface.dropTable("variants");
-    }
+    down: async (queryInterface, Sequelize) => {
+        await queryInterface.dropTable('variants');
+    },
 };

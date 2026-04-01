@@ -9,4 +9,11 @@ const sequelize = new Sequelize({
   logging: false,
 });
 
+(async () => {
+    await sequelize.authenticate();
+    // Enable foreign key enforcement
+    await sequelize.query("PRAGMA foreign_keys = ON;");
+    console.log("Foreign key enforcement enabled!");
+})();
+
 export default sequelize;

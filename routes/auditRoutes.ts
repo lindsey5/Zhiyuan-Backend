@@ -8,7 +8,7 @@ const router = Router();
 
 router.get(
     '/',
-    createRateLimiter(15 * 60 * 1000, 100),
+    createRateLimiter(5 * 60 * 1000, 100),
     authenticate,
     authorizePermission(PERMISSIONS.AUDIT_VIEW_ALL),
     getAuditLogs

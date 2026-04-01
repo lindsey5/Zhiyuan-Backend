@@ -9,7 +9,8 @@ export const login = async (req : Request, res : Response, next : NextFunction) 
 
         const user = await User.findOne({
             where: {
-                email
+                email,
+                status: 'active'
             },
             include: [
                 {

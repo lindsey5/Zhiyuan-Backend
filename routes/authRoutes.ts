@@ -6,8 +6,8 @@ import createRateLimiter from "../utils/rate-limit";
 
 const router = Router();
 
-router.post('/login', createRateLimiter(15 * 60 * 1000, 10), validateBody(loginSchema), login);
-router.post('/refreshToken', createRateLimiter(15 * 60 * 1000, 10), refreshAccessToken);
+router.post('/login', createRateLimiter(15 * 60 * 1000, 5), validateBody(loginSchema), login);
+router.post('/refreshToken', createRateLimiter(15 * 60 * 1000, 5), refreshAccessToken);
 
 const authRoutes = router;
 
