@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import Product from "../database/models/Product";
-import Variant from "../database/models/Variant";
+import Product from "../models/Product";
+import Variant from "../models/Variant";
 import dotenv from 'dotenv';
 dotenv.config();
 

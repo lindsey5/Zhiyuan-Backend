@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { deleteFiles, uploadBase64, uploadFile } from "../utils/cloudinary";
-import Variant from "../database/models/Variant";
+import Variant from "../models/Variant";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
-import Category from "../database/models/Category";
-import Product from "../database/models/Product";
+import Category from "../models/Category";
+import Product from "../models/Product";
 import mongoose from "mongoose";
 
 export const createProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {

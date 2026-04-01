@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
-import { OrderAttributes } from "../../types/model-attributes";
+import { OrderAttributes } from "../types/model-attributes";
 
 const OrderSchema: Schema<OrderAttributes> = new Schema(
     {

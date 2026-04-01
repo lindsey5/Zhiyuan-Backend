@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
-import PERMISSIONS from "../../utils/permissions";
-import { PermissionAttributes } from "../../types/model-attributes";
+import PERMISSIONS from "../utils/permissions";
+import { PermissionAttributes } from "../types/model-attributes";
 
 const PermissionSchema: Schema<PermissionAttributes> = new Schema(
     {

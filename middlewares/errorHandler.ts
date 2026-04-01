@@ -1,66 +1,58 @@
 import { NextFunction, Request, Response } from "express";
-import {
-    ValidationError,
-    UniqueConstraintError,
-    ForeignKeyConstraintError,
-    DatabaseError
-} from "sequelize";
+import mongoose from "mongoose";
 
 export const errorHandler = (
     err: any,
     _req: Request,
     res: Response,
     _next: NextFunction
- ) => {
+) => {
     console.error(err);
 
-    // Sequelize Validation Error
-    if (err instanceof ValidationError) {
-        res.status(400).json({
+    // Mongoose Validation Error
+    if (err instanceof mongoose.Error.ValidationError) {
+        return res.status(400).json({
             success: false,
             error: "Validation error",
-            details: err.errors.map(e => ({
+            details: Object.values(err.errors).map((e: any) => ({
                 field: e.path,
-                message: e.message
-            }))
+                message: e.message,
+            })),
         });
-        return;
     }
 
-    // Sequelize Unique Constraint
-    if (err instanceof UniqueConstraintError) {
-        res.status(409).json({
+    // Duplicate Key Error (Unique)
+    if (err.code === 11000) {
+        const field = Object.keys(err.keyValue)[0];
+
+        return res.status(409).json({
             success: false,
             error: "Duplicate value",
-            message: `${err.errors[0]?.path} already exists.`
+            message: `${field} already exists.`,
         });
-        return;
     }
 
-    // Foreign key error
-    if (err instanceof ForeignKeyConstraintError) {
-        res.status(400).json({
+    // CastError (Invalid ObjectId, wrong type)
+    if (err instanceof mongoose.Error.CastError) {
+        return res.status(400).json({
             success: false,
-            error: "Invalid reference",
-            message: err.message
+            error: "Invalid ID",
+            message: `Invalid value for field "${err.path}"`,
         });
-        return;
     }
 
-    // Database error
-    if (err instanceof DatabaseError) {
-        res.status(500).json({
+    // MongoServerError (general DB error)
+    if (err.name === "MongoServerError") {
+        return res.status(500).json({
             success: false,
             error: "Database error",
-            message: err.message
+            message: err.message,
         });
-        return;
     }
 
     // Default error
-    res.status(err.status || 500).json({
+    return res.status(err.status || 500).json({
         success: false,
-        message: err.message || "Internal Server Error"
+        message: err.message || "Internal Server Error",
     });
-    return;
 };

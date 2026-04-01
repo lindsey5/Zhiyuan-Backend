@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import { ProductAttributes } from "../../types/model-attributes";
+import { ProductAttributes } from "../types/model-attributes";
 
 const ProductSchema: Schema<ProductAttributes> = new Schema(
     {

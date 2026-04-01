@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
-import { VariantAttributes } from "../../types/model-attributes";
+import { VariantAttributes } from "../types/model-attributes";
 
 const VariantSchema: Schema<VariantAttributes> = new Schema(
     {

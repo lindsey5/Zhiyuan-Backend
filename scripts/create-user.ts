@@ -1,7 +1,7 @@
 import readline from 'readline';
-import Role from '../database/models/Role';
+import Role from '../models/Role';
 import mongoose from 'mongoose';
-import User from '../database/models/User';
+import User from '../models/User';
 import dotenv from 'dotenv';
 dotenv.config();
 

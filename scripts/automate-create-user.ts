@@ -1,5 +1,5 @@
-import Role from '../database/models/Role';
-import User from '../database/models/User';
+import Role from '../models/Role';
+import User from '../models/User';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 

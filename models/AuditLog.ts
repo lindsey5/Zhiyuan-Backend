@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
-import { AuditLogAttributes } from "../../types/model-attributes";
+import { AuditLogAttributes } from "../types/model-attributes";
 
 const AuditLogSchema: Schema<AuditLogAttributes> = new Schema(
     {

@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import { RoleAttributes } from "../../types/model-attributes";
+import { RoleAttributes } from "../types/model-attributes";
 
 const RoleSchema: Schema<RoleAttributes> = new Schema(
     {

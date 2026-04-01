@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { AuthRequest } from "../types/auth";
 import AuditLogService from "../services/AuditLogService";
-import Role from "../database/models/Role";
-import User from "../database/models/User";
+import Role from "../models/Role";
+import User from "../models/User";
 
 export const createUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

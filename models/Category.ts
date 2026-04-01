@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Types, Model } from "mongoose";
-import { CategoryAttributes } from "../../types/model-attributes";
+import { CategoryAttributes } from "../types/model-attributes";
 
 const CategorySchema: Schema<CategoryAttributes> = new Schema(
     {

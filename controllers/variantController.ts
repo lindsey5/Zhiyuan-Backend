@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import Variant from "../database/models/Variant";
+import Variant from "../models/Variant";
 import mongoose from "mongoose";
 
 export const getVariants = async (req: Request, res: Response, next: NextFunction) => {

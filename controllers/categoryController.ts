@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
-import Category from "../database/models/Category";
+import Category from "../models/Category";
 
 export const createCategory = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

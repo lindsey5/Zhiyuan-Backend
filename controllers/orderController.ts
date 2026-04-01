@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import Order from "../database/models/Order";
+import Order from "../models/Order";
 
 export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {

@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 import bcrypt from "bcrypt";
-import { hashPassword } from "../../utils/auth";
-import { UserAttributes } from "../../types/model-attributes";
+import { hashPassword } from "../utils/auth";
+import { UserAttributes } from "../types/model-attributes";
 
 const UserSchema: Schema<UserAttributes> = new Schema(
     {

@@ -2,9 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import PERMISSIONS from "../utils/permissions";
 import { AuthRequest } from "../types/auth";
 import AuditLogService from "../services/AuditLogService";
-import Role from "../database/models/Role";
-import Permission from "../database/models/Permission";
-import User from "../database/models/User";
+import Role from "../models/Role";
+import Permission from "../models/Permission";
+import User from "../models/User";
 
 export const createRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {

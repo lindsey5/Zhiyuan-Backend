@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import AuditLog from "../database/models/AuditLog";
+import AuditLog from "../models/AuditLog";
 
 export const getAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
