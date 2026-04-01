@@ -5,8 +5,7 @@ A backend service for managing users, roles, permissions, categories, products, 
 - Node.js
 - Typescript
 - Express.js
-- Sequelize
-- SQLite
+- Mongoose (MongoDB)
 - Zod
 - Cloudinary API
 
@@ -21,64 +20,28 @@ A backend service for managing users, roles, permissions, categories, products, 
 - Supports SQLite for easy setup
 - Cloudinary integration for image/media uploads
 - All API endpoints are validated using Zod
-- Automatically backup and restore SQLite database
-
-## Backup Feature
-The system can upload a copy of your SQLite database file to Cloudinary as a raw file.
-
-## Restore Feature
-The system can restore the database by downloading the backup file from Cloudinary and replacing the current SQLite database.
-
-Required Environment Variables (Backup & Restore):
-
-```bash
-# SQLite DB file path
-SQLITE_PATH=your_database_path_here
-
-# Backup file name in Cloudinary
-SQLITE_DB_SAVE_AS=your_backup_path_here
-
-# Cloudinary backup reference
-PUBLIC_ID=your_public_id_here
-CLOUDINARY_DB_FOLDER=your_cloudinary_folder_here
-```
-
-## Automatic Backup Watcher (Optional)
-
-If enabled, the system can automatically watch the SQLite file for changes and upload a backup.
-
-Enable watcher:
-```bash
-ENABLE_WATCHER=true
-```
-Disable watcher:
-```bash
-ENABLE_WATCHER=false
-```
 
 ## NPM Scripts
 
 This project includes useful scripts for development, production build, database setup, and automation.
 ```bash
-"scripts": {
     "dev": "cross-env NODE_ENV=development nodemon --watch . --exec ts-node server.ts",
-    "build": "npm install && ts-node scripts/download-db.ts && npx sequelize-cli db:migrate && ts-node scripts/setup-roles.ts && ts-node scripts/automate-create-user.ts && ts-node scripts/insert-products.ts && tsc",
+    "build": "npm install && ts-node scripts/setup-roles.ts && ts-node scripts/automate-create-user.ts && ts-node scripts/insert-products.ts && tsc",
     "start": "cross-env NODE_ENV=production node dist/server.js",
     "setup-roles": "ts-node scripts/setup-roles.ts",
     "create-user": "ts-node scripts/create-user.ts",
     "insert-products": "ts-node scripts/insert-products.ts",
-    "automate-create-user": "ts-node scripts/automate-create-user.ts",
-    "download-backup" : "ts-node scripts/download-db.ts"
-}
+    "automate-create-user": "ts-node scripts/automate-create-user.ts"
 ```
 
 ## Script Descriptions
 - npm run dev
 
-Runs the backend in development mode.
+    Runs the backend in development mode.
+
 - npm run build
 
-Builds the project for production. It installs dependencies, downloads the database backup, runs migrations, sets up roles, creates the default admin user, inserts demo products, and compiles TypeScript.
+    Builds the project for production. It installs dependencies, sets up roles, creates the default admin user, inserts demo products, and compiles TypeScript.
 
 - npm start
 
@@ -108,10 +71,6 @@ Builds the project for production. It installs dependencies, downloads the datab
 
     Inserts demo products into the database.
   
-- npm run download-backup
-
-    Downloads database backup from Cloudinary.
-  
 
 ## File Structure
 ```bash
@@ -129,28 +88,15 @@ Builds the project for production. It installs dependencies, downloads the datab
 |    ├── roleController.ts
 |    ├── userController.ts
 |    └── variantController.ts
-|
-├── database/
-│    └── migrations/ # Sequelize migration files
-|          ├── 20260322171226-create-audit-logs.js
-|          ├── 20260322171325-create-permissions.js
-|          ├── 20260322171348-create-products.js
-|          ├── 20260322171423-create-roles.js   
-|          ├── 20260322171446-create-users.js
-|          ├── 20260322171513-create-variants.js
-|          └── 20260326092231-create-categories.js
-|
-│   └── models/ # Sequelize models
-|          ├── AuditLog.ts
-|          ├── Category.ts
-|          ├── index.ts
-|          ├── Permission.ts
-|          ├── Product.ts
-|          ├── Role.ts
-|          ├── User.ts
-|          └── Variant.ts
-|
-│   └── seeders/ # Database seed scripts
+├── models/ # Mongoose models
+|    ├── AuditLog.ts
+|    ├── Category.ts
+|    ├── index.ts
+|    ├── Permission.ts
+|    ├── Product.ts
+|    ├── Role.ts
+|    ├── User.ts
+|    └── Variant.ts
 |
 ├── docs/
 │   └── paths/ # Swagger path definitions
@@ -192,9 +138,8 @@ Builds the project for production. It installs dependencies, downloads the datab
 |    └── userSchema.ts
 |
 ├── scripts/ # Utility scripts
-|    ├── automate-create-user.ts  # Automatically creates the default admin user (used during build/setup)
+|    ├── automate-create-user.ts  # Automatically creates the default admin user
 |    ├── create-user.ts           # Creates a user manually via terminal input (interactive)
-|    ├── download-db.ts           # Downloads/restores the SQLite database backup from Cloudinary before server startup
 |    ├── insert-products.ts       # Inserts demo/sample products into the database
 |    └── setup-roles.ts           # Creates default roles and permissions required by the system
 |
@@ -208,11 +153,9 @@ Builds the project for production. It installs dependencies, downloads the datab
 |
 └── utils/ # Helper functions
 |    ├── auth.ts         # JWT helper functions
-|    ├── backup.ts       # Handles SQLite database backup
 |    ├── cloudinary.ts   # Cloudinary utility functions (upload and delete helpers)
 |    ├── permissions.ts  
-|    ├── roles.ts        
-|    └── watchDB.ts      # Watches SQLite file changes and automatically triggers database backup
+|    └── roles.ts        
 ```
 
 ## Quick Install (Recommended)
@@ -232,18 +175,13 @@ npm install
 cp .env.example .env
 ```
 
-## 5. Run database migrations (auto-creates database.sqlite)
-```bash
-npx sequelize-cli db:migrate
-```
-
-## 6. Setup database roles and initial user
+## 4. Setup database roles and initial user
 ```bash
 npm run setup-roles
 npm run create-user
 ```
 
-## 7. Start the server
+## 5. Start the server
 ```bash
 # For development
 npm run dev
@@ -263,23 +201,12 @@ JWT_REFRESH_SECRET=your_refresh_secret_key
 JWT_ACCESS_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
 
-# SQLite DB file path
-SQLITE_PATH=your_database_path_here
-
-# Backup file name in Cloudinary
-SQLITE_DB_SAVE_AS=your_backup_path_here
-
-# Cloudinary backup reference
-PUBLIC_ID=your_public_id_here
-CLOUDINARY_DB_FOLDER=your_cloudinary_folder_here
-
-# Enable watcher for automatic backup and restore
-ENABLE_WATCHER=true
+MONGO_URI=your_mongodb_uri
 
 # Cloudinary API KEYS
-CLOUD_NAME=
-CLOUD_API_KEY=
-CLOUD_API_SECRET=
+CLOUD_NAME=your_cloudinary_cloud_name_here
+CLOUD_API_KEY=your_cloudinary_api_key_here
+CLOUD_API_SECRET=your_cloudinary_api_secret_here
 ```
 
 ## Access API documentation
