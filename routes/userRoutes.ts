@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, deleteUser, getUserById, getUsers, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
+import { createUser, deleteUser, getUsers, getUsersCount, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import validateBody from "../middlewares/validateBody";
@@ -50,11 +50,11 @@ router.get(
 )
 
 router.get(
-    '/:id',
-    createRateLimiter(60 * 1000, 20),
+    '/count',
+    createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.USER_READ),
-    getUserById
+    authorizePermission(PERMISSIONS.USER_UPDATE, PERMISSIONS.USER_CREATE, PERMISSIONS.USER_DELETE, PERMISSIONS.USER_READ_ALL),
+    getUsersCount
 )
 
 router.delete(

@@ -201,7 +201,7 @@ export const getOwnRole = async (req: AuthRequest, res: Response, next: NextFunc
         const role = await Role.findById(user.role_id).populate("permissions");
         if (!role) return res.status(404).json({ success: false, message: "No role found." });
 
-        const { permissions, ...roleData } = role;
+        const { permissions, ...roleData } = role.toObject();
 
         res.status(200).json({
             success: true,

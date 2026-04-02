@@ -43,14 +43,55 @@ export const createUser = async (req: AuthRequest, res: Response, next: NextFunc
 
 export const getUsers = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const users = await User.find({ _id: { $ne: req.user._id } })
-            .select("-password")
-            .populate({
-                path: "role",
-                populate: { path: "permissions" }
-            });
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
 
-        res.status(200).json({ success: true, users });
+        const search = req.query.search ? String(req.query.search) : "";
+        const role = req.query.role ? String(req.query.role) : "";
+
+        const filter : any = { _id: { $ne: req.user._id } };
+
+        if(search){
+            filter.$or = [
+                { firstname: { $regex: search, $options:  "i" }},
+                { lastname: { $regex: search, $options:  "i" }},
+                { email: { $regex: search, $options:  "i" }}
+            ]
+        }
+
+        if (role) {
+            const roleDoc = await Role.findOne({ name: role }).select("_id");
+            if (roleDoc) filter.role_id = roleDoc._id;
+        }
+
+        const [users, total] = await Promise.all([
+            User.find(filter)
+                .select("-password")
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                })
+                .skip(skip)
+                .limit(limit),
+            User.countDocuments(filter)
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                })
+                .exec()
+        ])
+
+       const totalPages = Math.ceil(total / limit);
+
+        res.status(200).json({
+            success: true,
+            page,
+            limit,
+            totalPages,
+            total,
+            users,
+        });
 
     } catch (err) {
         next(err);
@@ -90,23 +131,6 @@ export const updateUser = async (req: AuthRequest, res: Response, next: NextFunc
             message: "User successfully updated",
             updatedUser
         });
-
-    } catch (err) {
-        next(err);
-    }
-};
-
-export const getUserById = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const user = await User.findById(req.params.id).select("-password");
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found."
-            });
-        }
-
-        res.status(200).json({ success: true, user });
 
     } catch (err) {
         next(err);
@@ -207,3 +231,32 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
         next(err);
     }
 };
+
+export const getUsersCount = async (req : Request, res : Response, next: NextFunction) => {
+    try{
+        const usersCount = await Role.aggregate([
+        {
+            $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "role_id",
+            as: "users",
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                role_name: '$name',
+                total: { $size: "$users" }
+            },
+        },
+        ]);
+        res.status(200).json({
+            success: true,
+            usersCount
+        })
+
+    }catch(err) {
+        next(err);
+    }
+}

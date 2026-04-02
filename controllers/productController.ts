@@ -171,6 +171,19 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
             },
         ];
 
+        if (minPrice !== null || maxPrice !== null) {
+            const priceMatch: any = {};
+
+            if (minPrice !== null) priceMatch.$gte = minPrice;
+            if (maxPrice !== null) priceMatch.$lte = maxPrice;
+
+            pipeline.push({
+                $match: {
+                minPrice: priceMatch,
+                },
+            });
+        }
+
         // Apply sorting
         if (sortBy === "price") {
             pipeline.push({ $sort: { minPrice: order } });

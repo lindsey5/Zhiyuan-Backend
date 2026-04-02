@@ -5,7 +5,6 @@ const PERMISSIONS = {
 
     // User management
     USER_CREATE: 'user:create',
-    USER_READ: 'user:read',
     USER_READ_ALL: 'user:read:all',
     USER_UPDATE: 'user:update',
     USER_DELETE: 'user:delete',
@@ -32,11 +31,5 @@ const PERMISSIONS = {
     CATEGORY_CREATE: 'category:create',
     CATEGORY_UPDATE: 'category:update',
     CATEGORY_DELETE: 'category:delete',
-
-    //Distributor management
-    DISTRIBUTOR_READ_ALL: 'distributor:read:all',
-    DISTRIBUTOR_CREATE: 'distributor:create',
-    DISTRIBUTOR_UPDATE: 'distributor:update',
-    DISTRIBUTOR_DELETE: 'distributor:delete'
 }
 export default PERMISSIONS
