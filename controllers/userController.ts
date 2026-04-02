@@ -120,7 +120,7 @@ export const updateUser = async (req: AuthRequest, res: Response, next: NextFunc
             description: `User ID ${req.params.id} successfully updated.`,
             ip_address: req.ip || "",
             role: req.user.role.name || "N/A",
-            severity: "MEDIUM",
+            severity: "HIGH",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user._id,
             old_values: oldValues,
