@@ -51,7 +51,7 @@ export const getUsers = async (req: AuthRequest, res: Response, next: NextFuncti
         const search = req.query.search ? String(req.query.search) : "";
         const role = req.query.role ? String(req.query.role) : "";
 
-        const filter : any = { _id: { $ne: req.user._id } };
+        const filter : any = { _id: { $ne: req.user._id }, status: 'active' };
 
         if(search){
             filter.$or = [
@@ -209,7 +209,8 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
         }
 
         const oldValues = user.toObject();
-        await User.deleteOne({ _id: req.params.id });
+        user.status = 'deleted';
+        await user.save();
 
         await AuditLogService.log({
             action: "DELETE_USER",
@@ -238,17 +239,24 @@ export const getUsersCount = async (req : Request, res : Response, next: NextFun
         const usersCount = await Role.aggregate([
         {
             $lookup: {
-            from: "users",
-            localField: "_id",
-            foreignField: "role_id",
-            as: "users",
+                from: "users",
+                let: { roleId: "$_id" },
+                pipeline: [
+                    {
+                    $match: {
+                        $expr: { $eq: ["$role_id", "$$roleId"] },
+                        status: "active",
+                    },
+                    },
+                ],
+                as: "users",
             },
         },
         {
             $project: {
                 _id: 0,
-                role_name: '$name',
-                total: { $size: "$users" }
+                role_name: "$name",
+                total: { $size: "$users" },
             },
         },
         ]);
