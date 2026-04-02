@@ -35,42 +35,38 @@ This project includes useful scripts for development, production build, database
 ```
 
 ## Script Descriptions
-- npm run dev
+```bash
+npm run dev #Runs the backend in development mode.
+```
 
-    Runs the backend in development mode.
+```bash
+npm run build # Builds the project for production. It installs dependencies, sets up roles, creates the default admin user, inserts demo products, and compiles TypeScript.
+```
+```bash
+npm start # Starts the backend server in production mode using the compiled output in dist/.
+```
 
-- npm run build
+```bash
+npm run setup-roles # Creates default roles and permissions.
+```
+    
+```bash
+npm run create-user # Creates a user manually via terminal input.
 
-    Builds the project for production. It installs dependencies, sets up roles, creates the default admin user, inserts demo products, and compiles TypeScript.
-
-- npm start
-
-    Starts the backend server in production mode using the compiled output in dist/.
-
-- npm run setup-roles
-
-    Creates default roles and permissions.
-
-- npm run create-user
-
-    Creates a user manually via terminal input.
-
-    Add these to your .env file:
-    ```bash
+    # Add these to your .env file:
     FIRSTNAME=user_firstname
     LASTNAME=user_lastname
     EMAIL=user_email
     PASSWORD=user_password
-    ```
-
-- npm run automate-create-user
-
-    Automatically creates the default admin user.
-
-- npm run insert-products
-
-    Inserts demo products into the database.
-  
+```
+    
+```bash
+npm run automate-create-user # Automatically creates the default admin user.
+```
+    
+```bash
+npm run insert-products # Inserts demo products into the database.
+```
 
 ## File Structure
 ```bash
