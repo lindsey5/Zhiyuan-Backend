@@ -3,6 +3,7 @@ import { AuthRequest } from "../types/auth";
 import AuditLogService from "../services/AuditLogService";
 import Role from "../models/Role";
 import User from "../models/User";
+import mongoose from "mongoose";
 
 export const createUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -257,6 +258,30 @@ export const getUsersCount = async (req : Request, res : Response, next: NextFun
         })
 
     }catch(err) {
+        next(err);
+    }
+}
+
+export const isEmailExist = async (req: Request, res: Response, next: NextFunction) =>{
+    try{
+        const existingEmail = await User.findOne({
+            email: req.query.email,
+            _id: { $ne: new mongoose.Types.ObjectId(req.query.id as string) }
+        })
+
+        if(!existingEmail){
+            return res.status(400).json({
+                success: false,
+                message: 'Email not found'
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Email existed'
+        })
+
+    }catch(err){
         next(err);
     }
 }

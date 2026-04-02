@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUser, deleteUser, getUsers, getUsersCount, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
+import { createUser, deleteUser, getUsers, getUsersCount, isEmailExist, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import validateBody from "../middlewares/validateBody";
@@ -16,6 +16,14 @@ router.post(
     validateBody(createUserSchema),
     createUser
 );
+
+router.get(
+    '/email',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.USER_CREATE, PERMISSIONS.USER_UPDATE),
+    isEmailExist
+)
 
 router.get(
     '/', 
