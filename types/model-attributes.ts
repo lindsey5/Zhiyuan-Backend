@@ -78,3 +78,15 @@ export interface OrderItemAttributes extends Document {
     amount: number;
     price: number;
 }
+
+export interface DistributorAttributes extends Document {
+    parent_distributor_id: Types.ObjectId | null;
+    distributor_name: string;
+    commission_rate: number;
+    wallet_balance: number;
+    email: string;
+    password: string;
+    status: "active" | "deleted";
+    
+    matchPassword(plainPassword: string): Promise<boolean>;
+}
