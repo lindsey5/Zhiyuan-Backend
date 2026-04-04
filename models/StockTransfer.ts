@@ -7,7 +7,6 @@ export interface StockTransferAttributes extends Document {
 
 const StockTransferSchema: Schema<StockTransferAttributes> = new Schema(
     {
-
         receiver_id: {
             type: Schema.Types.ObjectId,
             ref: "Distributor",
@@ -24,6 +23,30 @@ const StockTransferSchema: Schema<StockTransferAttributes> = new Schema(
         timestamps: true,
     }
 );
+
+StockTransferSchema.virtual("receiver", {
+    ref: "Distributor",
+    localField: "receiver_id",
+    foreignField: "_id",
+    justOne: true
+});
+
+StockTransferSchema.virtual("sender", {
+    ref: "User",
+    localField: "sender_id",
+    foreignField: "_id",
+    justOne: true
+});
+
+StockTransferSchema.virtual("items", {
+    ref: "StockTransferItem",
+    localField: "_id",
+    foreignField: "transfer_id",
+});
+
+StockTransferSchema.set("toObject", { virtuals: true });
+StockTransferSchema.set("toJSON", { virtuals: true });
+
 
 const StockTransfer: Model<StockTransferAttributes> = mongoose.model(
     "StockTransfer",

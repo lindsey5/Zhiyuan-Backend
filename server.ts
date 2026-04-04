@@ -16,6 +16,7 @@ import orderRoutes from "./routes/orderRoutes";
 import connectDb from "./config/db";
 import distributorRoutes from "./routes/distributorRoutes";
 import distributorStockRoutes from "./routes/distributorStockRoutes";
+import stockTransferRoutes from "./routes/stockTransferRoutes";
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/distributors', distributorRoutes);
 app.use('/api/distributor-stocks', distributorStockRoutes);
+app.use('/api/stock-transfer-logs', stockTransferRoutes);
 app.use(errorHandler);
 
 app.use(

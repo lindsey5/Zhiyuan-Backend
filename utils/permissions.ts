@@ -2,6 +2,7 @@
 const PERMISSIONS = {
     DASHBOARD_VIEW: 'dashboard:view',
     AUDIT_VIEW_ALL: 'audit:view:all',
+    TRANSFER_LOGS_VIEW_ALL: 'tranfer-logs:view:all',
 
     // User management
     USER_CREATE: 'user:create',
