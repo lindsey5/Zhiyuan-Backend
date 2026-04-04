@@ -5,6 +5,7 @@ import { AuthRequest } from "../types/auth";
 import DistributorStock from "../models/DistributorStock";
 import StockTransferService from "../services/StockTransferService";
 import Distributor from "../models/Distributor";
+import AuditLogService from "../services/AuditLogService";
 
 export const createBulkDistributorStock = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -36,6 +37,12 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
 
             if (existingStock) {
                 existingStock.quantity += stock.quantity;
+                
+                await Variant.findByIdAndUpdate(
+                    stock.variant_id, 
+                    { $inc: { stock: -stock.quantity } }, 
+                    { new: true, session },
+                )
 
                 await existingStock.save({ session });
 
@@ -47,6 +54,12 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
                 [{ ...stock, distributor_id: distributorId }],
                 { session }
             );
+
+            await Variant.findByIdAndUpdate(
+                stock.variant_id, 
+                { $inc: { stock: -stock.quantity } }, 
+                { new: true, session },
+            )
 
             newStocks.push(distributorStock[0]);
         }
@@ -68,8 +81,21 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
         await session.commitTransaction();
         session.endSession();
 
+        await AuditLogService.log({
+            action: "STOCK_TRANSFER",
+            description: `Stocks successfully transfered`,
+            ip_address: req.ip || "",
+            role: req.user.role.name || "N/A",
+            severity: "HIGH",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user._id,
+            old_values: null,
+            new_values: newStocks
+        });
+
         res.status(201).json({
-            message: "Distributor stocks created successfully",
+            success: true,
+            message: "Stocks sucessfully transfered",
             newStocks,
         });
     } catch (err) {

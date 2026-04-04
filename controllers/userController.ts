@@ -21,7 +21,7 @@ export const createUser = async (req: AuthRequest, res: Response, next: NextFunc
 
         await AuditLogService.log({
             action: "CREATE_USER",
-            description: `User successfully created with role_id ${userData.role_id}.`,
+            description: `User successfully created.`,
             ip_address: req.ip || "N/A",
             role: req.user.role.name || "N/A",
             severity: "CRITICAL",

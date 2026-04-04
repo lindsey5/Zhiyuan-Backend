@@ -3,8 +3,10 @@ import Distributor from "../models/Distributor"
 import { generatePassword } from "../utils/utils";
 import { sendAcountDetails } from "../services/emailService";
 import mongoose from "mongoose";
+import AuditLogService from "../services/AuditLogService";
+import { AuthRequest } from "../types/auth";
 
-export const createDistributor = async (req: Request, res: Response, next: NextFunction) => {
+export const createDistributor = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
     
     try{
@@ -22,9 +24,22 @@ export const createDistributor = async (req: Request, res: Response, next: NextF
         const success = await sendAcountDetails(distributor[0].email, distributor[0].distributor_name, password);
 
         if(!success)throw new Error('Failed to create distrubutors');
-
+        
         await session.commitTransaction();
         session.endSession();
+
+        await AuditLogService.log({
+            action: "CREATE_DISTRIBUTOR",
+            description: `Distributor successfully created.`,
+            ip_address: req.ip || "",
+            role: req.user.role.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user._id,
+            old_values: null,
+            new_values: distributor
+        });
+
         res.status(201).json({
             success: true,
             message: 'Distributor successfull created',

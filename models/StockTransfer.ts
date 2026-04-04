@@ -1,37 +1,33 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
-export interface StockTransferItemAttributes extends Document {
-    transfer_id: mongoose.Types.ObjectId;
-    quantity: number;
-    variant_id: mongoose.Types.ObjectId;
+export interface StockTransferAttributes extends Document {
+    sender_id?: mongoose.Types.ObjectId | null;
+    receiver_id: mongoose.Types.ObjectId;
 }
 
-const StockTransferItemSchema: Schema<StockTransferItemAttributes> = new Schema(
+const StockTransferSchema: Schema<StockTransferAttributes> = new Schema(
     {
-        transfer_id: {
+
+        receiver_id: {
             type: Schema.Types.ObjectId,
+            ref: "Distributor",
             required: true,
         },
 
-        quantity: {
-            type: Number,
-            required: true,
-        },
-
-        variant_id: {
+        sender_id: {
             type: Schema.Types.ObjectId,
-            ref: "Variant",
-            required: true,
-        },
+            ref: 'User',
+            required: true
+        }
     },
     {
         timestamps: true,
     }
 );
 
-const StockTransferItem: Model<StockTransferItemAttributes> = mongoose.model(
-    "StockTransferItem",
-    StockTransferItemSchema
+const StockTransfer: Model<StockTransferAttributes> = mongoose.model(
+    "StockTransfer",
+    StockTransferSchema
 );
 
-export default StockTransferItem;
+export default StockTransfer;

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import StockTransfer from "../models/StockTransfer";
-import StockTransferItem from "../models/StockTransfer";
+import StockTransferItem from "../models/StockTransferItem";
 
 export default class StockTransferService {
     static async logStockTransfer({
@@ -19,11 +19,11 @@ export default class StockTransferService {
                 [{ sender_id, receiver_id }],
                 { session }
             );
-
             const items = stocks.map((stock) => ({
                 ...stock,
                 transfer_id: stockTransfer[0]._id,
             }));
+
 
             await StockTransferItem.insertMany(items, {
                 ordered: false,
