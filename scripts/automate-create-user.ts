@@ -29,6 +29,9 @@ dotenv.config();
             throw new Error("No roles found in the database. Please create a role first.");
         }
 
+        const existingEmail = await User.findOne({ email });
+
+        if(existingEmail) throw new Error("Email already exists.");
 
         // Create the new user
         const newUser = await User.create({
