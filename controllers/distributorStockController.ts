@@ -36,14 +36,6 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
             );
 
             if (existingStock) {
-                existingStock.quantity += stock.quantity;
-                
-                await Variant.findByIdAndUpdate(
-                    stock.variant_id, 
-                    { $inc: { stock: -stock.quantity } }, 
-                    { new: true, session },
-                )
-
                 await existingStock.save({ session });
 
                 newStocks.push(existingStock);
@@ -54,13 +46,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
                 [{ ...stock, distributor_id: distributorId }],
                 { session }
             );
-
-            await Variant.findByIdAndUpdate(
-                stock.variant_id, 
-                { $inc: { stock: -stock.quantity } }, 
-                { new: true, session },
-            )
-
+            
             newStocks.push(distributorStock[0]);
         }
 
