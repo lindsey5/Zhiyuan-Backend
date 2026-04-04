@@ -34,7 +34,6 @@ const DistributorSchema: Schema<DistributorAttributes> = new Schema(
         email: {
             type: String,
             required: [true, "email is required."],
-            unique: true,
             lowercase: true,
             trim: true,
             minlength: [5, "email must be between 5 and 100 characters."],
@@ -45,8 +44,6 @@ const DistributorSchema: Schema<DistributorAttributes> = new Schema(
         password: {
             type: String,
             required: [true, "password is required"],
-            minlength: [6, "password must be between 6 to 50 characters."],
-            maxlength: [50, "password must be between 6 to 50 characters."],
         },
 
         status: {

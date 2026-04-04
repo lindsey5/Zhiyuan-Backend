@@ -2,10 +2,14 @@ import { NextFunction, Request, Response } from "express"
 import Distributor from "../models/Distributor"
 import { generatePassword } from "../utils/utils";
 import { sendAcountDetails } from "../services/emailService";
+import mongoose from "mongoose";
 
 export const createDistributor = async (req: Request, res: Response, next: NextFunction) => {
+    const session = await mongoose.startSession();
+    
     try{
-        const existingEmail = await Distributor.findOne({ email: req.body.email });
+        session.startTransaction();
+        const existingEmail = await Distributor.findOne({ email: req.body.email, status: 'active' }, null, { session });
 
         if(existingEmail){
             return res.status(409).json({ message: 'Email already exists' })
@@ -13,13 +17,14 @@ export const createDistributor = async (req: Request, res: Response, next: NextF
 
         const password = generatePassword(10);
 
-        const distributor = await Distributor.create({
-            ...req.body,
-            password
-        });
+        const distributor = await Distributor.create([{...req.body, password}], { session});
 
-        await sendAcountDetails(distributor.email, distributor.distributor_name, password);
+        const success = await sendAcountDetails(distributor[0].email, distributor[0].distributor_name, password);
 
+        if(!success)throw new Error('Failed to create distrubutors');
+
+        await session.commitTransaction();
+        session.endSession();
         res.status(201).json({
             success: true,
             message: 'Distributor successfull created',
@@ -27,6 +32,8 @@ export const createDistributor = async (req: Request, res: Response, next: NextF
         })
 
     }catch(err){
+        await session.abortTransaction();
+        session.endSession();
         next(err)
     }
 }
@@ -121,3 +128,45 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
         next(err);
     }
 };
+
+export const deleteDistributorById = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const existingDistributor = await Distributor.findById(req.params.id);
+
+        if(!existingDistributor){
+            return res.status(404).json({
+                success: false,
+                message: 'Distributor not found'
+            })
+        }
+
+        existingDistributor.set({
+            status: 'deleted'
+        });
+        await existingDistributor.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Distributor successfully removed'
+        })
+
+    }catch(err){
+        next(err)
+    }
+}
+
+export const getDistributorById = async (req: Request, res: Response, next: NextFunction) =>{
+    try{
+        const distributor = await Distributor.findById(req.params.id).populate("parent_distributor");
+
+        if(!distributor) return res.status(404).json({ success: false, message: 'Distributor not found.'});
+
+        res.status(200).json({
+            success: true,
+            distributor
+        })
+
+    }catch(err){
+        next(err)
+    }
+}

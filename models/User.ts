@@ -24,7 +24,6 @@ const UserSchema: Schema<UserAttributes> = new Schema(
         email: {
             type: String,
             required: [true, "email is required."],
-            unique: true,
             minlength: [5, "email must be at least 5 characters."],
             maxlength: [100, "email must be at most 100 characters."],
             trim: true,

@@ -64,8 +64,10 @@ export const sendAcountDetails = async (
             htmlContent,
         });
 
+        return true;
+
     } catch (err: any) {
         console.error("Error sending email:", err);
-        throw new Error("Failed to send email.");
+        return false;
     }
 };
