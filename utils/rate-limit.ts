@@ -5,7 +5,7 @@ export default function createRateLimiter(windowMs: number, limit: number) {
         windowMs: windowMs,
         limit: limit,
         message: { error: "Too many requests, please try again later." },
-        standardHeaders: "draft-7", // adds RateLimit headers
+        standardHeaders: true,
         legacyHeaders: false,
     });
     return limiter;

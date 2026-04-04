@@ -31,8 +31,8 @@ app.use(cors({
 
 app.use(morgan('dev'));
 app.use(express.static('public'));
-app.use(express.json({ limit: "1gb" }));
-app.use(express.urlencoded({ limit: "1gb", extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.set("trust proxy", true);
 
 app.get('/', (_, res) => res.json('Welcome'));
