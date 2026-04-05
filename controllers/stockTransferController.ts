@@ -50,12 +50,12 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
         {
             $lookup: {
                 from: "variants",
-                localField: "items.variant",
+                localField: "items.variant_id",
                 foreignField: "_id",
                 as: "items.variant",
             },
         },
-
+         { $unwind: { path: "$items.variant" } },
         // Group items back into array
         {
             $group: {

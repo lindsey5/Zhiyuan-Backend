@@ -26,9 +26,9 @@ const PORT = process.env.PORT || 3000;
 const origins = process.env.ORIGINS?.split(",") || ['http://localhost:5173'];
 
 app.use(cors({
-  origin: origins,
-  methods: ['*'],
-  credentials: true,
+    origin: origins,
+    methods: ['*'],
+    credentials: true,
 }));
 
 app.use(morgan('dev'));
@@ -53,7 +53,7 @@ app.use('/api/stock-transfer-logs', stockTransferRoutes);
 app.use(errorHandler);
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  swaggerOptions: { defaultModelsExpandDepth: -1 },
+    swaggerOptions: { defaultModelsExpandDepth: -1 },
 }));
 
 connectDb();
