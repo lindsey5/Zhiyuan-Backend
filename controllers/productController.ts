@@ -179,7 +179,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 
             pipeline.push({
                 $match: {
-                minPrice: priceMatch,
+                    minPrice: priceMatch,
                 },
             });
         }
