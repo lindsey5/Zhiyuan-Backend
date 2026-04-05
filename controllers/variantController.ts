@@ -16,10 +16,7 @@ export const getVariants = async (req: Request, res: Response, next: NextFunctio
         // Build filter for variants
         const variantFilter: any = { status: 'active' };
         if (search) {
-            variantFilter.$or = [
-                { variant_name: { $regex: search, $options: "i" } },
-                { sku: { $regex: search, $options: "i" } },
-            ];
+            variantFilter.$text = { $search: search }
         }
 
         const [variants, totalCount] = await Promise.all([

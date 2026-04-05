@@ -138,7 +138,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const filter: any = { status: "active" };
 
         if (search) {
-            filter.product_name = { $regex: search, $options: "i" };
+            filter.$text = { $search: search };
         }
 
         if (categoriesArr.length > 0) {

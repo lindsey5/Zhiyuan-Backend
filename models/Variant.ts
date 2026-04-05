@@ -59,6 +59,9 @@ const VariantSchema: Schema<VariantAttributes> = new Schema(
     { timestamps: true } 
 );
 
+VariantSchema.index({ product_id: 1, status: 1 });
+VariantSchema.index({ variant_name: 'text', sku: 'text' })
+
 VariantSchema.virtual("product", {
     ref: "Product",          
     localField: "product_id", 

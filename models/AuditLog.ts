@@ -56,6 +56,11 @@ const AuditLogSchema: Schema<AuditLogAttributes> = new Schema(
     { timestamps: true } 
 );
 
+AuditLogSchema.index({ createdAt: -1 });
+AuditLogSchema.index({ role: 1, severity: 1, createdAt: -1 });
+AuditLogSchema.index({ user_id: 1 });
+AuditLogSchema.index({ action: "text" });
+
 AuditLogSchema.virtual("user", {
     ref: "User",
     localField: "user_id",

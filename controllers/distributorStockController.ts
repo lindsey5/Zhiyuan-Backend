@@ -46,7 +46,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
                 [{ ...stock, distributor_id: distributorId }],
                 { session }
             );
-            
+
             newStocks.push(distributorStock[0]);
         }
 
@@ -134,10 +134,10 @@ export const getDistributorStocks = async (
         // lookup variant
         {
             $lookup: {
-            from: "variants",
-            localField: "variant_id",
-            foreignField: "_id",
-            as: "variant",
+                from: "variants",
+                localField: "variant_id",
+                foreignField: "_id",
+                as: "variant",
             },
         },
         { $unwind: "$variant" },

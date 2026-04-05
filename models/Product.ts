@@ -47,6 +47,10 @@ const ProductSchema: Schema<ProductAttributes> = new Schema(
     { timestamps: true } 
 );
 
+ProductSchema.index({ status: 1, category: 1 });
+ProductSchema.index({ status: 1, product_name: 1 });
+ProductSchema.index({ product_name: "text" });
+
 ProductSchema.virtual("variants", {
     ref: "Variant",
     localField: "_id",

@@ -46,7 +46,7 @@ export const getCategories = async (req: Request, res: Response, next: NextFunct
     try {
         const search = req.query.search ? String(req.query.search) : "";
         const categories = await Category.find({
-            ...(search ? { name: { $regex: search, $options: "i" } } : {}),
+            $text: { $search: search },
             status: "active",
         }).sort({ name: 1 });
 

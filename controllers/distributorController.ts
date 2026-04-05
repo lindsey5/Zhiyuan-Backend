@@ -66,10 +66,7 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
 
         const matchQuery: any = {
             status: "active",
-            $or: [
-                { distributor_name: { $regex: search, $options: "i" } },
-                { email: { $regex: search, $options: "i" } }
-            ]
+            $text: { $search: search }
         };
 
         const allowedSortFields = [
@@ -95,8 +92,8 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
             },
             {
                 $unwind: {
-                path: "$parent_distributor",
-                preserveNullAndEmptyArrays: true,
+                    path: "$parent_distributor",
+                    preserveNullAndEmptyArrays: true,
                 },
             },
 

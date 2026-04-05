@@ -31,6 +31,8 @@ const DistributorStockSchema: Schema<DistributorStockAttributes> = new Schema(
     }
 );
 
+DistributorStockSchema.index({ distributor_id: 1 });
+
 DistributorStockSchema.virtual("variant", {
     ref: "Variant",          
     localField: "variant_id", 
