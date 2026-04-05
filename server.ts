@@ -52,15 +52,9 @@ app.use('/api/distributor-stocks', distributorStockRoutes);
 app.use('/api/stock-transfer-logs', stockTransferRoutes);
 app.use(errorHandler);
 
-app.use(
-    '/docs',
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, {
-        swaggerOptions: {
-        defaultModelsExpandDepth: -1,
-        },
-    })
-);
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  swaggerOptions: { defaultModelsExpandDepth: -1 },
+}));
 
 connectDb();
 
