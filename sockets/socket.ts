@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import { initStockTransferLogSocket } from "./transferLogSocket";
 dotenv.config();
 
+const origins = process.env.ORIGINS?.split(",") || ['http://localhost:5173', 'http://localhost:5174'];
+
 export function registerSockets(io: Server) {
     initStockTransferLogSocket(io);
 }
@@ -10,9 +12,10 @@ export function registerSockets(io: Server) {
 export default function initializeSocket(server: any) {
     const io = new Server(server, {
         cors: {
-            origin: ['*'],
+            origin: origins,
             methods: ["GET", "POST"],
             allowedHeaders: ["Authorization"],
+            credentials: true,
         },
     });
 
