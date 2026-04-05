@@ -23,8 +23,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000; 
 
+const origins = process.env.ORIGINS?.split(",") || ['http://localhost:5173'];
+
 app.use(cors({
-  origin: ['http://localhost:8081', 'http://localhost:5173', 'https://zhiyuan-frontend.vercel.app'],
+  origin: origins,
   methods: ['*'],
   credentials: true,
 }));
