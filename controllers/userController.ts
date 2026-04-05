@@ -76,11 +76,6 @@ export const getUsers = async (req: AuthRequest, res: Response, next: NextFuncti
                 .skip(skip)
                 .limit(limit),
             User.countDocuments(filter)
-                .populate({
-                    path: "role",
-                    populate: { path: "permissions" }
-                })
-                .exec()
         ])
 
        const totalPages = Math.ceil(total / limit);

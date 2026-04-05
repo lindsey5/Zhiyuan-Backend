@@ -29,6 +29,8 @@ const StockTransferItemSchema: Schema<StockTransferItemAttributes> = new Schema(
     }
 );
 
+StockTransferItemSchema.index({ transfer_id: 1, variant_id: 1 });
+
 StockTransferItemSchema.virtual("variant", {
     ref: "Variant",
     localField: "variant_id",

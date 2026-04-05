@@ -20,6 +20,8 @@ const PermissionSchema: Schema<PermissionAttributes> = new Schema(
     { timestamps: true } 
 );
 
+PermissionSchema.index({ role_id: 1 })
+
 const Permission: Model<PermissionAttributes> = mongoose.model(
     "Permission",
     PermissionSchema

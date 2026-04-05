@@ -62,9 +62,8 @@ UserSchema.methods.matchPassword = async function (
     return await bcrypt.compare(plainPassword, this.password);
 };
 
-UserSchema.index({ status: 1, firstname: 1, lastname: 1, email: 1 })
+UserSchema.index({ status: 1, firstname: 1, lastname: 1, email: 1, role_id: 1 })
 UserSchema.index({ firstname: "text", lastname: "text", email: "text" });
-UserSchema.index({ role_id: 1 });
 
 UserSchema.virtual("role", {
     ref: "Role",

@@ -21,7 +21,7 @@ const CategorySchema: Schema<CategoryAttributes> = new Schema(
     { timestamps: true } 
 );
 
-CategorySchema.index({ name: 1, status: -1 })
+CategorySchema.index({ name: 1, status: 1 })
 
 const Category: Model<CategoryAttributes> = mongoose.model(
     "Category",

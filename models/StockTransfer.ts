@@ -31,9 +31,7 @@ StockTransferSchema.virtual("receiver", {
     justOne: true
 });
 
-StockTransferSchema.index({ createdAt: -1 });
-StockTransferSchema.index({ createdAt: -1, "sender": 1 });
-StockTransferSchema.index({ createdAt: -1, "receiver": 1 });
+StockTransferSchema.index({ createdAt: -1, sender_id: 1, receiver_id: 1 });
 
 StockTransferSchema.virtual("sender", {
     ref: "User",
