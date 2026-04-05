@@ -1,8 +1,11 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { DistributorAttributes, UserAttributes } from "../types/model-attributes";
 
 export interface StockTransferAttributes extends Document {
     sender_id?: mongoose.Types.ObjectId | null;
     receiver_id: mongoose.Types.ObjectId;
+    receiver: DistributorAttributes;
+    sender: UserAttributes;
 }
 
 const StockTransferSchema: Schema<StockTransferAttributes> = new Schema(

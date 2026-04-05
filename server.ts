@@ -17,6 +17,8 @@ import connectDb from "./config/db";
 import distributorRoutes from "./routes/distributorRoutes";
 import distributorStockRoutes from "./routes/distributorStockRoutes";
 import stockTransferRoutes from "./routes/stockTransferRoutes";
+import initializeSocket from "./sockets/socket";
+import { createServer } from "http";
 
 dotenv.config();
 
@@ -58,6 +60,12 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 
 connectDb();
 
-app.listen(3000, () => {
-    console.log(`Server running on port ${PORT}`);
+const server = createServer(app);
+
+// initialize Socket.IO with the server
+initializeSocket(server);
+
+// start listening
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

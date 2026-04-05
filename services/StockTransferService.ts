@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import StockTransfer from "../models/StockTransfer";
 import StockTransferItem from "../models/StockTransferItem";
+import { emitStockTransfer } from "../sockets/transferLogSocket";
+import DistributorNotification from "../models/DistributorNotification";
 
 export default class StockTransferService {
     static async logStockTransfer({
@@ -19,6 +21,7 @@ export default class StockTransferService {
                 [{ sender_id, receiver_id }],
                 { session }
             );
+
             const items = stocks.map((stock) => ({
                 ...stock,
                 transfer_id: stockTransfer[0]._id,
@@ -29,6 +32,30 @@ export default class StockTransferService {
                 ordered: false,
                 session,
             });
+
+            await stockTransfer[0].populate("sender");
+            const sender = `${stockTransfer[0].sender.firstname} ${stockTransfer[0].sender.lastname}`;
+
+            const totalStocks = items.reduce((acc, item) => item.quantity + acc, 0);
+
+            const distributorNotification = await DistributorNotification.create(
+                [{ 
+                    distributor_id: receiver_id, 
+                    transfer_id: stockTransfer[0]._id,
+                    message: `You receive ${totalStocks} stocks from ${sender}`
+                }],
+                { session }
+            )
+
+            const notification = await distributorNotification[0].populate({
+                path: 'stockTransfer',
+                populate: {
+                    path: 'items',
+                    populate: 'variant'
+                }
+            })
+
+            await emitStockTransfer(notification, receiver_id)
 
             return true
         } catch (err) {
