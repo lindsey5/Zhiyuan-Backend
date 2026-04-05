@@ -66,7 +66,10 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
 
         const matchQuery: any = {
             status: "active",
-            $text: { $search: search }
+            $or: [
+                { distributor_name: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } }
+            ]
         };
 
         const allowedSortFields = [

@@ -54,7 +54,11 @@ export const getUsers = async (req: AuthRequest, res: Response, next: NextFuncti
         const filter : any = { _id: { $ne: req.user._id }, status: 'active' };
 
         if(search){
-            filter.$text = { $search: search }
+            filter.$or = [
+                { firstname: { $regex: search, $options:  "i" }},
+                { lastname: { $regex: search, $options:  "i" }},
+                { email: { $regex: search, $options:  "i" }}
+            ]
         }
 
         if (role) {

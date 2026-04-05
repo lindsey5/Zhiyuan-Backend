@@ -49,6 +49,7 @@ const ProductSchema: Schema<ProductAttributes> = new Schema(
 
 ProductSchema.index({ status: 1, category: 1 });
 ProductSchema.index({ status: 1, product_name: 1 });
+ProductSchema.index({ status: 1, product_name: 1, category: 1 })
 ProductSchema.index({ product_name: "text" });
 
 ProductSchema.virtual("variants", {

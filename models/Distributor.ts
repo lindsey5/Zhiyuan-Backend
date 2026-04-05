@@ -60,6 +60,7 @@ const DistributorSchema: Schema<DistributorAttributes> = new Schema(
 
 DistributorSchema.index({ status: 1, createdAt: -1 });
 DistributorSchema.index({ status: 1, distributor_name: 1 });
+DistributorSchema.index({ status: 1, email: 1 });
 DistributorSchema.index({ status: 1, wallet_balance: -1 });
 DistributorSchema.index({ parent_distributor_id: 1 });
 DistributorSchema.index({ distributor_name: "text", email: "text" });

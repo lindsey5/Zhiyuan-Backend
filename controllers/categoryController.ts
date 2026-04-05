@@ -25,7 +25,7 @@ export const createCategory = async (req: AuthRequest, res: Response, next: Next
             description: `Category "${category.name}" successfully created.`,
             ip_address: req.ip || "",
             role: req?.user?.role?.name || "N/A",
-            severity: "MEDIUM",
+            severity: "LOW",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user._id,
             old_values: null,
@@ -46,7 +46,7 @@ export const getCategories = async (req: Request, res: Response, next: NextFunct
     try {
         const search = req.query.search ? String(req.query.search) : "";
         const categories = await Category.find({
-            $text: { $search: search },
+            ...(search ? { name: { $regex: search, $options: "i" } } : {}),
             status: "active",
         }).sort({ name: 1 });
 
@@ -126,7 +126,7 @@ export const deleteCategory = async (req: AuthRequest, res: Response, next: Next
             description: `Category "${category.name}" successfully deleted.`,
             ip_address: req.ip || "",
             role: req?.user?.role?.name || "N/A",
-            severity: "MEDIUM",
+            severity: "HIGH",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user._id,
             old_values: category,

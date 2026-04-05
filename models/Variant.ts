@@ -60,6 +60,7 @@ const VariantSchema: Schema<VariantAttributes> = new Schema(
 );
 
 VariantSchema.index({ product_id: 1, status: 1 });
+VariantSchema.index({ status: 1, variant_name: 1, sku: 1})
 VariantSchema.index({ variant_name: 'text', sku: 'text' })
 
 VariantSchema.virtual("product", {

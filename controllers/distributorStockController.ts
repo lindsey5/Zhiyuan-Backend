@@ -169,15 +169,15 @@ export const getDistributorStocks = async (
         ];
 
         if (search) {
-        basePipeline.push({
-            $match: {
-            $or: [
-                { "variant.variant_name": { $regex: search, $options: "i" } },
-                { "variant.sku": { $regex: search, $options: "i" } },
-                { "variant.product.product_name": { $regex: search, $options: "i" } },
-            ],
-            },
-        });
+            basePipeline.push({
+                $match: {
+                $or: [
+                    { "variant.variant_name": { $regex: search, $options: "i" } },
+                    { "variant.sku": { $regex: search, $options: "i" } },
+                    { "variant.product.product_name": { $regex: search, $options: "i" } },
+                ],
+                },
+            });
         }
 
         const countPipeline = [...basePipeline, { $count: "total" }];

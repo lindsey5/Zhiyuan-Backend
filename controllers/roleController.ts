@@ -54,7 +54,7 @@ export const createRole = async (req: AuthRequest, res: Response, next: NextFunc
             description: `Role "${roleData.name}" successfully created with ${permissions.length} permissions.`,
             ip_address: req.ip || "N/A",
             role: req.user.role.name || "N/A",
-            severity: "HIGH",
+            severity: "LOW",
             user_agent: req.headers["user-agent"] || "N/A",
             user_id: req.user._id,
             old_values: null,

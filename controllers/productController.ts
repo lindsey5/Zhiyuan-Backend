@@ -84,7 +84,7 @@ export const createProduct = async (req: AuthRequest, res: Response, next: NextF
             description: `Product "${req.body.product_name}" successfully created.`,
             ip_address: req.ip || "",
             role: req?.user?.role.name || "N/A",
-            severity: "MEDIUM",
+            severity: "LOW",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user?._id,
             old_values: null,
@@ -138,7 +138,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
         const filter: any = { status: "active" };
 
         if (search) {
-            filter.$text = { $search: search };
+            filter.product_name = { $regex: search, $options: "i" };
         }
 
         if (categoriesArr.length > 0) {
