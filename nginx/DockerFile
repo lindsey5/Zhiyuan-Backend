@@ -1,9 +1,14 @@
+# Use official lightweight Nginx image
 FROM nginx:alpine
+
+# Set working directory inside container
 WORKDIR /etc/nginx
 
-COPY nginx.conf /etc/nginx/nginx.conf
+# Copy nginx.conf from the same folder as Dockerfile
+COPY ./nginx.conf /etc/nginx/nginx.conf
 
-EXPOSE 8080
+# Expose HTTP port
+EXPOSE 80
 
-# Run Nginx in foreground
+# Start Nginx in the foreground
 CMD ["nginx", "-g", "daemon off;"]
