@@ -16,7 +16,7 @@ services:
 
   backend1:
     build:
-      context: ./backend
+      context: /
     container_name: backend1
     environment:
       - NODE_ENV=production
@@ -24,7 +24,7 @@ services:
 
   backend2:
     build:
-      context: ./backend
+      context: /
     container_name: backend2
     environment:
       - NODE_ENV=production
@@ -32,7 +32,7 @@ services:
 
   backend3:
     build:
-      context: ./backend
+      context: /
     container_name: backend3
     environment:
       - NODE_ENV=production
@@ -40,7 +40,7 @@ services:
 
   backend4:
     build:
-      context: ./backend
+      context: /
     container_name: backend4
     environment:
       - NODE_ENV=production
