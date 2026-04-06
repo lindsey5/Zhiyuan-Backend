@@ -1,20 +1,14 @@
-# Use Node LTS
-FROM node:20-alpine
-
-# Set working directory
+FROM node:20-alpine AS builder
 WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-# Copy package files and install dependencies
+FROM node:20-alpine
+WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
-
-# Copy the built code
-COPY dist ./dist
-COPY scripts ./scripts  # if your start relies on any scripts
-COPY tsconfig.json ./
-
-# Expose the port
+COPY --from=builder /app/dist ./dist
 EXPOSE 3000
-
-# Use npm start to run the app
 CMD ["npm", "start"]
