@@ -16,32 +16,40 @@ services:
 
   backend1:
     build:
-      context: /
+      context: .
     container_name: backend1
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
     restart: always
 
   backend2:
     build:
-      context: /
+      context: .
     container_name: backend2
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
     restart: always
 
   backend3:
     build:
-      context: /
+      context: .
     container_name: backend3
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
     restart: always
 
   backend4:
     build:
-      context: /
+      context: .
     container_name: backend4
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
     restart: always
