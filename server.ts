@@ -39,7 +39,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.set("trust proxy", true);
 
-app.get('/', (_, res) => res.json('Welcome'));
+app.get('/', (_, res) => res.send('Welcome'));
 
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
