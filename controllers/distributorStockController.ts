@@ -209,3 +209,32 @@ export const getDistributorStocks = async (
         next(err);
     }
 };
+
+export const getTotalDistributorStocks = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor){
+            return res.status(404).json({ success: false, message: "Distributor not found." });
+        }
+
+        const filter : any = {
+            distributor_id: distributor._id
+        }
+
+        const result = await DistributorStock.aggregate([
+            { $match: filter },
+            { $group: { _id: null, totalStocks: { $sum: "$quantity" }}}
+        ])
+
+        const totalStocks = result[0]?.totalStocks || 0;
+
+        res.status(200).json({
+            success: true,
+            totalStocks
+        })
+
+    }catch(err){
+        next(err);
+    }
+}

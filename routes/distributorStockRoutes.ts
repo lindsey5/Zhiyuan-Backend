@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createBulkDistributorStock, getDistributorStocks } from "../controllers/distributorStockController";
+import { createBulkDistributorStock, getDistributorStocks, getTotalDistributorStocks } from "../controllers/distributorStockController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 const router = Router();
@@ -10,6 +10,13 @@ router.post(
     authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_TRANSFER),
     createBulkDistributorStock
 );
+
+router.get(
+    '/stock/:id',
+    authenticate,
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
+    getTotalDistributorStocks
+)
 
 router.get(
     '/:id',

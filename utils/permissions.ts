@@ -41,7 +41,13 @@ const PERMISSIONS = {
     DISTRIBUTOR_STOCK_TRANSFER: 'distributor-stock:transfer',
     DISTRIBUTOR_STOCK_VIEW: 'distributor-stock:view',
 
+    // Distributor Stats
+    DISTRIBUTOR_STATS_VIEW: 'distributor-stats:view',
+
     // Distributor Sales
-    DISTRIBUTOR_SALES_VIEW: 'distributor-sales:view'
+    DISTRIBUTOR_SALES_VIEW: 'distributor-sales:view',
+
+    // Distributor Reports
+    DISTRIBUTOR_REPORTS_VIEW: 'distributor-reports:view'
 }
 export default PERMISSIONS

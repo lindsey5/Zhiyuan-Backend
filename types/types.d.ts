@@ -1,0 +1,1 @@
+type Period = "today" | "thisWeek" | "thisMonth" | "thisYear" | "all";

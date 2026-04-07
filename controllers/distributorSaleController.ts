@@ -1,6 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import DistributorSale from "../models/DistributorSale";
 import { setEndDate, setStartDate } from "../utils/utils";
+import mongoose from "mongoose";
+import Distributor from "../models/Distributor";
+import { success } from "zod";
+import DistributorSaleService from "../services/DistributorSaleService";
 
 export const getAllDistributorSales = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -93,7 +97,7 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
 
-        const filter: any = { seller_id: req.params.id };
+        const filter: any = { seller_id: new mongoose.Types.ObjectId(req.params.id as string) };
 
         if(search){
             filter.$or = [
@@ -148,6 +152,210 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
         });
 
     } catch (err) {
+        next(err);
+    }
+}
+
+export const getDistributorSalesToday = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const sales = await DistributorSaleService.getDistributorSales({
+            distributorId: distributor?.id,
+            period: "today"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorSalesThisMonth = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const sales = await DistributorSaleService.getDistributorSales({
+            distributorId: distributor?.id,
+            period: "thisMonth"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorSalesThisWeek = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const sales = await DistributorSaleService.getDistributorSales({
+            distributorId: distributor?.id,
+            period: "thisWeek"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorSalesThisYear = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const sales = await DistributorSaleService.getDistributorSales({
+            distributorId: distributor?.id,
+            period: "thisYear"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorItemsSoldToday = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const totalQuantity = await DistributorSaleService.getDistributorItemsSold({
+            distributorId: distributor?.id,
+            period: 'today'
+        })
+        
+        res.status(200).json({ success: true, totalQuantity })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorItemsSoldThisWeek = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const totalQuantity = await DistributorSaleService.getDistributorItemsSold({
+            distributorId: distributor?.id,
+            period: 'thisWeek'
+        })
+        
+        res.status(200).json({ success: true, totalQuantity })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorItemsSoldThisMonth = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const totalQuantity = await DistributorSaleService.getDistributorItemsSold({
+            distributorId: distributor?.id,
+            period: 'thisMonth'
+        })
+        
+        res.status(200).json({ success: true, totalQuantity })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorItemsSoldThisYear = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const totalQuantity = await DistributorSaleService.getDistributorItemsSold({
+            distributorId: distributor?.id,
+            period: 'thisYear'
+        })
+        
+        res.status(200).json({ success: true, totalQuantity })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorMonthlySales = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const year = Number(req.query.year) || new Date().getFullYear();
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const monthlySales = await DistributorSaleService.getMonthlySalesByYear(year, distributor?.id);
+
+        res.status(200).json({
+            success: true,
+            monthlySales,
+            year
+        })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getDistributorItemsSoldPerMonth = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const year = Number(req.query.year) || new Date().getFullYear();
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor && req.params.id){
+            return res.status(404).json({ success: false, message: 'Distributor not found.' });
+        }
+
+        const itemsSoldPerMonth = await DistributorSaleService.getItemsSoldPerMonthByYear(year, distributor?.id);
+
+        res.status(200).json({
+            success: true,
+            itemsSoldPerMonth,
+            year
+        })
+
+    }catch(err){
         next(err);
     }
 }
