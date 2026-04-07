@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import StockTransfer from "../models/StockTransfer";
+import { setEndDate, setStartDate } from "../utils/utils";
 
 export const getStockTransferLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -7,8 +8,8 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
         const limit = Number(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         const search = req.query.search as string;
-        const startDate = req.query.startDate ? new Date(req.query.startDate as string) : null;
-        const endDate = req.query.endDate ? new Date(req.query.endDate as string) : null;
+        const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
+        const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
 
         const pipeline: any[] = [
         // Lookup receiver

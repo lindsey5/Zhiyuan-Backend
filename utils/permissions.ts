@@ -1,4 +1,3 @@
-
 const PERMISSIONS = {
     DASHBOARD_VIEW: 'dashboard:view',
     AUDIT_VIEW_ALL: 'audit:view:all',
@@ -40,6 +39,9 @@ const PERMISSIONS = {
     
     // Distributor Stock Management
     DISTRIBUTOR_STOCK_TRANSFER: 'distributor-stock:transfer',
-    DISTRIBUTOR_STOCK_READ: 'distributor-stock:read'
+    DISTRIBUTOR_STOCK_VIEW: 'distributor-stock:view',
+
+    // Distributor Sales
+    DISTRIBUTOR_SALES_VIEW: 'distributor-sales:view'
 }
 export default PERMISSIONS

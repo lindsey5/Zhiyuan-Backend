@@ -14,7 +14,7 @@ router.post(
 router.get(
     '/:id',
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_READ),
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW),
     getDistributorStocks
 )
 

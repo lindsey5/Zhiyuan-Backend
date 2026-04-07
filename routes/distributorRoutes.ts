@@ -21,7 +21,7 @@ router.get(
 router.get(
     '/:id',
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_READ),
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW, PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
     getDistributorById
 )
 

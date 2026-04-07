@@ -35,6 +35,16 @@ const DistributorSaleSchema: Schema<DistributorSaleAttributes> = new Schema(
     }
 );
 
+DistributorSaleSchema.virtual("seller", {
+    ref: "Distributor",          
+    localField: "seller_id", 
+    foreignField: "_id",   
+    justOne: true    
+});
+
+DistributorSaleSchema.set("toObject", { virtuals: true });
+DistributorSaleSchema.set("toJSON", { virtuals: true });
+
 const DistributorSale: Model<DistributorSaleAttributes> = mongoose.model(
     "DistributorSale",
     DistributorSaleSchema
