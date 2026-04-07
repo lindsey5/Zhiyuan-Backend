@@ -7,7 +7,7 @@ const router = Router();
 router.post(
     '/:id', 
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_CREATE),
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_TRANSFER),
     createBulkDistributorStock
 );
 

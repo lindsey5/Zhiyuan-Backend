@@ -39,7 +39,7 @@ const PERMISSIONS = {
     DISTRIBUTOR_DELETE: 'distributor:delete',
     
     // Distributor Stock Management
-    DISTRIBUTOR_STOCK_CREATE: 'distributor-stock:create',
+    DISTRIBUTOR_STOCK_TRANSFER: 'distributor-stock:transfer',
     DISTRIBUTOR_STOCK_READ: 'distributor-stock:read'
 }
 export default PERMISSIONS

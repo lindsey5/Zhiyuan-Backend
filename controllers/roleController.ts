@@ -155,7 +155,13 @@ export const getRoleById = async (req: Request, res: Response, next: NextFunctio
 
 export const getAllRoles = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const roles = await Role.find().populate("permissions").populate("users", "_id"); // populate users for count
+        const roles = await Role.find()
+        .populate("permissions")
+        .populate({
+            path: "users",
+            match: { status: "active" },
+            select: "_id"
+        });
         const rolesWithUserCount = roles.map((role: any) => ({
             ...role.toObject(),
             usersCount: role.users?.length || 0,
