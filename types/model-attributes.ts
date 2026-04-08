@@ -41,6 +41,8 @@ export interface VariantAttributes extends Document {
     image_url: string;
     sku: string;
     status?: "active" | "deleted";
+    product?: ProductAttributes;
+    createdAt: Date;
 }
 
 export interface AuditLogAttributes extends Document {

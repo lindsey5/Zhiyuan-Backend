@@ -4,6 +4,8 @@ import mongoose from "mongoose";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
 import { deleteFile, uploadBase64 } from "../utils/cloudinary";
+import ExcelJS from "exceljs";
+import { formatDate, formatToPeso } from "../utils/utils";
 
 export const getVariants = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -22,18 +24,35 @@ export const getVariants = async (req: Request, res: Response, next: NextFunctio
             variantFilter.$or = [
                 { variant_name: { $regex: search, $options: "i" } },
                 { sku: { $regex: search, $options: "i" } },
+                { "product.product_name" : { $regex: search, $options: "i" }}
             ];
         }
 
+        const pipeline: any[] = [
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "product_id",
+                    foreignField: "_id",
+                    as: "product",
+                },
+            },
+            { $unwind: "$product" },
+            { $match: variantFilter },
+        ];
+
+        if (category) {
+            pipeline.push({ $match: { "product.category": category } });
+        }
+
+        pipeline.push(
+            { $sort: { [sortBy]: order } },
+            { $skip: skip },
+            { $limit: limit }
+        );
+
         const [variants, totalCount] = await Promise.all([
-            Variant.find(variantFilter)
-                .populate({
-                    path: "product",
-                    match: { ...(category ? { category } : {}) },
-                })
-                .sort({ [sortBy]: order })
-                .skip(skip)
-                .limit(limit),
+            Variant.aggregate(pipeline),
             Variant.countDocuments(variantFilter)
                 .populate({
                     path: "product",
@@ -41,7 +60,6 @@ export const getVariants = async (req: Request, res: Response, next: NextFunctio
                 })
                 .exec(),
         ]);
-
 
         const totalPages = Math.ceil(totalCount / limit);
 
@@ -57,6 +75,81 @@ export const getVariants = async (req: Request, res: Response, next: NextFunctio
         next(err);
     }
 };
+
+export const downloadVariants = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const search = req.query.search ? String(req.query.search) : "";
+        const category = req.query.category ? String(req.query.category) : "";
+
+        // Build filter for variants
+        const variantFilter: any = { status: 'active' };
+        if (search) {
+            variantFilter.$or = [
+                { variant_name: { $regex: search, $options: "i" } },
+                { sku: { $regex: search, $options: "i" } },
+                { "product.product_name" : { $regex: search, $options: "i" }}
+            ];
+        }
+
+        const pipeline: any[] = [
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "product_id",
+                    foreignField: "_id",
+                    as: "product",
+                },
+            },
+            { $unwind: "$product" },
+            { $match: variantFilter },
+        ];
+
+        if (category) {
+            pipeline.push({ $match: { "product.category": category } });
+        }
+
+        const variants = await Variant.aggregate(pipeline)
+
+        // Create workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet(`Zhiyuan Inventory`);
+
+        // Add header row
+        worksheet.columns = [
+            { header: "Variant", key: "variant_name", width: 30 },
+            { header: "SKU", key: "sku", width: 20 },
+            { header: "Product", key: "product_name", width: 30 },
+            { header: "Category", key: "category", width: 20 },
+            { header: "Stock", key: "stock", width: 15 },
+            { header: "Price", key: "price", width: 20 },
+            { header: "Created At", key: "createdAt", width: 25 },
+        ];
+        // Add rows
+        variants.forEach((variant) => 
+            worksheet.addRow({
+                variant_name: variant.variant_name,
+                sku: variant.sku,
+                product_name: variant.product?.product_name,
+                category: variant.product?.category,
+                price: formatToPeso(variant.price),
+                stock: variant.stock,
+                createdAt: formatDate(variant.createdAt),
+            })
+        );
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const base64Data = Buffer.from(buffer).toString("base64");
+
+        // Send JSON response
+        res.status(200).json({
+            data: base64Data,
+            filename: `Zhiyuan Inventory.xlsx`
+        });
+    
+    } catch (err) {
+        next(err);
+    }
+}
 
 export const updateVariant = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();

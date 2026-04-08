@@ -67,7 +67,6 @@ VariantSchema.virtual("product", {
     ref: "Product",          
     localField: "product_id", 
     foreignField: "_id",      
-    match: { status: 'active' },
     justOne: true,           
 });
 
