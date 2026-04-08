@@ -5,6 +5,10 @@ import { DistributorAttributes } from "../types/model-attributes";
 
 const DistributorSchema: Schema<DistributorAttributes> = new Schema(
     {
+        distributor_id: {
+            type: String,
+            unique: true,
+        },
         parent_distributor_id: {
             type: Schema.Types.ObjectId,
             ref: 'Distributor',
@@ -82,11 +86,27 @@ DistributorSchema.set("toObject", { virtuals: true });
 DistributorSchema.set("toJSON", { virtuals: true });
 
 DistributorSchema.pre("save", async function (next) {
-    const distributor = this;
+    const distributor = this as any;
 
-    if (!distributor.isModified("password")) return next();
+    // Generate distributor_id if not set
+    if (!distributor.distributor_id) {
+        let unique = false;
+        while (!unique) {
+            const randomId = `DIST-${Math.floor(100000 + Math.random() * 900000)}`;
+            
+            // Check if it already exists in the DB
+            const existing = await Distributor.findOne({ distributor_id: randomId });
+            if (!existing) {
+                distributor.distributor_id = randomId;
+                unique = true;
+            }
+        }
+    }
 
-    distributor.password = await hashPassword(this.password);
+    // Hash password if modified
+    if (distributor.isModified("password")) {
+        distributor.password = await hashPassword(distributor.password);
+    }
 
     next();
 });

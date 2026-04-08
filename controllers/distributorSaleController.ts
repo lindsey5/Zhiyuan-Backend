@@ -24,8 +24,9 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
             filter.$or = [
                 { "variant.variant_name" : { $regex: search, $options: "i" } },
                 { "variant.sku" : { $regex: search, $options: "i" } },
-                { "seller.distributor_name" : { $regex: search, $options: "i" }},
+                { "seller.distributor_name" : { $regex: search, $options: "i" } },
                 { "seller.email" : { $regex: search, $options: "i" } },
+                { "seller.distributor_id" : { $regex: search, $options: "i" } }
             ]
         }
 

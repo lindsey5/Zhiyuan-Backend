@@ -80,6 +80,7 @@ export interface OrderItemAttributes extends Document {
 }
 
 export interface DistributorAttributes extends Document {
+    distributor_id: string;
     parent_distributor_id: Types.ObjectId | null;
     distributor_name: string;
     commission_rate: number;

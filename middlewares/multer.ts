@@ -15,18 +15,18 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
-    files: 11
+    fileSize: 20 * 1024 * 1024,
+    files: 20
   }
 });
 
 export const handleMulterError = (err : any, req : Request, res : Response, next : NextFunction) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return next(new Error('File size exceeds the 5MB limit'));
+      return next(new Error('File size exceeds the 20MB limit'));
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
-      return next(new Error('Too many files. Maximum is 11 images'));
+      return next(new Error('Too many files. Maximum is 20 images'));
     }
     return next(new Error(`File upload error: ${err.message}`));
   }
