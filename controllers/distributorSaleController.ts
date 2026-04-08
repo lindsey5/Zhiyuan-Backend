@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import DistributorSale from "../models/DistributorSale";
-import { setEndDate, setStartDate } from "../utils/utils";
+import { formatDate, formatToPeso, setEndDate, setStartDate } from "../utils/utils";
 import mongoose from "mongoose";
 import Distributor from "../models/Distributor";
-import { success } from "zod";
+import ExcelJS from "exceljs";
 import DistributorSaleService from "../services/DistributorSaleService";
 
 export const getAllDistributorSales = async (req: Request, res: Response, next: NextFunction) => {
@@ -18,7 +18,7 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
 
-        const filter: any = { };
+        const filter: any = { "seller.status" : "active" };
 
         if(search){
             filter.$or = [
@@ -71,6 +71,7 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
         const totalSales = totalSalesResult[0]?.totalSales || 0;
 
         res.status(200).json({
+            success: true,
             distributorSales,
             totalSales,
             pagination: {
@@ -97,6 +98,15 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
 
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor){
+            return res.status(404).json({
+                success: false,
+                message: 'Distributor not found.'
+            })
+        }
 
         const filter: any = { seller_id: new mongoose.Types.ObjectId(req.params.id as string) };
 
@@ -131,10 +141,7 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
             ]),
             DistributorSale.countDocuments(filter),
             DistributorSale.aggregate([
-                { $match: {
-                    ...filter,
-                    seller_id: req.params.id
-                }},
+                { $match: filter },
                 { $group: { _id: null, totalSales: { $sum: "$total_amount" } } }
             ])
         ]);
@@ -142,6 +149,7 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
         const totalSales = totalSalesResult[0]?.totalSales || 0;
 
         res.status(200).json({
+            success: true,
             distributorSales,
             totalSales,
             pagination: {
@@ -150,6 +158,177 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                 totalPages: Math.ceil(total / limit),
                 total
             }
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const downloadDistributorSales = async (req : Request, res : Response, next: NextFunction) => {
+    try{
+        const search = req.query.search?.toString() || "";
+        const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
+        const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+        
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor){
+            return res.status(404).json({
+                success: false, 
+                message: "Distributor not found"
+            })
+        }
+
+        const filter: any = { seller_id: distributor._id };
+
+        if(search){
+            filter.$or = [
+                { "variant.variant_name" : { $regex: search, $options: "i" } },
+                { "variant.sku" : { $regex: search, $options: "i" } }
+            ]
+        }
+
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = startDate;
+            if (endDate) filter.createdAt.$lte = endDate;
+        }
+
+        const distributorSalesData = await DistributorSale.aggregate([
+            {
+                $lookup: {
+                    from: "variants",
+                    localField: "variant_id",
+                    foreignField: "_id",
+                    as: "variant"
+                }
+            },
+            { $unwind: "$variant" },
+            { $match: filter },
+            { $sort: { createdAt: -1 }}
+        ]);
+
+        // Create workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet(`${distributor.distributor_name} - Sales`);
+
+        // Add header row
+        worksheet.columns = [
+            { header: "Item", key: "variant_name", width: 30 },
+            { header: "SKU", key: "sku", width: 20 },
+            { header: "Quantity", key: "quantity", width: 15 },
+            { header: "Total Amount", key: "total_amount", width: 20 },
+            { header: "Sold At", key: "createdAt", width: 25 },
+        ];
+
+        // Add rows
+        distributorSalesData.forEach((sale) => 
+            worksheet.addRow({
+                variant_name: sale.variant.variant_name,
+                sku: sale.variant.sku,
+                quantity: sale.quantity,
+                total_amount: formatToPeso(sale.total_amount),
+                createdAt: formatDate(sale.createdAt),
+            })
+        );
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const base64Data = Buffer.from(buffer).toString("base64");
+
+        // Send JSON response
+        res.status(200).json({
+            data: base64Data,
+            filename: `${distributor.distributor_name} - Sales.xlsx`
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+export const downloadAllDistributorSales = async (req : Request, res : Response, next: NextFunction) => {
+    try{
+        const search = req.query.search?.toString() || "";
+        const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
+        const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+
+        const filter: any = { "seller.status" : 'active' };
+
+        if(search){
+            filter.$or = [
+                { "variant.variant_name" : { $regex: search, $options: "i" } },
+                { "variant.sku" : { $regex: search, $options: "i" } },
+                { "seller.distributor_name" : { $regex: search, $options: "i" } },
+                { "seller.email" : { $regex: search, $options: "i" } },
+                { "seller.distributor_id" : { $regex: search, $options: "i" } }
+            ]
+        }
+
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = startDate;
+            if (endDate) filter.createdAt.$lte = endDate;
+        }
+
+        const distributorSalesData = await DistributorSale.aggregate([
+            {
+            $lookup: {
+                    from: "variants",
+                    localField: "variant_id",
+                    foreignField: "_id",
+                    as: "variant"
+                }
+            },
+            { $unwind: "$variant" },
+            {
+                $lookup: {
+                    from: 'distributors',
+                    localField: "seller_id",
+                    foreignField: '_id',
+                    as: 'seller'
+                }
+            },
+            { $unwind: "$seller" },
+            { $match: filter },
+            { $sort: { createdAt: -1 }}
+        ]);
+
+        // Create workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet(`Distributors - Sales`);
+
+        // Add header row
+        worksheet.columns = [
+            { header: "Distributor ID", key: "distributor_id", width: 30 },
+            { header: "Distributor", key: "distributor_name", width: 30 },
+            { header: "Item", key: "variant_name", width: 30 },
+            { header: "SKU", key: "sku", width: 20 },
+            { header: "Quantity", key: "quantity", width: 15 },
+            { header: "Total Amount", key: "total_amount", width: 20 },
+            { header: "Sold At", key: "createdAt", width: 25 },
+        ];
+
+        // Add rows
+        distributorSalesData.forEach((sale) => 
+            worksheet.addRow({
+                distributor_id: sale.seller.distributor_id,
+                distributor_name: sale.seller.distributor_name,
+                variant_name: sale.variant.variant_name,
+                sku: sale.variant.sku,
+                quantity: sale.quantity,
+                total_amount: formatToPeso(sale.total_amount),
+                createdAt: formatDate(sale.createdAt),
+            })
+        );
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const base64Data = Buffer.from(buffer).toString("base64");
+
+        // Send JSON response
+        res.status(200).json({
+            data: base64Data,
+            filename: `Distributors - Sales.xlsx`
         });
 
     } catch (err) {

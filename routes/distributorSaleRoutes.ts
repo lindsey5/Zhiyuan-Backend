@@ -3,6 +3,8 @@ import { authenticate, authorizePermission } from "../middlewares/authMiddleware
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import {
+    downloadAllDistributorSales,
+    downloadDistributorSales,
   getAllDistributorSales,
   getDistributorItemsSoldPerMonth,
   getDistributorItemsSoldThisMonth,
@@ -234,6 +236,22 @@ router.get(
   authorizePermission(PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
   getDistributorItemsSoldPerMonth
 );
+
+router.get(
+    '/download/:id',
+    createRateLimiter(5 * 60 * 1000, 5),
+    authenticate,
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
+    downloadDistributorSales
+)
+
+router.get(
+    '/download',
+    createRateLimiter(5 * 60 * 1000, 5),
+    authenticate,
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
+    downloadAllDistributorSales
+)
 
 /**
  * ============================================================

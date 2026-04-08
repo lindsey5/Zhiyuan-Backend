@@ -1,10 +1,14 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { DistributorAttributes, VariantAttributes } from "../types/model-attributes";
 
 export interface DistributorSaleAttributes extends Document {
     seller_id: mongoose.Types.ObjectId; 
     variant_id: mongoose.Types.ObjectId;
     quantity: number;
     total_amount: number;
+    variant?: VariantAttributes;
+    createdAt: Date;
+    seller?: DistributorAttributes;
 }
 
 const DistributorSaleSchema: Schema<DistributorSaleAttributes> = new Schema(
