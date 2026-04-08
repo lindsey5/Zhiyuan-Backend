@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createDistributor, deleteDistributorById, getDistributorById, getDistributors } from "../controllers/distributorController";
+import { createDistributor, deleteDistributorById, getDistributorById, getDistributors, getTopDistributors } from "../controllers/distributorController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 const router = Router();
@@ -16,6 +16,11 @@ router.get(
     authenticate,
     authorizePermission(PERMISSIONS.DISTRIBUTOR_READ_ALL),
     getDistributors
+)
+
+router.get(
+    '/top',
+    getTopDistributors
 )
 
 router.get(

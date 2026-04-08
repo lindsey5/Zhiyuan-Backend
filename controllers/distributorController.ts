@@ -5,6 +5,7 @@ import { sendAcountDetails } from "../services/emailService";
 import mongoose from "mongoose";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
+import DistributorSale from "../models/DistributorSale";
 
 export const createDistributor = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -186,5 +187,57 @@ export const getDistributorById = async (req: Request, res: Response, next: Next
 
     }catch(err){
         next(err)
+    }
+}
+
+
+export const getTopDistributors = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const limit = req.query.limit ? Number(req.query.limit) : 10;
+        const topDistributors = await DistributorSale.aggregate([
+        {
+            $lookup: {
+                from: "distributors",
+                localField: "seller_id",
+                foreignField: "_id",
+                as: "distributor"
+            }
+        },
+        {   $unwind: "$distributor" },
+        {   $match: { "distributor.status": "active" } }, 
+        {
+            $group: {
+                _id: "$seller_id",
+                    totalSales: { $sum: "$total_amount" },
+                    totalQuantity: { $sum: "$quantity" },
+                    distributor: { $first: "$distributor" } 
+                }
+            },
+            { $sort: { totalSales: -1 } },
+            { $limit: limit },
+        {
+            $project: {
+                _id: 0,
+                totalSales: 1,
+                totalQuantity: 1,
+                distributor: {
+                    _id: 1,
+                    parent_distributor_id: 1,
+                    distributor_name: 1,
+                    email: 1,
+                    commission_rate: 1,
+                    wallet_balance: 1,
+                }
+            }
+        }
+        ]);
+
+        res.status(200).json({ 
+            success: true,
+            topDistributors
+        })
+
+    }catch(err){
+        next(err);
     }
 }
