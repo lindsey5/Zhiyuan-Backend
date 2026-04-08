@@ -16,6 +16,7 @@ import distributorRoutes from "./routes/distributorRoutes";
 import distributorStockRoutes from "./routes/distributorStockRoutes";
 import stockTransferRoutes from "./routes/stockTransferRoutes";
 import distributorSaleRoutes from "./routes/distributorSaleRoutes";
+import commissionLogRoutes from "./routes/commissionLogRoutes";
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/distributors', distributorRoutes);
 app.use('/api/distributor-stocks', distributorStockRoutes);
 app.use('/api/stock-transfer-logs', stockTransferRoutes);
 app.use('/api/distributor-sales',distributorSaleRoutes);
+app.use('/api/commission-logs', commissionLogRoutes);
 app.use(errorHandler);
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
