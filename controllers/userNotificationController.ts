@@ -42,3 +42,25 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
         next(err);
     }
 }
+
+export const readNotification = async (req : AuthRequest, res : Response, next : NextFunction) => {
+    try{
+        const notification = await UserNotification.findById(req.params.id);
+
+        if(!notification){
+            return res.status(404).json({ success: false, message: "Notification not found"});
+        }
+
+        if(notification.user_id.toString() !== req.user._id.toString()){
+            return res.status(401).json({ success: false, message: "Unauthorized access" })
+        }
+
+        notification.status = "read";
+
+        await notification.save();
+
+        res.status(200).json({ success: true })
+    }catch(err){
+        next(err);
+    }
+}
