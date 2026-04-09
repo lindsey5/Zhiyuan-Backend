@@ -82,8 +82,6 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
                 { distributor_name: { $regex: search, $options: "i" } },
                 { email: { $regex: search, $options: "i" } },
                 { distributor_id: { $regex: search, $options: "i" }},
-                { "parent_distributor.distributor_name": { $regex: search, $options: "i" }},
-                { "parent_distributor.distributor_id": { $regex: search, $options: "i" }}
             ]
         };
 
