@@ -20,7 +20,17 @@ export const createDistributor = async (req: AuthRequest, res: Response, next: N
 
         const password = generatePassword(10);
 
-        const distributor = await Distributor.create([{...req.body, password}], { session});
+        const parentDistributor = await Distributor.findOne({
+            distributor_id: req.body.parent_distributor_id
+        })
+
+        if(!parentDistributor && req.body.parent_distributor_id){
+            return res.status(404).json({ message: "Parent distributor not found"});
+        }
+
+        const distributor = await Distributor.create([{
+            ...req.body, password, ...(parentDistributor && { parent_distributor_id: parentDistributor._id })
+        }], { session});
 
         const success = await sendAcountDetails(distributor[0].email, distributor[0].distributor_name, password);
 
@@ -71,7 +81,9 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
             $or: [
                 { distributor_name: { $regex: search, $options: "i" } },
                 { email: { $regex: search, $options: "i" } },
-                { distributor_id: { $regex: search, $options: "i" }}
+                { distributor_id: { $regex: search, $options: "i" }},
+                { "parent_distributor.distributor_name": { $regex: search, $options: "i" }},
+                { "parent_distributor.distributor_id": { $regex: search, $options: "i" }}
             ]
         };
 
@@ -87,8 +99,6 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
         const sortField = allowedSortFields.includes(sortBy) ? sortBy : "createdAt";
 
         const distributors = await Distributor.aggregate([
-            { $match: matchQuery },
-
             // populate parent distributor
             {
                 $lookup: {
@@ -104,7 +114,7 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
                     preserveNullAndEmptyArrays: true,
                 },
             },
-
+            { $match: matchQuery },
             // stocks
             {
                 $lookup: {

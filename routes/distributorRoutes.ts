@@ -3,10 +3,13 @@ import { createDistributor, deleteDistributorById, getDistributorById, getDistri
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
+import { distributorSchema } from "../schema/distributorSchema";
+import validateBody from "../middlewares/validateBody";
 const router = Router();
 
 router.post(
     '/', 
+    validateBody(distributorSchema),
     createRateLimiter(60 * 1000, 20),
     authenticate,
     authorizePermission(PERMISSIONS.DISTRIBUTOR_CREATE),
