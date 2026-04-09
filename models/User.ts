@@ -32,6 +32,8 @@ const UserSchema: Schema<UserAttributes> = new Schema(
         password: {
             type: String,
             required: [true, "password is required."],
+            minlength: [12, "password must be at least 12 character."],
+            maxlength: [100, "password must be at most 100 characters."],
         },
 
         role_id: {
