@@ -36,6 +36,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
             );
 
             if (existingStock) {
+                existingStock.quantity += stock.quantity;
                 await existingStock.save({ session });
 
                 newStocks.push(existingStock);
