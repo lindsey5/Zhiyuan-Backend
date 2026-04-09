@@ -45,6 +45,13 @@ DistributorSaleSchema.virtual("seller", {
     justOne: true    
 });
 
+DistributorSaleSchema.virtual("variant", {
+    ref: "Variant",
+    localField: "variant_id",
+    foreignField: "_id",
+    justOne: true
+});
+
 DistributorSaleSchema.set("toObject", { virtuals: true });
 DistributorSaleSchema.set("toJSON", { virtuals: true });
 

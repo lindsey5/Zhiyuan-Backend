@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import StockTransfer from "../models/StockTransfer";
 import StockTransferItem from "../models/StockTransferItem";
-import { emitStockTransfer } from "../sockets/transferLogSocket";
+import { emitStockTransfer } from "../sockets/stockTransferSocket";
 import DistributorNotification from "../models/DistributorNotification";
 
 export default class StockTransferService {

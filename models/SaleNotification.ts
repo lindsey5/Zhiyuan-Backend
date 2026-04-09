@@ -4,7 +4,7 @@ import mongoose, { Schema, Model, Document } from "mongoose";
 export interface SaleNotificationAttributes extends Document{
     notification_id: mongoose.Types.ObjectId;
     distributor_id: mongoose.Types.ObjectId;
-    sales: mongoose.Types.ObjectId[]; 
+    sale_ids: mongoose.Types.ObjectId[]; 
 }
 
 const SaleNotificationSchema: Schema<SaleNotificationAttributes> = new Schema(
@@ -20,7 +20,7 @@ const SaleNotificationSchema: Schema<SaleNotificationAttributes> = new Schema(
             required: true,
         },
 
-        sales: [{
+        sale_ids: [{
             type: Schema.Types.ObjectId,
             ref: "DistributorSale",
             required: true
@@ -30,6 +30,23 @@ const SaleNotificationSchema: Schema<SaleNotificationAttributes> = new Schema(
 );
 
 SaleNotificationSchema.index({ user_id: 1 })
+
+SaleNotificationSchema.virtual("sold_by", {
+    ref: "Distributor",
+    localField: "distributor_id",
+    foreignField: "_id",
+    justOne: true,
+})
+
+SaleNotificationSchema.virtual("sales", {
+    ref: "DistributorSale",
+    localField: "sale_ids",
+    foreignField: "_id",
+});
+
+SaleNotificationSchema.set("toObject", { virtuals: true });
+SaleNotificationSchema.set("toJSON", { virtuals: true });
+
 
 const SaleNotification: Model<SaleNotificationAttributes> = mongoose.model(
     "SaleNotification",
