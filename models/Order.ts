@@ -50,6 +50,15 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
     { timestamps: true } 
 );
 
+OrderSchema.virtual("order_items", {
+    ref: "OrderItem",
+    localField: "_id",
+    foreignField: "order_id",
+});
+
+OrderSchema.set("toObject", { virtuals: true });
+OrderSchema.set("toJSON", { virtuals: true });
+
 const Order: Model<OrderAttributes> = mongoose.model("Order", OrderSchema);
 
 export default Order;

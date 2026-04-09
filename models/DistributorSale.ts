@@ -7,7 +7,6 @@ export interface DistributorSaleAttributes extends Document {
     quantity: number;
     total_amount: number;
     variant?: VariantAttributes;
-    createdAt: Date;
     seller?: DistributorAttributes;
 }
 

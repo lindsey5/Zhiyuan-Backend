@@ -44,7 +44,8 @@
     "setup-roles": "ts-node scripts/setup-roles.ts",
     "create-user": "ts-node scripts/create-user.ts",
     "insert-products": "ts-node scripts/insert-products.ts",
-    "automate-create-user": "ts-node scripts/automate-create-user.ts"
+    "automate-create-user": "ts-node scripts/automate-create-user.ts",
+    "generate-orders": "ts-node scripts/generate-orders.ts"
   },
   "author": "",
   "license": "ISC",

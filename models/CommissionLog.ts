@@ -1,10 +1,10 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
 
 export interface CommissionLogAttributes extends Document {
-  sale_id: mongoose.Types.ObjectId;
-  receiver_id: mongoose.Types.ObjectId;
-  commission_rate: number;
-  commission_amount: number;
+    sale_id: mongoose.Types.ObjectId;
+    receiver_id: mongoose.Types.ObjectId;
+    commission_rate: number;
+    commission_amount: number;
 }
 
 const CommissionLogSchema: Schema<CommissionLogAttributes> = new Schema(
@@ -35,6 +35,8 @@ const CommissionLogSchema: Schema<CommissionLogAttributes> = new Schema(
         timestamps: true, 
     }
 );
+
+CommissionLogSchema.index({ sale_id: 1, receiver_id: 1, commission_amount: 1, createdAt: -1 })
 
 const CommissionLog: Model<CommissionLogAttributes> = mongoose.model(
     "CommissionLog",

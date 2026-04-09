@@ -46,8 +46,9 @@ const PERMISSIONS = {
 
     // Distributor Sales
     DISTRIBUTOR_SALES_VIEW: 'distributor-sales:view',
+    DISTRIBUTOR_SALES_NOTIFICATION: 'distributor-sales:notification',
 
     // Distributor Reports
-    DISTRIBUTOR_REPORTS_VIEW: 'distributor-reports:view'
+    DISTRIBUTOR_REPORTS_VIEW: 'distributor-reports:view',
 }
 export default PERMISSIONS

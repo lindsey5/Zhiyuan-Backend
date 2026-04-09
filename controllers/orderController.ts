@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Order from "../models/Order";
+import '../models/OrderItem';
 
 export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -28,7 +29,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 
         const orders = await Order.find(filter)
             .populate("order_items") 
-            .sort({ order_date: -1 })
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
 

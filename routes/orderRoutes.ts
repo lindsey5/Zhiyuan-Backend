@@ -8,9 +8,6 @@ const router = Router();
 
 router.get(
     '/',
-    createRateLimiter(15 * 60 * 1000, 100),
-    authenticate,
-    authorizePermission(PERMISSIONS.ORDER_READ_ALL),
     getOrders
 )
 
