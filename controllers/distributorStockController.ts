@@ -6,6 +6,7 @@ import DistributorStock from "../models/DistributorStock";
 import StockTransferService from "../services/StockTransferService";
 import Distributor from "../models/Distributor";
 import AuditLogService from "../services/AuditLogService";
+import PDFDocument from "pdfkit";
 
 export const createBulkDistributorStock = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -206,6 +207,201 @@ export const getDistributorStocks = async (
             total,
             distributorStocks: stocks,
         });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const downloadDistributorStocks = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const search = (req.query.search as string) || "";
+        const distributorId = req.params.id;
+
+        const existingDistributor = await Distributor.findById(distributorId);
+
+        if (!existingDistributor) {
+            return res.status(404).json({
+                success: false,
+                message: "Distributor not found",
+            });
+        }
+
+        const sortBy = (req.query.sortBy as string) || "createdAt";
+        const order = (req.query.order as string) === "asc" ? 1 : -1;
+
+        const sortStage: any = {};
+
+        if (["variant_name", "sku", "price", "stock"].includes(sortBy)) {
+            sortStage[`variant.${sortBy}`] = order;
+        } else {
+            sortStage[sortBy] = order;
+        }
+
+        const pipeline: any[] = [
+            {
+                $match: {
+                    distributor_id: new mongoose.Types.ObjectId(distributorId as string),
+                },
+            },
+
+            // lookup variant
+            {
+                $lookup: {
+                    from: "variants",
+                    localField: "variant_id",
+                    foreignField: "_id",
+                    as: "variant",
+                },
+            },
+            { $unwind: "$variant" },
+
+            // lookup product
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "variant.product_id",
+                    foreignField: "_id",
+                    as: "product",
+                },
+            },
+            { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+
+            // move product inside variant
+            {
+                $addFields: {
+                    "variant.product": "$product",
+                },
+            },
+
+            // remove root product
+            {
+                $project: {
+                    product: 0,
+                },
+            },
+        ];
+
+        // search filter
+        if (search) {
+            pipeline.push({
+                $match: {
+                    $or: [
+                        { "variant.variant_name": { $regex: search, $options: "i" } },
+                        { "variant.sku": { $regex: search, $options: "i" } },
+                        { "variant.product.product_name": { $regex: search, $options: "i" } },
+                    ],
+                },
+            });
+        }
+
+        // sort (NO PAGINATION)
+        pipeline.push({ $sort: sortStage });
+
+        const stocks = await DistributorStock.aggregate(pipeline);
+
+        // ======================
+        // PDF GENERATION
+        // ======================
+        const doc = new PDFDocument({ margin: 30, size: "A4" });
+
+        const buffers: Buffer[] = [];
+        doc.on("data", buffers.push.bind(buffers));
+
+        const pdfBufferPromise = new Promise<Buffer>((resolve) => {
+            doc.on("end", () => resolve(Buffer.concat(buffers)));
+        });
+
+        doc
+            .fontSize(16)
+            .text(`${existingDistributor.distributor_name} - Stock Report`, { align: "center" });
+
+        doc.moveDown(1);
+
+        const startX = 30;
+        const pageBottom = 750;
+
+        const columns = {
+            product: { x: startX, width: 160 },
+            variant: { x: startX + 170, width: 140 },
+            sku: { x: startX + 320, width: 90 },
+            price: { x: startX + 420, width: 70 },
+            quantity: { x: startX + 500, width: 60 },
+        };
+
+        const drawHeader = () => {
+            doc.font("Helvetica-Bold").fontSize(9);
+
+            const y = doc.y;
+
+            doc.text("Product", columns.product.x, y, { width: columns.product.width });
+            doc.text("Variant", columns.variant.x, y, { width: columns.variant.width });
+            doc.text("SKU", columns.sku.x, y, { width: columns.sku.width });
+            doc.text("Price", columns.price.x, y, { width: columns.price.width });
+            doc.text("Stock", columns.quantity.x, y, { width: columns.quantity.width });
+
+            doc.moveTo(startX, y + 15).lineTo(570, y + 15).stroke();
+            doc.moveDown(1);
+
+            doc.font("Helvetica").fontSize(8);
+        };
+
+        drawHeader();
+
+        let rowY = doc.y;
+
+        stocks.forEach((stock) => {
+            const productName = stock.variant?.product?.product_name || "";
+            const variantName = stock.variant?.variant_name || "";
+            const sku = stock.variant?.sku || "";
+            const price = (stock.variant?.price || 0).toFixed(2);
+            const stockQty = String(stock.quantity ?? 0);
+
+            const heights = [
+                doc.heightOfString(productName, { width: columns.product.width }),
+                doc.heightOfString(variantName, { width: columns.variant.width }),
+                doc.heightOfString(sku, { width: columns.sku.width }),
+                doc.heightOfString(price, { width: columns.price.width }),
+                doc.heightOfString(stockQty, { width: columns.quantity.width }),
+            ];
+
+            const rowHeight = Math.max(...heights) + 8;
+
+            if (rowY + rowHeight > pageBottom) {
+                doc.addPage();
+                drawHeader();
+                rowY = doc.y;
+            }
+
+            doc.text(productName, columns.product.x, rowY, { width: columns.product.width });
+            doc.text(variantName, columns.variant.x, rowY, { width: columns.variant.width });
+            doc.text(sku, columns.sku.x, rowY, { width: columns.sku.width });
+            doc.text(price, columns.price.x, rowY, { width: columns.price.width });
+            doc.text(stockQty, columns.quantity.x, rowY, { width: columns.quantity.width });
+
+            doc
+                .moveTo(startX, rowY + rowHeight - 3)
+                .lineTo(570, rowY + rowHeight - 3)
+                .strokeOpacity(0.2)
+                .stroke()
+                .strokeOpacity(1);
+
+            rowY += rowHeight;
+        });
+
+        doc.end();
+
+        const pdfBuffer = await pdfBufferPromise;
+        const base64Data = pdfBuffer.toString("base64");
+
+        res.status(200).json({
+            data: base64Data,
+            filename: `${existingDistributor.distributor_name} - Stocks.pdf`,
+        });
+
     } catch (err) {
         next(err);
     }

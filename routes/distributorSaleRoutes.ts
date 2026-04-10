@@ -230,18 +230,18 @@ router.get(
  * Returns items sold breakdown per month (Jan-Dec) for a distributor
  */
 router.get(
-  "/items-sold/:id",
-  createRateLimiter(5 * 60 * 1000, 100),
-  authenticate,
-  authorizePermission(PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
-  getDistributorItemsSoldPerMonth
+    "/items-sold/:id",
+    createRateLimiter(5 * 60 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
+    getDistributorItemsSoldPerMonth
 );
 
 router.get(
     '/download/:id',
     createRateLimiter(5 * 60 * 1000, 5),
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
     downloadDistributorSales
 )
 
