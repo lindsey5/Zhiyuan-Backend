@@ -50,5 +50,9 @@ const PERMISSIONS = {
 
     // Distributor Reports
     DISTRIBUTOR_REPORTS_VIEW: 'distributor-reports:view',
+
+    // Sponsored Items
+    SPONSORED_ITEMS_CREATE: 'sponsored-items:create',
+    SPOSORED_ITEMS_VIEW_ALL: 'sponsored-items:view:all',
 }
 export default PERMISSIONS
