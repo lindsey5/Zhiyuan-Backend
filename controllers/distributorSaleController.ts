@@ -22,6 +22,7 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
 
         if(search){
             filter.$or = [
+                { "product.product_name" : { $regex: search, $options: "i" } },
                 { "variant.variant_name" : { $regex: search, $options: "i" } },
                 { "variant.sku" : { $regex: search, $options: "i" } },
                 { "seller.distributor_name" : { $regex: search, $options: "i" } },
@@ -47,15 +48,27 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
                     }
                 },
                 { $unwind: "$variant" },
+
                 {
                     $lookup: {
-                        from: 'distributors',
+                        from: "products",
+                        localField: "variant.product_id",
+                        foreignField: "_id",
+                        as: "product"
+                    }
+                },
+                { $unwind: "$product" },
+
+                {
+                    $lookup: {
+                        from: "distributors",
                         localField: "seller_id",
-                        foreignField: '_id',
-                        as: 'seller'
+                        foreignField: "_id",
+                        as: "seller"
                     }
                 },
                 { $unwind: "$seller" },
+
                 { $match: filter },
                 { $sort: { [sortBy]: order } },
                 { $skip: skip },
@@ -134,6 +147,26 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                     }
                 },
                 { $unwind: "$variant" },
+
+                {
+                    $lookup: {
+                        from: "products",
+                        localField: "variant.product_id",
+                        foreignField: "_id",
+                        as: "product"
+                    }
+                },
+                { $unwind: "$product" },
+
+                {
+                    $lookup: {
+                        from: "distributors",
+                        localField: "seller_id",
+                        foreignField: "_id",
+                        as: "seller"
+                    }
+                },
+                { $unwind: "$seller" },
                 { $match: filter },
                 { $sort: { [sortBy]: order } },
                 { $skip: skip },
