@@ -87,12 +87,10 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
             success: true,
             distributorSales,
             totalSales,
-            pagination: {
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
-                total
-            }
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            total
         });
 
     } catch (err) {
@@ -185,12 +183,10 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
             success: true,
             distributorSales,
             totalSales,
-            pagination: {
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
-                total
-            }
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            total
         });
 
     } catch (err) {
