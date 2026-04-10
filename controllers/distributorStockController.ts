@@ -82,7 +82,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
 
         res.status(201).json({
             success: true,
-            message: "Stocks sucessfully transfered",
+            message: "Stocks sucessfully transferred",
             newStocks,
         });
     } catch (err) {
