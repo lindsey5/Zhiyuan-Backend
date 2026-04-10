@@ -14,7 +14,13 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                 {
                     path: "saleNotification",
                     populate: [
-                        { path: "sales", populate: "variant" },
+                        { 
+                            path: "sales", 
+                            populate: {
+                                path: "variant",
+                                populate: "product"
+                            },
+                        },
                         { path: "sold_by", select: "-password" }
                     ]
                 }
