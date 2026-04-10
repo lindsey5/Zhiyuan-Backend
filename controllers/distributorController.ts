@@ -9,7 +9,7 @@ import DistributorSale from "../models/DistributorSale";
 
 export const createDistributor = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
-    
+
     try{
         session.startTransaction();
         const existingEmail = await Distributor.findOne({ email: req.body.email, status: 'active' }, null, { session });
@@ -28,9 +28,18 @@ export const createDistributor = async (req: AuthRequest, res: Response, next: N
             return res.status(404).json({ message: "Parent distributor not found"});
         }
 
-        const distributor = await Distributor.create([{
-            ...req.body, password, ...(parentDistributor && { parent_distributor_id: parentDistributor._id })
-        }], { session});
+        const payload: any = {
+            ...req.body,
+            password,
+        };
+
+        if (!req.body.parent_distributor_id || req.body.parent_distributor_id === "") {
+            delete payload.parent_distributor_id;
+        } else if (parentDistributor) {
+            payload.parent_distributor_id = parentDistributor._id;
+        }
+
+        const distributor = await Distributor.create([payload], { session });
 
         const success = await sendAcountDetails(distributor[0].email, distributor[0].distributor_name, password);
 
