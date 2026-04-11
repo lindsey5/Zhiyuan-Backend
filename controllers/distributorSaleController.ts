@@ -37,50 +37,54 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
             if (endDate) filter.createdAt.$lte = endDate;
         }
 
+        const pipeline = [
+            {
+                $lookup: {
+                    from: "variants",
+                    localField: "variant_id",
+                    foreignField: "_id",
+                    as: "variant"
+                }
+            },
+            { $unwind: "$variant" },
+
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "variant.product_id",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+
+            {
+                $lookup: {
+                    from: "distributors",
+                    localField: "seller_id",
+                    foreignField: "_id",
+                    as: "seller"
+                }
+            },
+            { $unwind: "$seller" },
+        ]
+
         const [distributorSales, total, totalSalesResult] = await Promise.all([
             DistributorSale.aggregate([
-                {
-                    $lookup: {
-                        from: "variants",
-                        localField: "variant_id",
-                        foreignField: "_id",
-                        as: "variant"
-                    }
-                },
-                { $unwind: "$variant" },
-
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "variant.product_id",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-
-                {
-                    $lookup: {
-                        from: "distributors",
-                        localField: "seller_id",
-                        foreignField: "_id",
-                        as: "seller"
-                    }
-                },
-                { $unwind: "$seller" },
-
+                ...pipeline,             
                 { $match: filter },
                 { $sort: { [sortBy]: order } },
                 { $skip: skip },
                 { $limit: limit }
             ]),
-            DistributorSale.countDocuments(filter),
+            DistributorSale.countDocuments(pipeline),
             DistributorSale.aggregate([
+                ...pipeline,
                 { $match: filter },
                 { $group: { _id: null, totalSales: { $sum: "$total_amount" } } }
             ])
         ]);
-
+        
         const totalSales = totalSalesResult[0]?.totalSales || 0;
 
         res.status(200).json({
@@ -134,44 +138,39 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
             if (endDate) filter.createdAt.$lte = endDate;
         }
 
+        const pipeline = [
+            {
+                $lookup: {
+                    from: "variants",
+                    localField: "variant_id",
+                    foreignField: "_id",
+                    as: "variant"
+                }
+            },
+            { $unwind: "$variant" },
+
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "variant.product_id",
+                    foreignField: "_id",
+                    as: "product"
+                }
+            },
+            { $unwind: "$product" },
+        ]
+
         const [distributorSales, total, totalSalesResult] = await Promise.all([
             DistributorSale.aggregate([
-                {
-                    $lookup: {
-                        from: "variants",
-                        localField: "variant_id",
-                        foreignField: "_id",
-                        as: "variant"
-                    }
-                },
-                { $unwind: "$variant" },
-
-                {
-                    $lookup: {
-                        from: "products",
-                        localField: "variant.product_id",
-                        foreignField: "_id",
-                        as: "product"
-                    }
-                },
-                { $unwind: "$product" },
-
-                {
-                    $lookup: {
-                        from: "distributors",
-                        localField: "seller_id",
-                        foreignField: "_id",
-                        as: "seller"
-                    }
-                },
-                { $unwind: "$seller" },
+                ...pipeline,             
                 { $match: filter },
                 { $sort: { [sortBy]: order } },
                 { $skip: skip },
                 { $limit: limit }
             ]),
-            DistributorSale.countDocuments(filter),
+            DistributorSale.countDocuments(pipeline),
             DistributorSale.aggregate([
+                ...pipeline,
                 { $match: filter },
                 { $group: { _id: null, totalSales: { $sum: "$total_amount" } } }
             ])
