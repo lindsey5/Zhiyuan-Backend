@@ -1,12 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import Distributor from "../models/Distributor";
 import CommissionLog from "../models/CommissionLog";
+import redisClient from "../config/redis";
 
 export const getCommissionsPerMonth = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const year = Number(req.query.year) || new Date().getFullYear();
         const distributor = await Distributor.findById(req.params.id);
 
+        const cacheKey = `commissionsPerMonth:${year}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                source: "redis-cache",
+                ...JSON.parse(cachedValue)
+            });
+        }
+    
         const match: any = {
             createdAt: {
                 $gte: new Date(year, 0, 1, 0, 0, 0, 0),
@@ -49,9 +62,18 @@ export const getCommissionsPerMonth = async (req: Request, res: Response, next: 
             commissionsPerMonth[item.month - 1].totalCommission = item.totalCommission;
         });
 
-        res.status(200).json({
+        const responseData = {
             commissionsPerMonth,
             year
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        })
+
+        res.status(200).json({
+            success: true,
+            ...responseData
         })
 
     }catch(err){

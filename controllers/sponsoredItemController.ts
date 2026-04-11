@@ -6,6 +6,7 @@ import Variant from "../models/Variant";
 import mongoose from "mongoose";
 import AuditLogService from "../services/AuditLogService";
 import { setEndDate, setStartDate } from "../utils/utils";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createBulkSponsoredItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -42,7 +43,7 @@ export const createBulkSponsoredItem = async (req: AuthRequest, res: Response, n
             old_values: null,
             new_values: sponsoredItems
         });
-
+        await deleteCache("sponsored-items:*")
         res.status(201).json({
             success: true,
             message: "New sponsored items successfully recorded.",
@@ -72,6 +73,17 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
             filter.createdAt = {};
             if (startDate) filter.createdAt.$gte = startDate;
             if (endDate) filter.createdAt.$lte = endDate;
+        }
+
+        const cacheKey = `sponsored-items:${search}:${page}:${limit}:${sortBy}:${order}:${startDate}:${endDate}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
         }
 
         if(search){
@@ -111,15 +123,22 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
             SponsoredItem.countDocuments(filter),
         ])
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             sponsoredItems,
             page,
             limit,
             totalPages: Math.ceil(total / limit),
             total
-        });
+        }
 
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        })
+
+        res.status(200).json({
+            success: true,
+            ...responseData
+        })
     }catch(err){
         next(err);
     }

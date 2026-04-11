@@ -3,6 +3,7 @@ import StockTransfer from "../models/StockTransfer";
 import StockTransferItem from "../models/StockTransferItem";
 import { emitStockTransfer } from "../sockets/stockTransferSocket";
 import DistributorNotification from "../models/DistributorNotification";
+import { deleteCache } from "../config/redis";
 
 export default class StockTransferService {
     static async logStockTransfer({
@@ -56,7 +57,7 @@ export default class StockTransferService {
             })
 
             await emitStockTransfer(notification, receiver_id)
-
+            await deleteCache("stock-transfer-logs:*")
             return true
         } catch (err) {
             console.log(err);

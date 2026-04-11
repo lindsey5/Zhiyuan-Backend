@@ -6,6 +6,7 @@ import User from "../models/User";
 import mongoose from "mongoose";
 import validator from "validator";
 
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -33,6 +34,8 @@ export const createUser = async (req: AuthRequest, res: Response, next: NextFunc
             old_values: null
         });
 
+        await deleteCache("users:*")
+
         res.status(201).json({
             success: true,
             message: "User successfully created",
@@ -52,6 +55,18 @@ export const getUsers = async (req: AuthRequest, res: Response, next: NextFuncti
 
         const search = req.query.search ? String(req.query.search) : "";
         const role = req.query.role ? String(req.query.role) : "";
+
+        const cacheKey = `users:${page}:${limit}:${search}:${role}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                source: "redis-cache",
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         const filter : any = { _id: { $ne: req.user._id }, status: 'active' };
 
@@ -123,6 +138,8 @@ export const updateUser = async (req: AuthRequest, res: Response, next: NextFunc
             old_values: oldValues,
             new_values: updatedUser
         });
+
+        await deleteCache("users:*")
 
         res.status(200).json({
             success: true,
@@ -267,6 +284,8 @@ export const userUpdateOwn = async (req: AuthRequest, res: Response, next: NextF
         const updatedUser: any = user.toObject();
         const { role, ...rest } = updatedUser;
 
+        await deleteCache("users:*")
+
         res.status(200).json({ 
             success: true, 
             message: "Successfully Updated",
@@ -307,6 +326,8 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
             new_values: null
         });
 
+        await deleteCache("users:*")
+
         res.status(200).json({
             success: true,
             message: "User successfully deleted."
@@ -319,6 +340,17 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
 
 export const getUsersCount = async (req : Request, res : Response, next: NextFunction) => {
     try{
+        const cacheKey = `users:count`;
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                source: "redis-cache",
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const usersCount = await Role.aggregate([
         {
             $lookup: {
@@ -343,9 +375,18 @@ export const getUsersCount = async (req : Request, res : Response, next: NextFun
             },
         },
         ]);
+        
+        const responseData = {
+            usersCount
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        })
+
         res.status(200).json({
             success: true,
-            usersCount
+            ...responseData
         })
 
     }catch(err) {
@@ -355,6 +396,17 @@ export const getUsersCount = async (req : Request, res : Response, next: NextFun
 
 export const isEmailExist = async (req: Request, res: Response, next: NextFunction) =>{
     try{
+        const cacheKey = `users:${req.query.email}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const existingEmail = await User.findOne({
             email: req.query.email,
             _id: { $ne: new mongoose.Types.ObjectId(req.query.id as string) }
@@ -367,9 +419,19 @@ export const isEmailExist = async (req: Request, res: Response, next: NextFuncti
             })
         }
 
+        
+        const responseData = {
+            user: existingEmail,
+            message: 'Email existed'
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        })
+
         return res.status(200).json({
             success: true,
-            message: 'Email existed'
+            ...responseData
         })
 
     }catch(err){

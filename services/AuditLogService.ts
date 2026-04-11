@@ -1,3 +1,4 @@
+import { deleteCache } from "../config/redis";
 import AuditLog from "../models/AuditLog";
 
 type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -26,7 +27,7 @@ class AuditLogService {
                 new_values: data.new_values,
                 old_values: data.old_values
             });
-
+            await deleteCache("auditLogs:*")
         }catch(err){
             console.log("AuditLogService Error:", err);
         }
