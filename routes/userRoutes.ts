@@ -50,6 +50,14 @@ router.put(
     updateUser
 )
 
+router.patch(
+    '/change-password',
+    createRateLimiter(60 * 1000, 20),
+    authenticate,
+    validateBody(updateUserSchema),
+    updateUser
+)
+
 router.get(
     '/me',
     createRateLimiter(5 * 1000, 100),
