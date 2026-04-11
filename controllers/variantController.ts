@@ -5,6 +5,7 @@ import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
 import { deleteFile, uploadBase64 } from "../utils/cloudinary";
 import PDFDocument from "pdfkit";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const getVariants = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -16,6 +17,17 @@ export const getVariants = async (req: Request, res: Response, next: NextFunctio
         const category = req.query.category ? String(req.query.category) : "";
         const sortBy = req.query.sortBy ? String(req.query.sortBy) : "variant_name";
         const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? -1 : 1;
+
+        const cacheKey = `variants:${page}:${limit}:${search}:${category}:${sortBy}:${order}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         // Build filter for variants
         const variantFilter: any = { status: 'active' };
@@ -62,13 +74,21 @@ export const getVariants = async (req: Request, res: Response, next: NextFunctio
 
         const totalPages = Math.ceil(totalCount / limit);
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             page,
             limit,
             totalPages,
             total: totalCount,
             variants,
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
         });
     } catch (err) {
         next(err);
@@ -267,6 +287,8 @@ export const updateVariant = async (req: AuthRequest, res: Response, next: NextF
             new_values: variant
         });
 
+        await deleteCache("variants:*")
+
         res.status(200).json({
             success: true,
             variant,
@@ -304,6 +326,8 @@ export const deleteVariant = async (req: AuthRequest, res: Response, next: NextF
             old_values: oldValues,
             new_values: null
         })
+
+        await deleteCache("variants:*")
 
         res.status(200).json({
             success: true,

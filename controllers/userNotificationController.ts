@@ -1,12 +1,24 @@
 import { NextFunction, Response } from "express";
 import { AuthRequest } from "../types/auth";
 import UserNotification from "../models/UserNotification";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const getUserNotifications = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
         const page = req.query.page ? Number(req.query.page) : 1;
         const limit = req.query.limit ? Number(req.query.limit) : 10;
         const skip = (page - 1) * limit;
+
+        const cacheKey = `user-notifications:${req.user._id}:${page}:${limit}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         const [userNotifications, total, unread] = await Promise.all([
             UserNotification.find({ user_id: req.user._id })
@@ -34,14 +46,22 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
 
         const totalPages = Math.ceil(total / limit);
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             page,
             limit,
             totalPages,
             total,
             unread,
             userNotifications
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
         });
 
     }catch(err){
@@ -64,6 +84,8 @@ export const readNotification = async (req : AuthRequest, res : Response, next :
         notification.status = "read";
 
         await notification.save();
+
+        await deleteCache(`user-notifications:${req.user._id}:*`);
 
         res.status(200).json({ success: true })
     }catch(err){

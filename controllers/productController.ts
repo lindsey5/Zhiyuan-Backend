@@ -6,6 +6,7 @@ import { AuthRequest } from "../types/auth";
 import Category from "../models/Category";
 import Product from "../models/Product";
 import mongoose from "mongoose";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const uploadedPublicIds: string[] = [];
@@ -94,6 +95,8 @@ export const createProduct = async (req: AuthRequest, res: Response, next: NextF
             }
         });
 
+        await deleteCache("products:*")
+
         return res.status(201).json({
             success: true,
             message: "Product created successfully",
@@ -136,6 +139,17 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 
         // Build main product filter
         const filter: any = { status: "active" };
+
+        const cacheKey = `products:${page}:${limit}:${search}:${category}:${categories}:${minPrice}:${maxPrice}:${sortBy}:${order}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         if (search) {
             filter.product_name = { $regex: search, $options: "i" };
@@ -198,13 +212,21 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 
         const totalPages = Math.ceil(total / limit);
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             page,
             limit,
             totalPages,
             total,
             products,
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
         });
     } catch (err) {
         next(err);
@@ -269,6 +291,8 @@ export const deleteProduct = async (req: AuthRequest, res: Response, next: NextF
             old_values: oldValues,
             new_values: null
         });
+
+        await deleteCache("products:*")
 
         return res.status(200).json({
             success: true,
@@ -418,7 +442,8 @@ export const updateProduct = async (req: AuthRequest, res: Response, next: NextF
             },
             new_values: newValues
         });
-
+        await deleteCache("products:*")
+        
         return res.status(200).json({
             success: true,
             message: "Product updated successfully",

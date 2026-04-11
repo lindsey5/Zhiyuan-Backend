@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
 import Category from "../models/Category";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createCategory = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -32,6 +33,8 @@ export const createCategory = async (req: AuthRequest, res: Response, next: Next
             new_values: category,
         });
 
+        await deleteCache("categories:*")
+
         res.status(201).json({
             success: true,
             message: "Category successfully created.",
@@ -45,10 +48,24 @@ export const createCategory = async (req: AuthRequest, res: Response, next: Next
 export const getCategories = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const search = req.query.search ? String(req.query.search) : "";
+
+        const cacheKey = `categories:${search}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const categories = await Category.find({
             ...(search ? { name: { $regex: search, $options: "i" } } : {}),
             status: "active",
         }).sort({ name: 1 });
+
+        await redisClient.set(cacheKey, JSON.stringify({ categories }))
 
         res.status(200).json({
             success: true,
@@ -99,10 +116,12 @@ export const updateCategory = async (req: AuthRequest, res: Response, next: Next
             new_values: category,
         });
 
+        await deleteCache("categories:*")
+
         res.status(200).json({
-        success: true,
-        message: "Category successfully updated",
-        category,
+            success: true,
+            message: "Category successfully updated",
+            category,
         });
     } catch (err) {
         next(err);
@@ -132,6 +151,8 @@ export const deleteCategory = async (req: AuthRequest, res: Response, next: Next
             old_values: category,
             new_values: null,
         });
+
+        await deleteCache("categories:*")
 
         res.status(200).json({
             success: true,

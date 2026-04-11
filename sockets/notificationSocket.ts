@@ -7,6 +7,7 @@ import User from "../models/User";
 import PERMISSIONS from "../utils/permissions";
 import UserNotification from "../models/UserNotification";
 import SaleNotification from "../models/SaleNotification";
+import { deleteCache } from "../config/redis";
 dotenv.config();
 
 export let notificationNamespace: Namespace;
@@ -45,7 +46,7 @@ export function initNotificationSocket(io: SocketIOServer): void {
                         { path: "sales", populate: "variant" },
                         { path: "sold_by", select: "-password" }
                     ])
-
+                    await deleteCache(`user-notifications:${user._id}:*`)
                     notificationNamespace.to(user.id).emit("receive-notification", { 
                         userNotification: {
                             ...userNotification.toObject(),

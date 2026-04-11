@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
 import DistributorSale from "../models/DistributorSale";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createDistributor = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -60,6 +61,8 @@ export const createDistributor = async (req: AuthRequest, res: Response, next: N
             new_values: distributor
         });
 
+        await deleteCache("distributors:*")
+
         res.status(201).json({
             success: true,
             message: 'Distributor successfull created',
@@ -78,12 +81,22 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
         const search = (req.query.search as string) || "";
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
-        const id = req.query.id;
 
         const sortBy = (req.query.sortBy as string) || "createdAt";
         const order = (req.query.order as string) === "asc" ? 1 : -1;
 
         const skip = (page - 1) * limit;
+
+        const cacheKey = `distributors:${page}:${limit}:${search}:${sortBy}:${order}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+        
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         const matchQuery: any = {
             status: "active",
@@ -93,8 +106,6 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
                 { distributor_id: { $regex: search, $options: "i" }},
             ]
         };
-
-        if(id) matchQuery._id = new mongoose.Types.ObjectId(id as string);
 
         const allowedSortFields = [
             "distributor_name",
@@ -153,12 +164,21 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
 
         const totalDistributors = await Distributor.countDocuments(matchQuery);
 
-        res.status(200).json({
+        const responseData = {
             distributors,
-            total: totalDistributors,
             page,
             limit,
             totalPages: Math.ceil(totalDistributors / limit),
+            total: totalDistributors
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData,
         });
 
     } catch (err) {
@@ -181,6 +201,7 @@ export const deleteDistributorById = async (req: Request, res: Response, next: N
             status: 'deleted'
         });
         await existingDistributor.save();
+        await deleteCache("distributors:*");
 
         res.status(200).json({
             success: true,

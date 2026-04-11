@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import StockTransfer from "../models/StockTransfer";
 import { setEndDate, setStartDate } from "../utils/utils";
+import redisClient from "../config/redis";
 
 export const getStockTransferLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -10,6 +11,17 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
         const search = req.query.search as string;
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+
+        const cacheKey = `stock-transfer-logs:${search}:${page}:${limit}:${startDate}:${endDate}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         const pipeline: any[] = [
             // Lookup receiver
@@ -131,14 +143,23 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
 
         const stockTransferLogs = await StockTransfer.aggregate(pipeline);
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             stockTransferLogs,
             page,
             limit,
             totalPages: Math.ceil(total / limit),
             total,
-        });
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        })
+
+        res.status(200).json({
+            success: true,
+            ...responseData
+        })
+        
     } catch (err) {
         next(err);
     }

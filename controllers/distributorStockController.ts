@@ -7,6 +7,7 @@ import StockTransferService from "../services/StockTransferService";
 import Distributor from "../models/Distributor";
 import AuditLogService from "../services/AuditLogService";
 import PDFDocument from "pdfkit";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createBulkDistributorStock = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -16,6 +17,12 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
 
         const stocks = req.body;
         const distributorId = req.params.id;
+
+        const distributor = await Distributor.findById(distributorId);
+
+        if(!distributor || distributor.status === 'deleted'){
+            return res.status(404).json({ success: false, message: "Distributor not found"})
+        }
 
         const newStocks = [];
 
@@ -81,6 +88,8 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
             new_values: newStocks
         });
 
+        await deleteCache(`distributor-stocks:${distributorId}:*`)
+
         res.status(201).json({
             success: true,
             message: "Stocks sucessfully transferred",
@@ -103,10 +112,12 @@ export const getDistributorStocks = async (
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const skip = (page - 1) * limit;
-
         const distributorId = req.params.id;
+        const sortBy = (req.query.sortBy as string)
+        const order = (req.query.order as string) === "asc" ? 1 : -1;
 
         const existingDistributor = await Distributor.findById(distributorId);
+        
         if (!existingDistributor) {
             return res.status(404).json({
                 success: false,
@@ -114,9 +125,16 @@ export const getDistributorStocks = async (
             });
         }
 
-        const sortBy = (req.query.sortBy as string)
+        const cacheKey = `distributor-stocks:${distributorId}:${page}:${limit}:${search}:${req.query.startDate || ""}:${req.query.endDate || ""}:${order}:${sortBy}`;
 
-        const order = (req.query.order as string) === "asc" ? 1 : -1;
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         const sortStage: any = {};
 
@@ -199,13 +217,21 @@ export const getDistributorStocks = async (
         const total = countResult.length > 0 ? countResult[0].total : 0;
         const totalPages = Math.ceil(total / limit);
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             page,
             limit,
             totalPages,
             total,
             distributorStocks: stocks,
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
         });
     } catch (err) {
         next(err);
@@ -415,6 +441,17 @@ export const getTotalDistributorStocks = async (req: Request, res: Response, nex
             return res.status(404).json({ success: false, message: "Distributor not found." });
         }
 
+        const cacheKey = `distributor-stocks:${distributor.id}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const filter : any = {
             distributor_id: distributor._id
         }
@@ -426,9 +463,18 @@ export const getTotalDistributorStocks = async (req: Request, res: Response, nex
 
         const totalStocks = result[0]?.totalStocks || 0;
 
+
+        const responseData = {
+            totalStocks
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
         res.status(200).json({
             success: true,
-            totalStocks
+            ...responseData
         })
 
     }catch(err){

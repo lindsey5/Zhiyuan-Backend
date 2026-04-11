@@ -5,6 +5,7 @@ import AuditLogService from "../services/AuditLogService";
 import Role from "../models/Role";
 import Permission from "../models/Permission";
 import User from "../models/User";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -61,6 +62,8 @@ export const createRole = async (req: AuthRequest, res: Response, next: NextFunc
             new_values: roleData,
         });
 
+        await deleteCache("roles:*");
+        
         res.status(201).json({
             success: true,
             message: "Role successfully created",
@@ -127,6 +130,8 @@ export const updateRole = async (req: AuthRequest, res: Response, next: NextFunc
             new_values: newValues,
         });
 
+        await deleteCache("roles:*");
+
         res.status(200).json({
             success: true,
             message: "Role successfully updated",
@@ -155,6 +160,17 @@ export const getRoleById = async (req: Request, res: Response, next: NextFunctio
 
 export const getAllRoles = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const cacheKey = `roles:all`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const roles = await Role.find()
         .populate("permissions")
         .populate({
@@ -167,7 +183,15 @@ export const getAllRoles = async (req: Request, res: Response, next: NextFunctio
             usersCount: role.users?.length || 0,
         }));
 
-        res.status(200).json({ success: true, roles: rolesWithUserCount });
+        const responseData = {
+            roles: rolesWithUserCount
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({ success: true, ...responseData });
     } catch (err) {
         next(err);
     }
@@ -193,6 +217,8 @@ export const deleteRole = async (req: AuthRequest, res: Response, next: NextFunc
             new_values: null,
         });
 
+        await deleteCache("roles:*");
+
         res.status(200).json({ success: true, message: "Role successfully deleted." });
     } catch (err) {
         next(err);
@@ -204,15 +230,34 @@ export const getOwnRole = async (req: AuthRequest, res: Response, next: NextFunc
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
+        const cacheKey = `roles:${req.user._id}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const role = await Role.findById(user.role_id).populate("permissions");
         if (!role) return res.status(404).json({ success: false, message: "No role found." });
 
         const { permissions, ...roleData } = role.toObject();
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             role: roleData,
             permissions: permissions?.map((p: any) => p.action) || [],
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
         });
     } catch (err) {
         next(err);

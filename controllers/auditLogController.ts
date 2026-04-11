@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import AuditLog from "../models/AuditLog";
 import { setEndDate, setStartDate } from "../utils/utils";
+import redisClient from "../config/redis";
 
 export const getAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -13,6 +14,17 @@ export const getAuditLogs = async (req: Request, res: Response, next: NextFuncti
         const role = req.query.role as string;
         const severity = req.query.severity as string;
         const order = req.query.order && String(req.query.order).toUpperCase() === "ASC" ? 1 : -1;
+
+        const cacheKey = `auditLogs:${page}:${limit}:${search}:${role}:${severity}:${startDate}:${endDate}:${order}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
 
         // Base match filter
         const matchStage: any = {};
@@ -73,13 +85,21 @@ export const getAuditLogs = async (req: Request, res: Response, next: NextFuncti
         // Fetch audit logs
         const auditLogs = await AuditLog.aggregate(pipeline);
 
-        res.status(200).json({
-            success: true,
+        const responseData = {
             auditLogs,
             page,
             limit,
             totalPages: Math.ceil(total / limit),
-            total,
+            total
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
         });
 
     } catch (err) {
