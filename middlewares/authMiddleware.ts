@@ -47,7 +47,6 @@ export const authenticate = async (
                 permissions: userPermissions,
             },
         };
-
         next();
     } catch (error: any) {
         console.log(error);

@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { createUser, deleteUser, getUsers, getUsersCount, isEmailExist, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
+import { changePassword, createUser, deleteUser, getUsers, getUsersCount, isEmailExist, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import validateBody from "../middlewares/validateBody";
-import { createUserSchema, updateUserSchema } from "../schema/userSchema";
+import { changePasswordSchema, createUserSchema, updateUserSchema } from "../schema/userSchema";
 import createRateLimiter from "../utils/rate-limit";
 
 const router = Router();
@@ -54,8 +54,8 @@ router.patch(
     '/change-password',
     createRateLimiter(60 * 1000, 20),
     authenticate,
-    validateBody(updateUserSchema),
-    updateUser
+    validateBody(changePasswordSchema),
+    changePassword
 )
 
 router.get(

@@ -152,40 +152,15 @@ export const updateUser = async (req: AuthRequest, res: Response, next: NextFunc
     }
 };
 
-export const changePassword = async (req: Request, res: Response) => {
+export const changePassword = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        const userId = (req as any).user?.id;
-
-        if (!userId) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
+        const userId = req.user._id;
 
         let { currentPassword, newPassword, confirmPassword } = req.body;
 
         currentPassword = validator.trim(currentPassword || "");
         newPassword = validator.trim(newPassword || "");
         confirmPassword = validator.trim(confirmPassword || "");
-
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            return res.status(400).json({
-                message: "All fields are required",
-            });
-        }
-
-        if (
-            !validator.isStrongPassword(newPassword, {
-                minLength: 12, 
-                minLowercase: 1,
-                minUppercase: 1,
-                minNumbers: 1,
-                minSymbols: 1,
-            })
-        ) {
-            return res.status(400).json({
-                message:
-                "Password must be at least 12 characters and include uppercase, lowercase, number, and symbol",
-            });
-        }
 
         if (newPassword !== confirmPassword) {
             return res.status(400).json({
@@ -229,11 +204,7 @@ export const changePassword = async (req: Request, res: Response) => {
         });
         
     } catch (error) {
-        console.error("Change Password Error:", error);
-
-        return res.status(500).json({
-            message: "Internal server error",
-        });
+        next(error);
     }
 };
 
