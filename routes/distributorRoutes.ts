@@ -20,7 +20,14 @@ router.get(
     '/',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_READ_ALL),
+    hasAnyPermission(
+        PERMISSIONS.DISTRIBUTOR_READ_ALL, 
+        PERMISSIONS.DISTRIBUTOR_STOCK_VIEW, 
+        PERMISSIONS.DISTRIBUTOR_SALES_VIEW, 
+        PERMISSIONS.DISTRIBUTOR_STATS_VIEW, 
+        PERMISSIONS.DISTRIBUTOR_CREATE,
+        PERMISSIONS.DISTRIBUTOR_DELETE,
+    ),
     getDistributors
 )
 
@@ -34,7 +41,7 @@ router.get(
     '/:id',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    hasAnyPermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW, PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
+    hasAnyPermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW, PERMISSIONS.DISTRIBUTOR_SALES_VIEW, PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
     getDistributorById
 )
 
