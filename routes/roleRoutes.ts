@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import { createRole, deleteRole, getAllRoles, getOwnRole, getRoleById, updateRole } from "../controllers/roleController";
 import validateBody from "../middlewares/validateBody";
@@ -21,7 +21,7 @@ router.get(
     '/',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(
+    hasAnyPermission(
         PERMISSIONS.ROLE_READ_ALL, 
         PERMISSIONS.AUDIT_VIEW_ALL, 
         PERMISSIONS.USER_CREATE, 

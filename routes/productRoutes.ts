@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { handleMulterError, createProductUploads } from "../middlewares/multer";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import { createProduct, deleteProduct, getProductById, getProducts, searchProduct, updateProduct } from "../controllers/productController";
 import validateBody from "../middlewares/validateBody";
@@ -29,7 +29,7 @@ router.get(
 router.get(
     '/search',
     authenticate,
-    authorizePermission(PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_UPDATE),
+    hasAnyPermission(PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_UPDATE),
     searchProduct,
 )
 

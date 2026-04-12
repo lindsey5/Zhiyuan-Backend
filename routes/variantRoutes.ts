@@ -22,7 +22,7 @@ router.get(
 router.get(
     '/search',
     authenticate,
-    authorizePermission(PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_UPDATE),
+    hasAnyPermission(PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_UPDATE),
     searchVariant,
 )
 
@@ -30,7 +30,7 @@ router.get(
     '/download',
     createRateLimiter(5 * 60 * 1000, 5),
     authenticate,
-    authorizePermission(PERMISSIONS.PRODUCT_READ_ALL, PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_DELETE, PERMISSIONS.PRODUCT_UPDATE),
+    hasAnyPermission(PERMISSIONS.PRODUCT_READ_ALL, PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_DELETE, PERMISSIONS.PRODUCT_UPDATE),
     downloadVariants
 )
 

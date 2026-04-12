@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createDistributor, deleteDistributorById, getDistributorById, getDistributors, getTopDistributors } from "../controllers/distributorController";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import { distributorSchema } from "../schema/distributorSchema";
@@ -34,7 +34,7 @@ router.get(
     '/:id',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW, PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
+    hasAnyPermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW, PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
     getDistributorById
 )
 

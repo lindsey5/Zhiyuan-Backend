@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { changePassword, createUser, deleteUser, getUsers, getUsersCount, isEmailExist, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import validateBody from "../middlewares/validateBody";
 import { changePasswordSchema, createUserSchema, updateUserSchema } from "../schema/userSchema";
@@ -21,7 +21,7 @@ router.get(
     '/email',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.USER_CREATE, PERMISSIONS.USER_UPDATE),
+    hasAnyPermission(PERMISSIONS.USER_CREATE, PERMISSIONS.USER_UPDATE),
     isEmailExist
 )
 
@@ -69,7 +69,7 @@ router.get(
     '/count',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.USER_UPDATE, PERMISSIONS.USER_CREATE, PERMISSIONS.USER_DELETE, PERMISSIONS.USER_READ_ALL),
+    hasAnyPermission(PERMISSIONS.USER_UPDATE, PERMISSIONS.USER_CREATE, PERMISSIONS.USER_DELETE, PERMISSIONS.USER_READ_ALL),
     getUsersCount
 )
 

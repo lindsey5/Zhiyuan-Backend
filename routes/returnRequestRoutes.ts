@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import { getReturnRequests, updateAllReturnRequestItems, updateReturnRequestItem } from "../controllers/returnRequestController";
@@ -10,7 +10,7 @@ router.get(
     '/',
     createRateLimiter(5 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW, PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_UPDATE),
+    hasAnyPermission(PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW, PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_UPDATE),
     getReturnRequests
 )
 
