@@ -30,7 +30,7 @@ class NotificationService {
                 });
 
             const authorizedUsers = users.filter(user =>
-                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW)
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW || p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW)
             );
             
             const totalItems = sales.reduce((total, sale) => total + sale.quantity, 0);

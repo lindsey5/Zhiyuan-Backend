@@ -1,8 +1,10 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { VariantAttributes } from "../types/model-attributes";
 
 export interface DistributorStockAttributes extends Document {
     distributor_id: mongoose.Types.ObjectId;
     variant_id: mongoose.Types.ObjectId;
+    variant: VariantAttributes;
     quantity: number;
 }
 

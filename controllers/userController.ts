@@ -5,7 +5,6 @@ import Role from "../models/Role";
 import User from "../models/User";
 import mongoose from "mongoose";
 import validator from "validator";
-
 import redisClient, { deleteCache } from "../config/redis";
 
 export const createUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
