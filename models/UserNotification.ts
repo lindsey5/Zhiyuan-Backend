@@ -37,6 +37,13 @@ UserNotificationSchema.virtual("saleNotification", {
     justOne: true,
 });
 
+UserNotificationSchema.virtual("returnNotification", {
+    ref: "ReturnNotification",
+    localField: "_id",
+    foreignField: "notification_id",
+    justOne: true,
+});
+
 UserNotificationSchema.set("toJSON", { virtuals: true });
 UserNotificationSchema.set("toObject", { virtuals: true });
 

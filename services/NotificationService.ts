@@ -1,0 +1,123 @@
+import { Namespace } from "socket.io";
+import { deleteCache } from "../config/redis";
+import { DistributorSaleAttributes } from "../models/DistributorSale";
+import SaleNotification from "../models/SaleNotification";
+import User from "../models/User";
+import UserNotification from "../models/UserNotification";
+import PERMISSIONS from "../utils/permissions";
+import { ReturnRequestAttributes } from "../models/ReturnRequest";
+import ReturnNotification from "../models/ReturnNotification";
+import '../models/ReturnRequest';
+
+class NotificationService {
+    namespace: Namespace;
+
+    constructor(namespace : Namespace){
+        this.namespace = namespace;
+
+        this.sendSaleNotification = this.sendSaleNotification.bind(this);
+        this.sendReturnNotification = this.sendReturnNotification.bind(this);
+    }
+
+    async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
+        try{
+            const { distributor_id, distributor_name, sales } = payload;
+
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW)
+            );
+            
+            const totalItems = sales.reduce((total, sale) => total + sale.quantity, 0);
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor_name} sold ${totalItems} items`
+                })
+
+                const saleNotification = await SaleNotification.create({
+                    notification_id: userNotification._id,
+                    distributor_id,
+                    sale_ids: sales.map(sale => sale._id)
+                })
+
+                await saleNotification.populate([
+                    { 
+                        path: "sales", 
+                        populate: {
+                            path: "variant",
+                            populate: "product"
+                        }
+                    },
+                    { path: "sold_by", select: "-password" }
+                ])
+                await deleteCache(`user-notifications:${user._id}:*`)
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        saleNotification
+                    }
+                })
+            }
+
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+    async sendReturnNotification (payload : { returnRequest : ReturnRequestAttributes, distributor_name: string, distributor_id: string }) {
+        try{
+            const { distributor_name, returnRequest } = payload;
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_SALES_VIEW)
+            );
+
+            const totalItems = returnRequest.items.reduce((total, item) => total + item.quantity, 0);
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor_name} requested to return ${totalItems} items`
+                })
+
+                const returnNotification = await ReturnNotification.create({
+                    return_id: returnRequest._id,
+                    notification_id: userNotification._id
+                })
+
+                await returnNotification.populate({ 
+                    path: "returnRequest", 
+                    populate: [
+                        { path: "items.variant", populate: "product" },
+                        { path: 'distributor', select: '-password' }
+                    ]
+                })
+                await deleteCache(`user-notifications:${user._id}:*`)
+                this.namespace.to(user.id).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        returnNotification
+                    }
+                })
+            }
+
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+}
+
+export default NotificationService

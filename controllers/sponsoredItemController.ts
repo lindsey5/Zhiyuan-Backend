@@ -43,7 +43,9 @@ export const createBulkSponsoredItem = async (req: AuthRequest, res: Response, n
             old_values: null,
             new_values: sponsoredItems
         });
+
         await deleteCache("sponsored-items:*")
+        
         res.status(201).json({
             success: true,
             message: "New sponsored items successfully recorded.",

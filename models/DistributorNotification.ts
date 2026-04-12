@@ -3,6 +3,7 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface DistributorNotificationAttributes extends Document {
     distributor_id: mongoose.Types.ObjectId;
     transfer_id: mongoose.Types.ObjectId;
+    return_id: mongoose.Types.ObjectId;
     message: string;
     status: 'read' | 'unread'
 }
@@ -18,7 +19,11 @@ const DistributorNotificationSchema: Schema<DistributorNotificationAttributes> =
         transfer_id: {
             type: Schema.Types.ObjectId,
             ref: "StockTransfer",
-            required: true,
+        },
+
+        return_id: {
+            type: Schema.Types.ObjectId,
+            ref: 'ReturnRequest',
         },
 
         message: {
@@ -44,6 +49,14 @@ DistributorNotificationSchema.virtual("stockTransfer", {
     foreignField: "_id",   
     justOne: true    
 });
+
+DistributorNotificationSchema.virtual("returnRequest", {
+    ref: "ReturnRequest",          
+    localField: "return_id", 
+    foreignField: "_id",   
+    justOne: true    
+});
+
 
 DistributorNotificationSchema.set("toObject", { virtuals: true });
 DistributorNotificationSchema.set("toJSON", { virtuals: true });

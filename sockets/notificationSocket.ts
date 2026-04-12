@@ -2,12 +2,7 @@
 import type { Server as SocketIOServer, Namespace } from "socket.io";
 import dotenv from 'dotenv';
 import socketConnection from "./socketConnection";
-import { DistributorSaleAttributes } from "../models/DistributorSale";
-import User from "../models/User";
-import PERMISSIONS from "../utils/permissions";
-import UserNotification from "../models/UserNotification";
-import SaleNotification from "../models/SaleNotification";
-import { deleteCache } from "../config/redis";
+import NotificationService from "../services/NotificationService";
 dotenv.config();
 
 export let notificationNamespace: Namespace;
@@ -15,50 +10,11 @@ export let notificationNamespace: Namespace;
 export function initNotificationSocket(io: SocketIOServer): void {
     notificationNamespace = io.of("/notification");
 
+    const notification = new NotificationService(notificationNamespace);
+
     const events = {
-        "send-sale-notification": async (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) => {
-            try{
-                const { distributor_id, distributor_name, sales } = payload;
-
-                const users = await User.find({ status: 'active' })
-                    .populate({
-                        path: "role",
-                        populate: { path: "permissions" }
-                    });
-
-                const authorizedUsers = users.filter(user =>
-                    user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_SALES_NOTIFICATION)
-                );
-
-                for(const user of authorizedUsers){
-                    const userNotification = await UserNotification.create({
-                        user_id: user._id,
-                        message: `${distributor_name} sold ${sales.reduce((total, sale) => total + sale.quantity, 0)} items`
-                    })
-
-                    const saleNotification = await SaleNotification.create({
-                        notification_id: userNotification._id,
-                        distributor_id,
-                        sale_ids: sales.map(sale => sale._id)
-                    })
-
-                    await saleNotification.populate([
-                        { path: "sales", populate: "variant" },
-                        { path: "sold_by", select: "-password" }
-                    ])
-                    await deleteCache(`user-notifications:${user._id}:*`)
-                    notificationNamespace.to(user.id).emit("receive-notification", { 
-                        userNotification: {
-                            ...userNotification.toObject(),
-                            saleNotification
-                        }
-                    })
-                }
-
-            }catch(err){
-                console.log(err);
-            }
-        }
+        "send-sale-notification": notification.sendSaleNotification,
+        "send-return-notification" : notification.sendReturnNotification
     }
 
     socketConnection(

@@ -13,7 +13,6 @@ export const deleteCache = async (pattern : string) => {
 
         cursor = result.cursor;
         const keys = result.keys;
-        console.log(keys)
         if (keys.length > 0) await redisClient.del(keys);
 
     } while (Number(cursor) !== 0);

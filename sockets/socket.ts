@@ -1,13 +1,13 @@
 import { Server } from "socket.io";
 import dotenv from 'dotenv';
-import { initStockTransferLogSocket } from "./stockTransferSocket";
 import { initNotificationSocket } from "./notificationSocket";
+import { initDistributorNotificationSocket } from "./distributorNotificationSocket";
 dotenv.config();
 
 const origins = process.env.ORIGINS?.split(",") || ['http://localhost:5173', 'http://localhost:5174'];
 
 export function registerSockets(io: Server) {
-    initStockTransferLogSocket(io);
+    initDistributorNotificationSocket(io);
     initNotificationSocket(io);
 }
 

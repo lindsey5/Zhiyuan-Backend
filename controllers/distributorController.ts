@@ -44,7 +44,7 @@ export const createDistributor = async (req: AuthRequest, res: Response, next: N
 
         const success = await sendAcountDetails(distributor[0].email, distributor[0].distributor_name, password);
 
-        if(!success)throw new Error('Failed to create distrubutors');
+        if(!success) throw new Error('Failed to create distrubutors');
         
         await session.commitTransaction();
         session.endSession();
