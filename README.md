@@ -17,7 +17,6 @@ A backend service for managing users, roles, permissions, categories, products, 
 - Audit logs
 - JWT authentication and authorization
 - Full API documentation via Swagger at `/docs`
-- Supports SQLite for easy setup
 - Cloudinary integration for image/media uploads
 - All API endpoints are validated using Zod
 
