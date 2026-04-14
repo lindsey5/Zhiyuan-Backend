@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Order from "../models/Order";
 import '../models/OrderItem';
+import { setEndDate, setStartDate } from "../utils/utils";
 
 export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -11,7 +12,10 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
         const status = req.query.status ? String(req.query.status) : "";
         const paymentMethod = req.query.paymentMethod ? String(req.query.paymentMethod) : "";
         const paymentStatus = req.query.paymentStatus ? String(req.query.paymentStatus) : "";
-
+        const deliveryType = req.query.deliveryType ? String(req.query.deliveryType) : "";
+        const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
+        const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+        
         const filter: any = {};
 
         if (search) {
@@ -21,9 +25,16 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
             ];
         }
 
+        if (startDate || endDate) {
+            filter.createdAt = {};
+            if (startDate) filter.createdAt.$gte = startDate;
+            if (endDate) filter.createdAt.$lte = endDate;
+        }
+
         if (status) filter.status = status;
         if (paymentMethod) filter.payment_method = paymentMethod;
         if (paymentStatus) filter.payment_status = paymentStatus;
+        if(deliveryType) filter.delivery_type = deliveryType;
 
         const total = await Order.countDocuments(filter);
 
@@ -47,3 +58,64 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
         next(err);
     }
 };
+
+export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const order = await Order.findById(req.params.id);
+
+        if(!order){
+            return res.status(404).json({
+                success: false,
+                message: "Order not found"
+            })
+        }
+
+        if(order.payment_status === 'paid') {
+            return res.status(400).json({
+                success: false,
+                message: "This order is already paid"
+            })
+        }
+
+        order.payment_status = 'paid'
+
+        if(order.delivery_type === 'pickup'){
+            order.status = 'completed'
+        }
+
+        await order.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Order successfully marked as paid",
+        })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const updateOrderStatus= async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const order = await Order.findById(req.params.id);
+
+        if(!order){
+            return res.status(404).json({
+                success: false,
+                message: "Order not found"
+            })
+        }
+
+        order.status = req.body.status;
+
+        await order.save();
+
+        res.status(200).json({
+            success: true,
+            message: `Order ${order.order_id} successfully marked as ${req.body.status}`
+        })
+
+    }catch(err){
+        next(err);
+    }
+}

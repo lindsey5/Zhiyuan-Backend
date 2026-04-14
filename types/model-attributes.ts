@@ -66,10 +66,10 @@ export interface CategoryAttributes extends Document {
 export interface OrderAttributes extends Document {
     order_id: string;
     customer_name: string;
-    status: "pending" | "processing" | "completed" | "cancelled";
+    status: "pending" | "processing" | "completed" | "cancelled" | "refunded";
     total_amount: number;
     delivery_type: "pickup" | "delivery";
-    payment_method: "COD" | "GCash" | "Card";
+    payment_method: "COD" | "GCash" | "Card" | "Paymaya";
     payment_status: "paid" | "unpaid";
 }
 

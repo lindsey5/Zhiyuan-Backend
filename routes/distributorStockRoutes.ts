@@ -3,11 +3,14 @@ import { createBulkDistributorStock, downloadDistributorStocks, getDistributorSt
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
+import validateBody from "../middlewares/validateBody";
+import { distributorStockSchema } from "../schema/distributorStockSchema";
 const router = Router();
 
 router.post(
     '/:id',
     createRateLimiter(60 * 1000, 20),
+    validateBody(distributorStockSchema),
     authenticate,
     authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_TRANSFER),
     createBulkDistributorStock

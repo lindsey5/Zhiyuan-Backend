@@ -23,7 +23,6 @@ const PERMISSIONS = {
 
     // Order management
     ORDER_READ_ALL: 'order:read:all',
-    ORDER_READ: 'order:read',
     ORDER_UPDATE: 'order:update',
 
     //Category management

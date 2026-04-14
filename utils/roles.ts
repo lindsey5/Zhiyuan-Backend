@@ -11,7 +11,6 @@ const ROLES = {
         description: 'Handles day-to-day front desk operations.',
         permissions: [
             'order:read:all',
-            'order:read',
             'order:update',
             'product:read:all',
             'category:read:all'
