@@ -305,7 +305,7 @@ export const updateAllReturnRequestItems = async (req: Request, res: Response, n
             [{
                 distributor_id: distributor._id,
                 return_id: returnId,
-                message: `Your return request has been ${status}`,
+                message: `All products on your return request has been ${status}`,
             }],
             { session }
         );

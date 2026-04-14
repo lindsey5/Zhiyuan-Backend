@@ -1,4 +1,3 @@
-
 import type { Server as SocketIOServer, Namespace } from "socket.io";
 import dotenv from 'dotenv';
 import socketConnection from "./socketConnection";

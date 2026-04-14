@@ -105,7 +105,8 @@ export const updateRole = async (req: AuthRequest, res: Response, next: NextFunc
         await role.save();
 
         // Replace permissions
-        await Permission.deleteMany({ role: role._id });
+        const response = await Permission.deleteMany({ role_id: role._id }); 
+        
         const updatedPermissions = await Permission.insertMany(
             permissions.map((action) => ({ action, role_id: role._id }))
         );

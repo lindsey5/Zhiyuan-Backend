@@ -339,6 +339,23 @@ export const deleteVariant = async (req: AuthRequest, res: Response, next: NextF
     }
 }
 
+export const getVariantById = async (req : Request, res: Response, next: NextFunction) => {
+    try{
+        const variant = await Variant.findById(req.params.id).populate("product");
+
+        if(!variant){
+            return res.status(404).json({ success: false, message: 'Variant not found'});
+        }
+
+        res.status(200).json({
+            success: true,
+            variant
+        })
+    }catch(err){
+        next(err);
+    }
+}
+
 export const searchVariant = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id, ...query } = req.query;

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
-import { deleteVariant, downloadVariants, getVariants, searchVariant, updateVariant } from "../controllers/variantController";
+import { deleteVariant, downloadVariants, getVariantById, getVariants, searchVariant, updateVariant } from "../controllers/variantController";
 import createRateLimiter from "../utils/rate-limit";
 
 const router = Router();
@@ -17,6 +17,12 @@ router.get(
         PERMISSIONS.PRODUCT_DELETE
     ),
     getVariants
+)
+
+router.get(
+    '/:id',
+    createRateLimiter(5 * 1000, 100),
+    getVariantById
 )
 
 router.get(
