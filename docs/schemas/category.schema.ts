@@ -5,8 +5,8 @@
  *          Category:
  *              type: object
  *              properties:
- *                  id:
- *                      type: integer
+ *                  _id:
+ *                      type: string
  *                  name:
  *                      type: string
  *                  createdAt:

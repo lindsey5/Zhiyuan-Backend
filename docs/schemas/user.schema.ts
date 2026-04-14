@@ -5,7 +5,7 @@
  *     Permission:
  *       type: object
  *       properties:
- *         id:
+ *         _id:
  *           type: integer
  *         action:
  *           type: string
@@ -15,7 +15,7 @@
  *     Role:
  *       type: object
  *       properties:
- *         id:
+ *         _id:
  *           type: integer
  *         name:
  *           type: string
@@ -29,7 +29,7 @@
  *     User:
  *       type: object
  *       properties:
- *         id:
+ *         _id:
  *           type: integer
  *         firstname:
  *           type: string

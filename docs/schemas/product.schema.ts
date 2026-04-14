@@ -5,8 +5,8 @@
  *     Variant:
  *       type: object
  *       properties:
- *         id:
- *           type: integer
+ *         _id:
+ *           type: string
  *         variant_name:
  *           type: string
  *         price:
@@ -21,8 +21,8 @@
  *     Product:
  *       type: object
  *       properties:
- *         id:
- *           type: integer
+ *         _id:
+ *           type: string
  *         product_name:
  *           type: string
  *         description:
