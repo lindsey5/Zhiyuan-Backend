@@ -18,7 +18,7 @@ async function generateDemoOrders() {
 
         for (let i = 1; i <= 5; i++) {
         const order = new Order({
-            order_id: `ORD-${1000 + i}`,
+            order_id: `ORD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
             customer_name: `Customer ${i}`,
             status: ["pending", "processing", "completed", "cancelled"][Math.floor(Math.random() * 4)],
             total_amount: 0,
