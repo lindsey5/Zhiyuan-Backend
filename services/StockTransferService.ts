@@ -52,7 +52,10 @@ export default class StockTransferService {
                 path: 'stockTransfer',
                 populate: {
                     path: 'items',
-                    populate: 'variant'
+                    populate: {
+                        path: 'variant',
+                        populate: 'product'
+                    }
                 }
             })
 

@@ -34,6 +34,24 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
             required: true,
         },
 
+        address: {
+            type: {
+                street: {
+                    type: String,
+                    required: true,
+                },
+                barangay: {
+                    type: String,
+                    required: true,
+                },
+                city: {
+                    type: String,
+                    required: true,
+                },
+            },
+            required: false,
+        },
+
         payment_method: {
             type: String,
             enum: ["COD", "GCash", "Card", "Paymaya"],

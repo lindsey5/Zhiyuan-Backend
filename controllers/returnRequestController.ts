@@ -219,10 +219,13 @@ export const updateReturnRequestItem = async (req: Request, res: Response, next:
 
         const notification = await distributorNotification[0].populate({
             path: 'returnRequest',
-            populate: {
-                path: 'items.variant',
-                populate: 'product'
-            }
+            populate: [
+                {
+                    path: 'items.variant',
+                    populate: 'product'
+                },
+                { path: 'distributor'}
+            ]
         });
 
         await session.commitTransaction();
@@ -312,10 +315,13 @@ export const updateAllReturnRequestItems = async (req: Request, res: Response, n
 
         const notification = await distributorNotification[0].populate({
             path: 'returnRequest',
-            populate: {
-                path: 'items.variant',
-                populate: 'product'
-            }
+            populate: [
+                {
+                    path: 'items.variant',
+                    populate: 'product'
+                },
+                { path: 'distributor'}
+            ]
         });
 
         await session.commitTransaction();

@@ -16,9 +16,9 @@ export function initNotificationSocket(io: SocketIOServer): void {
         "send-return-notification" : notification.sendReturnNotification
     }
 
-    socketConnection(
-        notificationNamespace, 
-        "User connected to notification namespace", 
+    socketConnection({
+        namespace: notificationNamespace, 
+        message: "User connected to notification namespace", 
         events
-    )
+    })
 }

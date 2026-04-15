@@ -8,10 +8,10 @@ export let distributorNotificationNamespace: Namespace;
 
 export function initDistributorNotificationSocket(io: SocketIOServer): void {
     distributorNotificationNamespace = io.of("/distributor-notification");
-    socketConnection(
-        distributorNotificationNamespace, 
-        "User connected to Distributor Notification namespace"
-    )
+    socketConnection({
+        namespace: distributorNotificationNamespace, 
+        message: "User connected to Distributor Notification namespace"
+    })
 }
 
 export async function emitDistributorNotification(distributorNotification: DistributorNotificationAttributes, to : string) {

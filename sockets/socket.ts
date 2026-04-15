@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import dotenv from 'dotenv';
 import { initNotificationSocket } from "./notificationSocket";
 import { initDistributorNotificationSocket } from "./distributorNotificationSocket";
+import { initOrderSocket } from "./orderSocket";
 dotenv.config();
 
 const origins = process.env.ORIGINS?.split(",") || ['http://localhost:5173', 'http://localhost:5174'];
@@ -9,6 +10,7 @@ const origins = process.env.ORIGINS?.split(",") || ['http://localhost:5173', 'ht
 export function registerSockets(io: Server) {
     initDistributorNotificationSocket(io);
     initNotificationSocket(io);
+    initOrderSocket(io);
 }
 
 export default function initializeSocket(server: any) {

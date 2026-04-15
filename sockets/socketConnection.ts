@@ -9,31 +9,39 @@ type SocketEvents = {
     [eventName: string]: (data?: any) => void | Promise<void>;
 };
 
-export default function socketConnection(
+export default function socketConnection({
+    namespace,
+    message,
+    events,
+    authenticate = true
+}: {
     namespace: Namespace,
     message: string,
-    events?: SocketEvents
-) {
+    events?: SocketEvents,
+    authenticate?: boolean
+}) {
     namespace.on("connection", async (socket: Socket) => {
         try {
-            const authHeader = socket.handshake.auth.token;
-            if (!authHeader?.startsWith("Bearer ")) {
-                throw new Error("Access token required");
+            if(authenticate){
+                const authHeader = socket.handshake.auth.token;
+                if (!authHeader?.startsWith("Bearer ")) {
+                    throw new Error("Access token required");
+                }
+
+                const token = authHeader.split(" ")[1];
+                const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as JwtPayload;
+                const userId = decoded.id || decoded._id;
+
+                const user = await User.findOne({ _id: userId, status: "active" });
+                const distributor = await Distributor.findOne({ _id: userId, status: "active" });
+
+                if (!user && !distributor) {
+                    throw new Error("Unauthorized user");
+                }
+
+                socket.join(userId);
+                console.log(message, userId);
             }
-
-            const token = authHeader.split(" ")[1];
-            const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET as string) as JwtPayload;
-            const userId = decoded.id || decoded._id;
-
-            const user = await User.findOne({ _id: userId, status: "active" });
-            const distributor = await Distributor.findOne({ _id: userId, status: "active" });
-
-            if (!user && !distributor) {
-                throw new Error("Unauthorized user");
-            }
-
-            socket.join(userId);
-            console.log(message, userId);
 
             // Register custom events dynamically
             if (events) {

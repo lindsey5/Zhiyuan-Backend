@@ -63,6 +63,12 @@ export interface CategoryAttributes extends Document {
     status?: "active" | "inactive";
 }
 
+interface Address {
+    street: string;
+    barangay: string;
+    city: string;
+}
+
 export interface OrderAttributes extends Document {
     order_id: string;
     customer_name: string;
@@ -71,6 +77,7 @@ export interface OrderAttributes extends Document {
     delivery_type: "pickup" | "delivery";
     payment_method: "COD" | "GCash" | "Card" | "Paymaya";
     payment_status: "paid" | "unpaid";
+    address?: Address;
 }
 
 export interface OrderItemAttributes extends Document {
