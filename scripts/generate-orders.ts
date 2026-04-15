@@ -1,30 +1,50 @@
+import readline from "readline";
 import mongoose from "mongoose";
 import Variant from "../models/Variant";
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 import Order from "../models/Order";
 import OrderItem from "../models/OrderItem";
+
 dotenv.config();
 
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+});
+
+const question = (q: string) => new Promise<string>((resolve) => rl.question(q, resolve));
+
 async function getRandomVariant() {
-  const variants = await Variant.aggregate([{ $match: { status: "active" } }, { $sample: { size: 1 } }]);
-  return variants[0]; // Returns a random variant document
+    const variants = await Variant.aggregate([
+        { $match: { status: "active" } },
+        { $sample: { size: 1 } },
+    ]);
+    return variants[0];
 }
 
-async function generateDemoOrders() {
+(async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI || "");
-        console.log("Connected to MongoDB");
+        console.log("Database connected.");
 
+        const input = await question("How many orders to generate? ");
 
-        for (let i = 1; i <= 5; i++) {
+        const count = parseInt(input);
+
+        if (isNaN(count) || count <= 0) {
+            console.log("Invalid number.");
+            return;
+        }
+
+        for (let i = 1; i <= count; i++) {
         const order = new Order({
             order_id: `ORD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
             customer_name: `Customer ${i}`,
-            status: ["pending", "processing", "delivered", "completed", "cancelled", "refunded"][Math.floor(Math.random() * 4)],
+            status: "pending",
             total_amount: 0,
             delivery_type: ["pickup", "delivery"][Math.floor(Math.random() * 2)],
             payment_method: ["COD", "GCash", "Card"][Math.floor(Math.random() * 3)],
-            payment_status: ["paid", "unpaid"][Math.floor(Math.random() * 2)],
+            payment_status: "unpaid"
         });
 
         await order.save();
@@ -34,7 +54,7 @@ async function generateDemoOrders() {
 
         for (let j = 1; j <= numItems; j++) {
             const variant = await getRandomVariant();
-            if (!variant) continue; 
+            if (!variant) continue;
 
             const price = variant.price;
             const quantity = Math.floor(Math.random() * 3) + 1;
@@ -52,15 +72,15 @@ async function generateDemoOrders() {
             orderTotal += amount;
         }
 
-        order.total_amount = orderTotal;
-        await order.save();
+            order.total_amount = orderTotal;
+            await order.save();
         }
 
-        console.log("Demo orders generated successfully!");
-        mongoose.disconnect();
+        console.log(`Generated ${count} orders successfully.`);
     } catch (err) {
         console.error("Error generating demo orders:", err);
+    } finally {
+        rl.close();
+        await mongoose.disconnect();
     }
-}
-
-generateDemoOrders();
+})();
