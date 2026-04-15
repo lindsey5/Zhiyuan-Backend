@@ -81,7 +81,7 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
             { $unwind: "$seller" },
         ]
 
-        const [distributorSales, total, totalSalesResult] = await Promise.all([
+        const [distributorSales, total] = await Promise.all([
             DistributorSale.aggregate([
                 ...pipeline,             
                 { $match: filter },
@@ -90,18 +90,11 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
                 { $limit: limit }
             ]),
             DistributorSale.countDocuments(pipeline),
-            DistributorSale.aggregate([
-                ...pipeline,
-                { $match: filter },
-                { $group: { _id: null, totalSales: { $sum: "$total_amount" } } }
-            ])
         ]);
         
-        const totalSales = totalSalesResult[0]?.totalSales || 0;
 
         const responseData = {
             distributorSales,
-            totalSales,
             page,
             limit,
             totalPages: Math.ceil(total / limit),
@@ -191,7 +184,7 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
             { $unwind: "$product" },
         ]
 
-        const [distributorSales, total, totalSalesResult] = await Promise.all([
+        const [distributorSales, total] = await Promise.all([
             DistributorSale.aggregate([
                 ...pipeline,             
                 { $match: filter },
@@ -200,18 +193,11 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                 { $limit: limit }
             ]),
             DistributorSale.countDocuments(pipeline),
-            DistributorSale.aggregate([
-                ...pipeline,
-                { $match: filter },
-                { $group: { _id: null, totalSales: { $sum: "$total_amount" } } }
-            ])
         ]);
 
-        const totalSales = totalSalesResult[0]?.totalSales || 0;
 
         const responseData = {
             distributorSales,
-            totalSales,
             page,
             limit,
             totalPages: Math.ceil(total / limit),

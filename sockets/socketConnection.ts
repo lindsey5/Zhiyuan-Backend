@@ -25,6 +25,10 @@ export default function socketConnection({
             let userId;
             const authHeader = socket.handshake.auth?.token;
 
+            if(!authHeader && authenticate){
+                throw new Error("Access token required");
+            }
+
             if (authHeader) {
                 if (!authHeader || !authHeader.startsWith("Bearer ")) {
                     throw new Error("Access token required");
