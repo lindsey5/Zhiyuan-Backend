@@ -20,7 +20,7 @@ async function generateDemoOrders() {
         const order = new Order({
             order_id: `ORD-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
             customer_name: `Customer ${i}`,
-            status: ["pending", "processing", "completed", "cancelled"][Math.floor(Math.random() * 4)],
+            status: ["pending", "processing", "delivered", "completed", "cancelled", "refunded"][Math.floor(Math.random() * 4)],
             total_amount: 0,
             delivery_type: ["pickup", "delivery"][Math.floor(Math.random() * 2)],
             payment_method: ["COD", "GCash", "Card"][Math.floor(Math.random() * 3)],
