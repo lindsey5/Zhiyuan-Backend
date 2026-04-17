@@ -2,9 +2,15 @@ import { Router } from "express";
 import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
-import { getOrders, orderMarkAsPaid, updateOrderStatus } from "../controllers/orderController";
+import { createOrder, getOrders, orderMarkAsPaid, updateOrderStatus } from "../controllers/orderController";
 
 const router = Router();
+
+router.post(
+    '/',
+    createRateLimiter(60 * 1000, 20),
+    createOrder
+)
 
 router.get(
     '/',

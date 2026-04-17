@@ -13,7 +13,6 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
         customer_name: {
             type: String,
             required: true,
-            trim: true,
         },
 
         status: {
@@ -55,7 +54,6 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
         payment_method: {
             type: String,
             enum: ["COD", "GCash", "Card", "Paymaya"],
-            required: true,
         },
 
         payment_status: {

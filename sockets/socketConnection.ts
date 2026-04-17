@@ -63,9 +63,6 @@ export default function socketConnection({
             }
         } catch (err : any) {
             console.log("Socket connection error:", err);
-            socket.emit("auth_error", {
-                message: err.message
-            });
             socket.disconnect();
         }
     });

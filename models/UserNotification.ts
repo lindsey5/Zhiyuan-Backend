@@ -1,10 +1,15 @@
-
 import mongoose, { Schema, Model, Document } from "mongoose";
+import { SaleNotificationAttributes } from "./SaleNotification";
+import { ReturnNotificationAttributes } from "./ReturnNotification";
+import { OrderNotificationAttributes } from "./OrderNotification";
 
 export interface UserNotificationAttributes extends Document{
     user_id: mongoose.Types.ObjectId;
     message: string;
-    status: 'read' | 'unread'
+    status: 'read' | 'unread';
+    saleNotification?: SaleNotificationAttributes;
+    returnNotification?: ReturnNotificationAttributes;
+    orderNotification?: OrderNotificationAttributes;
 }
 
 const UserNotificationSchema: Schema<UserNotificationAttributes> = new Schema(
@@ -39,6 +44,13 @@ UserNotificationSchema.virtual("saleNotification", {
 
 UserNotificationSchema.virtual("returnNotification", {
     ref: "ReturnNotification",
+    localField: "_id",
+    foreignField: "notification_id",
+    justOne: true,
+});
+
+UserNotificationSchema.virtual("orderNotification", {
+    ref: "OrderNotification",
     localField: "_id",
     foreignField: "notification_id",
     justOne: true,

@@ -42,6 +42,16 @@ const OrderItemSchema: Schema<OrderItemAttributes> = new Schema(
     { timestamps: true } 
 );
 
+OrderItemSchema.virtual("variant", {
+    ref: "Variant",
+    localField: "variant_id",
+    foreignField: "_id",
+    justOne: true
+});
+
+OrderItemSchema.set("toObject", { virtuals: true });
+OrderItemSchema.set("toJSON", { virtuals: true });
+
 const OrderItem: Model<OrderItemAttributes> = mongoose.model(
     "OrderItem",
     OrderItemSchema

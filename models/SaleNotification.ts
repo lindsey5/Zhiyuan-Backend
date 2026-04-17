@@ -1,4 +1,3 @@
-
 import mongoose, { Schema, Model, Document } from "mongoose";
 
 export interface SaleNotificationAttributes extends Document{

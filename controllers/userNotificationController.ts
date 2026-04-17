@@ -2,6 +2,7 @@ import { NextFunction, Response } from "express";
 import { AuthRequest } from "../types/auth";
 import UserNotification from "../models/UserNotification";
 import redisClient, { deleteCache } from "../config/redis";
+import { populate } from "dotenv";
 
 export const getUserNotifications = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
@@ -46,6 +47,19 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                         ]
                     }
                 },
+                {
+                    path: 'orderNotification',
+                    populate: {
+                        path: 'order',
+                        populate: {
+                            path: 'order_items',
+                            populate: {
+                                path: 'variant',
+                                populate: 'product'
+                            }
+                        }
+                    }
+                }
             ])
             .sort({ createdAt: -1 })
             .skip(skip)

@@ -2,6 +2,157 @@ import { Request, Response, NextFunction } from "express";
 import Order from "../models/Order";
 import '../models/OrderItem';
 import { setEndDate, setStartDate } from "../utils/utils";
+import Variant from "../models/Variant";
+import OrderItem from "../models/OrderItem";
+import mongoose from "mongoose";
+import User from "../models/User";
+import UserNotification from "../models/UserNotification";
+import PERMISSIONS from "../utils/permissions";
+import OrderNotification from "../models/OrderNotification";
+import { emitOrderNotification } from "../sockets/orderSocket";
+
+export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const { items, ...rest } = req.body;
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: "Order items are required",
+            });
+        }
+
+        // validate variants (must use session)
+        for (const item of items) {
+            const variant = await Variant.findOne({
+                _id: item.variant_id,
+                status: "active",
+            }).session(session);
+
+            if (!variant) {
+                await session.abortTransaction();
+                session.endSession();
+
+                return res.status(404).json({
+                    success: false,
+                    message: `Variant not found: ${item.variant_id}`,
+                });
+            }
+        }
+
+        const total_amount = items.reduce(
+            (total: number, item: any) => total + (Number(item.amount) || 0),
+            0
+        );
+
+        const order = await Order.create(
+            [
+                {
+                    ...rest,
+                    order_id: `ORD-${Math.random()
+                        .toString(36)
+                        .substring(2, 8)
+                        .toUpperCase()}`,
+                    total_amount,
+                },
+            ],
+            { session }
+        );
+
+        await OrderItem.insertMany(
+            items.map((item: any) => ({
+                ...item,
+                order_id: order[0]._id,
+            })),
+            { session }
+        );
+
+        const order_items = await OrderItem.find({ order_id: order[0]._id })
+            .populate({
+                path: "variant",
+                populate: { path: "product" },
+            })
+            .session(session);
+
+        // must use session
+        const users = await User.find({ status: "active" })
+            .populate({
+                path: "role",
+                populate: { path: "permissions" },
+            })
+            .session(session);
+
+        const authorizedUsers = users.filter((user) =>
+            user.role?.permissions?.some(
+                (p) =>
+                    p.action === PERMISSIONS.ORDER_READ_ALL ||
+                    p.action === PERMISSIONS.ORDER_UPDATE
+            )
+        );
+
+        for (const user of authorizedUsers) {
+            const userNotification = await UserNotification.create(
+                [
+                    {
+                        user_id: user._id,
+                        message: `New order created: ${order[0].order_id}`,
+                    },
+                ],
+                { session }
+            );
+
+            const orderNotification = await OrderNotification.create(
+                [
+                    {
+                        order_id: order[0]._id,
+                        notification_id: userNotification[0]._id,
+                    },
+                ],
+                { session }
+            );
+
+            await orderNotification[0].populate({
+                path: "order",
+                populate: {
+                    path: "order_items",
+                    populate: {
+                        path: "variant",
+                        populate: "product",
+                    },
+                },
+            });
+
+            await emitOrderNotification(
+                userNotification[0],
+                orderNotification[0],
+                user.id
+            );
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({
+            success: true,
+            message: "Order successfully created",
+            order: {
+                ...order[0].toJSON(),
+                order_items,
+            },
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        next(err);
+    }
+};
 
 export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -39,7 +190,13 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
         const total = await Order.countDocuments(filter);
 
         const orders = await Order.find(filter)
-            .populate("order_items") 
+            .populate({
+                path: "order_items",
+                populate: {
+                    path: 'variant',
+                    populate: 'product'
+                }
+            }) 
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)

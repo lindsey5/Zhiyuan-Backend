@@ -75,7 +75,7 @@ export interface OrderAttributes extends Document {
     status: "pending" | "processing" | "delivered" |"completed" | "cancelled" | "refunded";
     total_amount: number;
     delivery_type: "pickup" | "delivery";
-    payment_method: "COD" | "GCash" | "Card" | "Paymaya";
+    payment_method?: "COD" | "GCash" | "Card" | "Paymaya";
     payment_status: "paid" | "unpaid";
     address?: Address;
 }
