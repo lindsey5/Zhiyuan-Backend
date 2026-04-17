@@ -20,12 +20,6 @@ router.get(
 )
 
 router.get(
-    '/:id',
-    createRateLimiter(5 * 1000, 100),
-    getVariantById
-)
-
-router.get(
     '/search',
     authenticate,
     hasAnyPermission(PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_UPDATE),
@@ -38,6 +32,12 @@ router.get(
     authenticate,
     hasAnyPermission(PERMISSIONS.PRODUCT_READ_ALL, PERMISSIONS.PRODUCT_CREATE, PERMISSIONS.PRODUCT_DELETE, PERMISSIONS.PRODUCT_UPDATE),
     downloadVariants
+)
+
+router.get(
+    '/:id',
+    createRateLimiter(5 * 1000, 100),
+    getVariantById
 )
 
 router.put(
