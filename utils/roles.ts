@@ -20,7 +20,8 @@ const ROLES = {
         name: 'Distributor\'s Admin',
         description: 'Manages distributor operations.',
         permissions: [
-
+            'tranfer-logs:view:all',
+            
             // Product management
             'product:read:all',
             'product:create',
@@ -32,7 +33,7 @@ const ROLES = {
             'category:create',
             'category:update',
             'category:delete',
-            
+
             // Distributor Management
             'distributor:read:all',
             'distrubutor:create',
