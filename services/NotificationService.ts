@@ -125,55 +125,47 @@ class NotificationService {
         try{
             const { distributor_name, stockTransfer } = payload;
 
-            const users = await User.find({ status: 'active' })
-                .populate({
-                    path: "role",
-                    populate: { path: "permissions" }
-                });
+            const user = await User.findById(stockTransfer.sender_id);
 
-            const authorizedUsers = users.filter(user =>
-                user.role?.permissions?.some(p => p.action === PERMISSIONS.STOCK_DISTRIBUTION_HISTORY_UPDATE || p.action === PERMISSIONS.STOCK_DISTRIBUTION_HISTORY_VIEW_ALL)
-            );
+            if(!user) return;
             
-            for(const user of authorizedUsers){
-                const userNotification = await UserNotification.create({
-                    user_id: user._id,
-                    message: `Stock transfer for ${distributor_name} has been successfully marked as received.`
-                })
+            const userNotification = await UserNotification.create({
+                user_id: user._id,
+                message: `Stocks for ${distributor_name} has been successfully marked as received.`
+            })
 
-                const stockTransferNotification = await StockTransferNotification.create({
-                    notification_id: userNotification._id,
-                    stock_transfer_id: stockTransfer._id
-                })
+            const stockTransferNotification = await StockTransferNotification.create({
+                notification_id: userNotification._id,
+                stock_transfer_id: stockTransfer._id
+            })
 
-                await stockTransferNotification.populate({
-                    path: "stock_transfer",
-                    populate: [
-                        { path: "sender", select: "-password" },
-                        { path: 'receiver', select: "-password" },
-                        { 
-                            path: "items",
-                            populate: {
-                                path: "variant",
-                                populate: "product"
-                            }
+            await stockTransferNotification.populate({
+                path: "stockTransfer",
+                populate: [
+                    { path: "sender", select: "-password" },
+                    { path: 'receiver', select: "-password" },
+                    { 
+                        path: "items",
+                        populate: {
+                            path: "variant",
+                            populate: "product"
                         }
-                    ]
-                })
-
-                await deleteCache(`user-notifications:${user._id}:*`)
-                await deleteCache("stock-transfer-logs:*");
-                await deleteCache(`products:*`);
-                await deleteCache(`variants:*`);
-                await deleteCache(`distributor-stocks:*`);
-
-                this.namespace.to(user._id.toString()).emit("receive-notification", { 
-                    userNotification: {
-                        ...userNotification.toObject(),
-                        stockTransferNotification
                     }
-                })
-            }
+                ]
+            })
+
+            await deleteCache(`user-notifications:${user._id}:*`)
+            await deleteCache("stock-transfer-logs:*");
+            await deleteCache(`products:*`);
+            await deleteCache(`variants:*`);
+            await deleteCache(`distributor-stocks:*`);
+
+            this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                userNotification: {
+                    ...userNotification.toObject(),
+                    stockTransferNotification
+                }
+            })
 
         }catch(err){
             console.log(err);

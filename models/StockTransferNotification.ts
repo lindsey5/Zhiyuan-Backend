@@ -24,7 +24,7 @@ const StockTransferNotificationSchema: Schema<StockTransferNotificationAttribute
 
 StockTransferNotificationSchema.index({ user_id: 1 })
 
-StockTransferNotificationSchema.virtual("stock_transfer", {
+StockTransferNotificationSchema.virtual("stockTransfer", {
     ref: "StockTransfer",
     localField: "stock_transfer_id",
     foreignField: "_id",

@@ -74,7 +74,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
         await deleteCache(`variants:*`);
         res.status(201).json({
             success: true,
-            message: "Stock transfer request successfully created",
+            message: "Stock distribution request successfully created",
             stockTransfer,
         });
     } catch (err) {

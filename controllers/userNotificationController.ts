@@ -63,7 +63,7 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                 {
                     path: 'stockTransferNotification',
                     populate: {
-                        path: "stock_transfer",
+                        path: "stockTransfer",
                         populate: [
                             { path: "sender", select: "-password" },
                             { path: 'receiver', select: "-password" },
