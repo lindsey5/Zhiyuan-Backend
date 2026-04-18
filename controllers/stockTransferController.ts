@@ -202,7 +202,7 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
             });
         }
 
-        if(req.body.status === 'cancelled' || req.body.status === 'rejected'){
+        if(req.body.status === 'cancelled' || req.body.status === 'rejected' || req.body.status === 'failed'){
             for(const item of stockTransfer.items){
                 const variant = await Variant.findById(item.variant_id);
 
@@ -255,7 +255,7 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
             description: `A stock distribution has been updated to ${stockTransfer.status}`,
             ip_address: req.ip || "",
             role: req.user.role.name || "N/A",
-            severity: "HIGH",
+            severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user._id,
             old_values: null,

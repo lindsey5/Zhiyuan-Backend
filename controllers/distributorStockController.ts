@@ -63,7 +63,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
             description: `A new stock distribution has been created and submitted`,
             ip_address: req.ip || "",
             role: req.user.role.name || "N/A",
-            severity: "HIGH",
+            severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user._id,
             old_values: null,
