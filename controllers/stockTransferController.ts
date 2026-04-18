@@ -17,8 +17,9 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
         const search = req.query.search as string;
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+        const status = req.query.status || "";
 
-        const cacheKey = `stock-transfer-logs:${search}:${page}:${limit}:${startDate}:${endDate}`;
+        const cacheKey = `stock-transfer-logs:${search}:${page}:${limit}:${startDate}:${endDate}:${status}`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -126,6 +127,10 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
                 { "sender.lastname": { $regex: search, $options: "i" } },
                 { "sender.email": { $regex: search, $options: "i" } },
             ];
+        }
+
+        if(status){
+            match.status = status;
         }
 
         if (startDate || endDate) {
