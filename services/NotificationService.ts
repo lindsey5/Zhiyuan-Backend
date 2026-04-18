@@ -131,7 +131,7 @@ class NotificationService {
             
             const userNotification = await UserNotification.create({
                 user_id: user._id,
-                message: `Stock distribution for ${distributor_name} has been successfully marked as received.`
+                message: `Stock distribution status for ${distributor_name} has been successfully marked as received.`
             })
 
             const stockTransferNotification = await StockTransferNotification.create({
