@@ -216,7 +216,7 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
         stockTransfer.status = req.body.status;
         await stockTransfer.save({ session });
 
-        const message = `Stock transfer status updated to ${req.body.status}.`;
+        const message = `Stock distribution status updated to ${req.body.status}.`;
 
         const distributorNotification = await DistributorNotification.create(
             [

@@ -51,6 +51,13 @@ StockTransferSchema.virtual("sender", {
     justOne: true
 });
 
+StockTransferSchema.virtual("receiver", {
+    ref: "Distributor",
+    localField: "receiver_id",
+    foreignField: "_id",
+    justOne: true
+});
+
 StockTransferSchema.virtual("items", {
     ref: "StockTransferItem",
     localField: "_id",

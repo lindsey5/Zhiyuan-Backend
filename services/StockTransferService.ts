@@ -47,20 +47,24 @@ export default class StockTransferService {
                 [{ 
                     distributor_id: receiver_id, 
                     transfer_id: stockTransfer[0]._id,
-                    message: `${sender} is transferring ${totalStocks} ${totalStocks === 1 ? "stock" : "stocks"} to you.`
+                    message: `${sender} distribute ${totalStocks} ${totalStocks === 1 ? "stock" : "stocks"} to you.`
                 }],
                 { session }
             )
 
             const notification = await distributorNotification[0].populate({
                 path: 'stockTransfer',
-                populate: {
-                    path: 'items',
-                    populate: {
-                        path: 'variant',
-                        populate: 'product'
+                populate: [
+                    { path: 'sender', select: '-password'},
+                    { path: 'receiver', select: '-password'},
+                    {
+                        path: 'items',
+                        populate: {
+                            path: 'variant',
+                            populate: 'product'
+                        }
                     }
-                }
+                ]
             })
 
             await emitDistributorNotification(notification, receiver_id)
