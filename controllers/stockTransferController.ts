@@ -7,6 +7,7 @@ import DistributorNotification from "../models/DistributorNotification";
 import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
 import mongoose from "mongoose";
 import Variant from "../models/Variant";
+import AuditLogService from "../services/AuditLogService";
 
 export const getStockTransferLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -248,6 +249,19 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
         await deleteCache(`products:*`);
         await deleteCache(`variants:*`);
         await deleteCache(`distributor-stocks:*`);
+                
+        await AuditLogService.log({
+            action: "STOCK_DISTRIBUTION_UPDATED",
+            description: `A stock distribution has been updated to ${stockTransfer.status}`,
+            ip_address: req.ip || "",
+            role: req.user.role.name || "N/A",
+            severity: "HIGH",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user._id,
+            old_values: null,
+            new_values: stockTransfer
+        });
+
         return res.status(200).json({
             success: true,
             message: "Stock transfer status updated successfully",

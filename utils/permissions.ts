@@ -57,7 +57,7 @@ const PERMISSIONS = {
     SPONSORED_PRODUCT_VIEW_ALL: 'sponsored-items:view:all',
 
     // Transfer Logs
-    TRANSFER_LOGS_VIEW_ALL: 'tranfer-logs:view:all',
-    TRANSFER_LOGS_UPDATE: 'transfer-logs:update',
+    STOCK_DISTRIBUTION_HISTORY_VIEW_ALL: 'tranfer-logs:view:all',
+    STOCK_DISTRIBUTION_HISTORY_UPDATE: 'transfer-logs:update',
 }
 export default PERMISSIONS

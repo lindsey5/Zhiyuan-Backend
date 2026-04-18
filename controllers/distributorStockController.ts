@@ -59,8 +59,8 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
         session.endSession();
 
         await AuditLogService.log({
-            action: "STOCK_TRANSFER_REQUEST_CREATED",
-            description: `Stock transfer request created successfully.`,
+            action: "STOCK_DISTRIBUTION_CREATED",
+            description: `A new stock distribution has been created and submitted`,
             ip_address: req.ip || "",
             role: req.user.role.name || "N/A",
             severity: "HIGH",

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import { getStockTransferLogs, updateStockTransferLogStatus } from "../controllers/stockTransferController";
@@ -10,7 +10,7 @@ router.get(
     '/',
     createRateLimiter(5 * 60 * 1000, 100),
     authenticate,
-    authorizePermission(PERMISSIONS.TRANSFER_LOGS_VIEW_ALL),
+    hasAnyPermission(PERMISSIONS.STOCK_DISTRIBUTION_HISTORY_UPDATE, PERMISSIONS.STOCK_DISTRIBUTION_HISTORY_VIEW_ALL),
     getStockTransferLogs
 );
 
@@ -18,7 +18,7 @@ router.patch(
     '/:id',
     createRateLimiter(60 * 1000, 20),
     authenticate,
-    authorizePermission(PERMISSIONS.TRANSFER_LOGS_UPDATE),
+    authorizePermission(PERMISSIONS.STOCK_DISTRIBUTION_HISTORY_UPDATE),
     updateStockTransferLogStatus
 )
 

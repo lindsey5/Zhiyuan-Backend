@@ -132,7 +132,7 @@ class NotificationService {
                 });
 
             const authorizedUsers = users.filter(user =>
-                user.role?.permissions?.some(p => p.action === PERMISSIONS.TRANSFER_LOGS_UPDATE || p.action === PERMISSIONS.TRANSFER_LOGS_VIEW_ALL)
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.STOCK_DISTRIBUTION_HISTORY_UPDATE || p.action === PERMISSIONS.STOCK_DISTRIBUTION_HISTORY_VIEW_ALL)
             );
             
             for(const user of authorizedUsers){
@@ -166,7 +166,7 @@ class NotificationService {
                 await deleteCache(`products:*`);
                 await deleteCache(`variants:*`);
                 await deleteCache(`distributor-stocks:*`);
-                
+
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
