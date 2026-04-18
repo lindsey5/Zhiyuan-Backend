@@ -1,7 +1,6 @@
 const PERMISSIONS = {
     DASHBOARD_VIEW: 'dashboard:view',
     AUDIT_VIEW_ALL: 'audit:view:all',
-    TRANSFER_LOGS_VIEW_ALL: 'tranfer-logs:view:all',
 
     // User management
     USER_CREATE: 'user:create',
@@ -53,7 +52,12 @@ const PERMISSIONS = {
     DISTRIBUTOR_REPORTS_VIEW: 'distributor-reports:view',
 
     // Sponsored Items
+    SPONSORED_PRODUCT_CREATE: 'sponsored-items:create',
     SPONSORED_PRODUCT_UPDATE: 'sponsored-items:update',
     SPONSORED_PRODUCT_VIEW_ALL: 'sponsored-items:view:all',
+
+    // Transfer Logs
+    TRANSFER_LOGS_VIEW_ALL: 'tranfer-logs:view:all',
+    TRANSFER_LOGS_UPDATE: 'transfer-logs:update',
 }
 export default PERMISSIONS

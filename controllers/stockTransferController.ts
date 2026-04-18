@@ -2,6 +2,10 @@ import { NextFunction, Request, Response } from "express";
 import StockTransfer from "../models/StockTransfer";
 import { setEndDate, setStartDate } from "../utils/utils";
 import redisClient from "../config/redis";
+import { AuthRequest } from "../types/auth";
+import DistributorNotification from "../models/DistributorNotification";
+import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import mongoose from "mongoose";
 
 export const getStockTransferLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -104,6 +108,7 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
                     sender: { $first: "$sender" },
                     createdAt: { $first: "$createdAt" },
                     updatedAt: { $first: "$updatedAt" },
+                    status: { $first: '$status' },
                     items: { $push: "$items" },
                 },
             },
@@ -161,6 +166,80 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
         })
         
     } catch (err) {
+        next(err);
+    }
+};
+
+export const updateStockTransferLogStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const stockTransfer = await StockTransfer.findById(req.params.id)
+            .session(session)
+            .populate([
+                { path: "sender_id" },
+                { path: "receiver_id" },
+                {
+                    path: "items",
+                    populate: {
+                        path: "variant",
+                        populate: "product",
+                    },
+                },
+            ]);
+
+        if (!stockTransfer) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(404).json({
+                success: false,
+                message: "Stock transfer not found",
+            });
+        }
+
+        stockTransfer.status = req.body.status;
+        await stockTransfer.save({ session });
+
+        const message = `Stock transfer status updated to "${req.body.status}".`;
+
+        const distributorNotification = await DistributorNotification.create(
+            [
+                {
+                    distributor_id: stockTransfer.receiver_id,
+                    transfer_id: stockTransfer._id,
+                    message,
+                },
+            ],
+            { session }
+        );
+
+        const notification = await distributorNotification[0].populate({
+            path: "stockTransfer",
+            populate: {
+                path: "items",
+                populate: {
+                    path: "variant",
+                    populate: "product",
+                },
+            },
+        });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        // emit AFTER commit
+        await emitDistributorNotification(notification, stockTransfer.receiver_id.toString());
+
+        return res.status(200).json({
+            success: true,
+            message: "Stock transfer status updated successfully",
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
         next(err);
     }
 };

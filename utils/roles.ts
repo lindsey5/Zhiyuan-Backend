@@ -21,7 +21,7 @@ const ROLES = {
         description: 'Manages distributor operations.',
         permissions: [
             'tranfer-logs:view:all',
-            
+
             // Product management
             'product:read:all',
             'product:create',
@@ -56,7 +56,7 @@ const ROLES = {
             'distributor-reports:view',
 
             // Sponsored Items
-            'sponsored-items:update',
+            'sponsored-items:create',
             'sponsored-items:view:all',
         ]
     }

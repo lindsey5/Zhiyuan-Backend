@@ -1,6 +1,5 @@
 import { NextFunction, Response, Request } from "express";
 import mongoose from "mongoose";
-import Variant from "../models/Variant";
 import { AuthRequest } from "../types/auth";
 import DistributorStock from "../models/DistributorStock";
 import StockTransferService from "../services/StockTransferService";
@@ -24,42 +23,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
             return res.status(404).json({ success: false, message: "Distributor not found"})
         }
 
-        const newStocks = [];
-
-        for (const stock of stocks) {
-            const variant = await Variant.findById(stock.variant_id);
-
-            if(!variant) continue;
-
-            variant.stock -= stock.quantity;
-            await variant.save({ session });
-
-            const existingStock = await DistributorStock.findOne(
-                {
-                    distributor_id: distributorId,
-                    variant_id: stock.variant_id,
-                },
-                null,
-                { session }
-            );
-
-            if (existingStock) {
-                existingStock.quantity += stock.quantity;
-                await existingStock.save({ session });
-
-                newStocks.push(existingStock);
-                continue;
-            }
-
-            const distributorStock = await DistributorStock.create(
-                [{ ...stock, distributor_id: distributorId }],
-                { session }
-            );
-
-            newStocks.push(distributorStock[0]);
-        }
-
-        const success = await StockTransferService.logStockTransfer({
+        const stockTransfer = await StockTransferService.logStockTransfer({
             sender_id: req.user._id as string,
             receiver_id: distributorId as string,
             stocks: stocks.map((stock : any) => ({
@@ -69,7 +33,7 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
             session,
         });
 
-        if (!success) {
+        if (!stockTransfer) {
             throw new Error("Failed to log stock transfer");
         }
 
@@ -77,23 +41,23 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
         session.endSession();
 
         await AuditLogService.log({
-            action: "STOCK_TRANSFER",
-            description: `Stocks successfully transfered`,
+            action: "STOCK_TRANSFER_REQUEST_CREATED",
+            description: `Stock transfer request created successfully.`,
             ip_address: req.ip || "",
             role: req.user.role.name || "N/A",
             severity: "HIGH",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user._id,
             old_values: null,
-            new_values: newStocks
+            new_values: stockTransfer
         });
 
         await deleteCache(`distributor-stocks:${distributorId}:*`)
 
         res.status(201).json({
             success: true,
-            message: "Stocks sucessfully transferred",
-            newStocks,
+            message: "Stock transfer request successfully created",
+            stockTransfer,
         });
     } catch (err) {
         await session.abortTransaction();

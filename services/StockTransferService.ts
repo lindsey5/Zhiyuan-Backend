@@ -34,7 +34,11 @@ export default class StockTransferService {
                 session,
             });
 
-            await stockTransfer[0].populate("sender");
+            await stockTransfer[0].populate([
+                { path: "sender" },
+                { path: "receiver"},
+                { path: 'items' }
+            ]);
             const sender = `${stockTransfer[0].sender.firstname} ${stockTransfer[0].sender.lastname}`;
 
             const totalStocks = items.reduce((acc, item) => item.quantity + acc, 0);
@@ -43,7 +47,7 @@ export default class StockTransferService {
                 [{ 
                     distributor_id: receiver_id, 
                     transfer_id: stockTransfer[0]._id,
-                    message: `You receive ${totalStocks} ${totalStocks === 1 ? 'stock' : 'stocks'} from ${sender}`
+                    message: `${sender} is transferring ${totalStocks} ${totalStocks === 1 ? "stock" : "stocks"} to you.`
                 }],
                 { session }
             )
@@ -61,11 +65,11 @@ export default class StockTransferService {
 
             await emitDistributorNotification(notification, receiver_id)
             await deleteCache("stock-transfer-logs:*")
-            return true
+            return stockTransfer
         } catch (err) {
             console.log(err);
 
-            return false
+            return null
         }
     }
 }
