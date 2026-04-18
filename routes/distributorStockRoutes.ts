@@ -12,7 +12,7 @@ router.post(
     createRateLimiter(60 * 1000, 20),
     validateBody(distributorStockSchema),
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_TRANSFER),
+    authorizePermission(PERMISSIONS.STOCK_DISTRIBUTION_CREATE),
     createBulkDistributorStock
 );
 

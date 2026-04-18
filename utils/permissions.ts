@@ -36,7 +36,6 @@ const PERMISSIONS = {
     DISTRIBUTOR_DELETE: 'distributor:delete',
     
     // Distributor Stock Management
-    DISTRIBUTOR_STOCK_TRANSFER: 'distributor-stock:transfer',
     DISTRIBUTOR_STOCK_VIEW: 'distributor-stock:view',
 
     // Distributor Stats
@@ -59,5 +58,6 @@ const PERMISSIONS = {
     // Transfer Logs
     STOCK_DISTRIBUTION_HISTORY_VIEW_ALL: 'tranfer-logs:view:all',
     STOCK_DISTRIBUTION_HISTORY_UPDATE: 'transfer-logs:update',
+    STOCK_DISTRIBUTION_CREATE: 'distributor-stock:transfer',
 }
 export default PERMISSIONS
