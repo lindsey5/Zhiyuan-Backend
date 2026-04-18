@@ -8,6 +8,8 @@ import PERMISSIONS from "../utils/permissions";
 import { ReturnRequestAttributes } from "../models/ReturnRequest";
 import ReturnNotification from "../models/ReturnNotification";
 import '../models/ReturnRequest';
+import { StockTransferAttributes } from "../models/StockTransfer";
+import StockTransferNotification from "../models/StockTransferNotification";
 
 class NotificationService {
     namespace: Namespace;
@@ -17,6 +19,7 @@ class NotificationService {
 
         this.sendSaleNotification = this.sendSaleNotification.bind(this);
         this.sendReturnNotification = this.sendReturnNotification.bind(this);
+        this.sendStockTransferNotification = this.sendStockTransferNotification.bind(this);
     }
 
     async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
@@ -105,10 +108,70 @@ class NotificationService {
                     ]
                 })
                 await deleteCache(`user-notifications:${user._id}:*`)
-                this.namespace.to(user.id).emit("receive-notification", { 
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
                         returnNotification
+                    }
+                })
+            }
+
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+    async sendStockTransferNotification (payload : { distributor_name: string, stockTransfer: StockTransferAttributes}) {
+        try{
+            const { distributor_name, stockTransfer } = payload;
+
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.TRANSFER_LOGS_UPDATE || p.action === PERMISSIONS.TRANSFER_LOGS_VIEW_ALL)
+            );
+            
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `Stock transfer for ${distributor_name} has been successfully marked as received.`
+                })
+
+                const stockTransferNotification = await StockTransferNotification.create({
+                    notification_id: userNotification._id,
+                    stock_transfer_id: stockTransfer._id
+                })
+
+                await stockTransferNotification.populate({
+                    path: "stock_transfer",
+                    populate: [
+                        { path: "sender", select: "-password" },
+                        { path: 'receiver', select: "-password" },
+                        { 
+                            path: "items",
+                            populate: {
+                                path: "variant",
+                                populate: "product"
+                            }
+                        }
+                    ]
+                })
+
+                await deleteCache(`user-notifications:${user._id}:*`)
+                await deleteCache("stock-transfer-logs:*");
+                await deleteCache(`products:*`);
+                await deleteCache(`variants:*`);
+                await deleteCache(`distributor-stocks:*`);
+
+                console.log("ID", user._id.toString())
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        stockTransferNotification
                     }
                 })
             }

@@ -56,6 +56,13 @@ UserNotificationSchema.virtual("orderNotification", {
     justOne: true,
 });
 
+UserNotificationSchema.virtual("stockTransferNotification", {
+    ref: "StockTransferNotification",
+    localField: "_id",
+    foreignField: "notification_id",
+    justOne: true,
+});
+
 UserNotificationSchema.set("toJSON", { virtuals: true });
 UserNotificationSchema.set("toObject", { virtuals: true });
 

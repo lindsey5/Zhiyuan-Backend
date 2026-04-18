@@ -1,11 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import StockTransfer from "../models/StockTransfer";
 import { setEndDate, setStartDate } from "../utils/utils";
-import redisClient from "../config/redis";
+import redisClient, { deleteCache } from "../config/redis";
 import { AuthRequest } from "../types/auth";
 import DistributorNotification from "../models/DistributorNotification";
 import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
 import mongoose from "mongoose";
+import Variant from "../models/Variant";
 
 export const getStockTransferLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -179,8 +180,8 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
         const stockTransfer = await StockTransfer.findById(req.params.id)
             .session(session)
             .populate([
-                { path: "sender_id" },
-                { path: "receiver_id" },
+                { path: "sender" },
+                { path: "receiver" },
                 {
                     path: "items",
                     populate: {
@@ -200,10 +201,21 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
             });
         }
 
+        if(req.body.status === 'cancelled' || req.body.status === 'rejected'){
+            for(const item of stockTransfer.items){
+                const variant = await Variant.findById(item.variant_id);
+
+                if(!variant) continue;
+
+                variant.stock += item.quantity;
+                await variant.save({ session })
+            }
+        }
+
         stockTransfer.status = req.body.status;
         await stockTransfer.save({ session });
 
-        const message = `Stock transfer status updated to "${req.body.status}".`;
+        const message = `Stock transfer status updated to ${req.body.status}.`;
 
         const distributorNotification = await DistributorNotification.create(
             [
@@ -229,10 +241,13 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
 
         await session.commitTransaction();
         session.endSession();
-
+        
         // emit AFTER commit
         await emitDistributorNotification(notification, stockTransfer.receiver_id.toString());
-
+        await deleteCache("stock-transfer-logs:*");
+        await deleteCache(`products:*`);
+        await deleteCache(`variants:*`);
+        await deleteCache(`distributor-stocks:*`);
         return res.status(200).json({
             success: true,
             message: "Stock transfer status updated successfully",

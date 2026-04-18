@@ -7,6 +7,7 @@ import Distributor from "../models/Distributor";
 import AuditLogService from "../services/AuditLogService";
 import PDFDocument from "pdfkit";
 import redisClient, { deleteCache } from "../config/redis";
+import Variant from "../models/Variant";
 
 export const createBulkDistributorStock = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -21,6 +22,23 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
 
         if(!distributor || distributor.status === 'deleted'){
             return res.status(404).json({ success: false, message: "Distributor not found"})
+        }
+
+        for (const stock of stocks) {
+            const variant = await Variant.findById(stock.variant_id);
+
+            if(!variant) continue;
+
+            if(variant.stock < stock.quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Insufficient stock for ${variant.variant_name}. Please reload the page.`
+                })
+            }
+
+            variant.stock -= stock.quantity;
+
+            await variant.save({ session });
         }
 
         const stockTransfer = await StockTransferService.logStockTransfer({
@@ -52,8 +70,8 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
             new_values: stockTransfer
         });
 
-        await deleteCache(`distributor-stocks:${distributorId}:*`)
-
+        await deleteCache(`products:*`);
+        await deleteCache(`variants:*`);
         res.status(201).json({
             success: true,
             message: "Stock transfer request successfully created",
@@ -67,9 +85,9 @@ export const createBulkDistributorStock = async (req: AuthRequest, res: Response
 };
 
 export const getDistributorStocks = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
+    req: Request,
+    res: Response,
+    next: NextFunction
 ) => {
     try {
         const search = (req.query.search as string) || "";
