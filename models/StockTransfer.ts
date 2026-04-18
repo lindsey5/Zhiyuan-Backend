@@ -5,7 +5,7 @@ import { StockTransferItemAttributes } from "./StockTransferItem";
 export interface StockTransferAttributes extends Document {
     sender_id?: mongoose.Types.ObjectId | null;
     receiver_id: mongoose.Types.ObjectId;
-    status?: 'pending' | 'approved'| 'processing' | 'delivered' | 'received' | 'cancelled' | 'rejected';
+    status?: 'pending' | 'approved'| 'processing' | 'delivered' | 'received' | 'cancelled' | 'rejected' | 'failed';
     receiver: DistributorAttributes;
     items: StockTransferItemAttributes[];
     sender: UserAttributes;
@@ -26,7 +26,7 @@ const StockTransferSchema: Schema<StockTransferAttributes> = new Schema(
         },
         status: {
             type: String,
-            enum: ['pending', 'approved', 'processing', 'delivered', 'received', 'cancelled', 'rejected'],
+            enum: ['pending', 'approved', 'processing', 'delivered', 'received', 'cancelled', 'rejected', 'failed'],
             default: 'pending'
         }
     },

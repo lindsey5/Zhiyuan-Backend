@@ -7,6 +7,8 @@ import DistributorNotification from "../models/DistributorNotification";
 import mongoose from "mongoose";
 import { setEndDate, setStartDate } from "../utils/utils";
 import redisClient, { deleteCache } from "../config/redis";
+import AuditLogService from "../services/AuditLogService";
+import { AuthRequest } from "../types/auth";
 
 export const getReturnRequests = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -148,10 +150,10 @@ export const getReturnRequests = async (req: Request, res: Response, next: NextF
     }
 }
 
-export const updateReturnRequestItem = async (req: Request, res: Response, next: NextFunction) => {
+export const updateReturnRequestItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
-    
-    try{
+
+    try {
         session.startTransaction();
 
         const returnId = req.params.return_id;
@@ -159,94 +161,133 @@ export const updateReturnRequestItem = async (req: Request, res: Response, next:
         const variantId = req.params.variant_id;
         const { status } = req.body;
 
-        if (!status || !['accepted', 'rejected'].includes(status)) {
-            return res.status(400).json({ success: false, message: 'Invalid Status' });
+        if (!status || !["accepted", "rejected"].includes(status)) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({ success: false, message: "Invalid status" });
         }
 
-        const distributor = await Distributor.findById(distributorId)
+        const distributor = await Distributor.findById(distributorId).session(session);
 
         if (!distributor) {
-            return res.status(404).json({ success: false, message: 'Distributor not found' });
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(404).json({ success: false, message: "Distributor not found" });
         }
 
         const returnRequest = await ReturnRequest.findById(returnId).session(session);
 
         if (!returnRequest) {
-            return res.status(404).json({ success: false, message: 'Return Request not found' });
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(404).json({ success: false, message: "Return Request not found" });
         }
 
         if (returnRequest.distributor_id.toString() !== distributor._id.toString()) {
+            await session.abortTransaction();
+            session.endSession();
+
             return res.status(403).json({
                 success: false,
-                message: 'Return request does not belong to this distributor'
+                message: "Return request does not belong to this distributor",
             });
         }
 
-        const item = returnRequest.items.find(item => item.variant_id.toString() === variantId);
+        const item = returnRequest.items.find((item) => item.variant_id.toString() === variantId);
 
-        if(!item){
+        if (!item) {
+            await session.abortTransaction();
+            session.endSession();
+
             return res.status(404).json({ success: false, message: "Variant not found in request" });
         }
 
+        const oldItemStatus = item.status;
+
         const distributor_stock = await DistributorStock.findOne({
             distributor_id: distributorId,
-            variant_id: item.variant_id
-        }).populate({
-            path: 'variant',
-            populate: 'product'
-        }).session(session);
+            variant_id: item.variant_id,
+        })
+            .populate({
+                path: "variant",
+                populate: "product",
+            })
+            .session(session);
 
         let finalStatus = status;
 
-        if (status === 'pending' && (!distributor_stock || distributor_stock.quantity < item.quantity)) {
-            finalStatus = 'insufficient stock';
+        if (!distributor_stock || distributor_stock.quantity < item.quantity) {
+            finalStatus = "insufficient stock";
         }
 
-        if(item.status === 'pending'){
+        if (item.status === "pending") {
             item.status = finalStatus;
         }
 
         await returnRequest.save({ session });
 
+        const productName =
+            distributor_stock?.variant?.product?.product_name || "Unknown Product";
+        const variantName =
+            distributor_stock?.variant?.variant_name || "Unknown Variant";
+
         const distributorNotification = await DistributorNotification.create(
-            [{
-                distributor_id: distributor._id,
-                return_id: returnId,
-                message: `Your return request for ${distributor_stock?.variant.product?.product_name}-${distributor_stock?.variant.variant_name} has been ${status}`
-            }],
+            [
+                {
+                    distributor_id: distributor._id,
+                    return_id: returnId,
+                    message: `Your return request for ${productName} - ${variantName} has been updated to ${finalStatus}.`,
+                },
+            ],
             { session }
         );
 
         const notification = await distributorNotification[0].populate({
-            path: 'returnRequest',
+            path: "returnRequest",
             populate: [
                 {
-                    path: 'items.variant',
-                    populate: 'product'
+                    path: "items.variant",
+                    populate: "product",
                 },
-                { path: 'distributor'}
-            ]
+                { path: "distributor" },
+            ],
         });
 
         await session.commitTransaction();
         session.endSession();
 
-        await emitDistributorNotification(notification, distributor.id);
+        await emitDistributorNotification(notification, distributor._id.toString());
 
-        await deleteCache('returnRequests:*')
-
-        res.status(200).json({
-            success: true,
-            message: `${distributor_stock?.variant.product?.product_name}-${distributor_stock?.variant.variant_name} successfully ${status}`,
-            returnRequest
+        await AuditLogService.log({
+            action: "RETURN_REQUEST_ITEM_STATUS_UPDATED",
+            description: `Return request for ${productName} - ${variantName} has been updated to ${finalStatus}.".`,
+            ip_address: req.ip || "",
+            role: req?.user?.role?.name || "N/A",
+            severity: "LOW",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user?._id,
+            old_values: { status: oldItemStatus },
+            new_values: { status: finalStatus },
         });
 
-    }catch(err){
+        await deleteCache("returnRequests:*");
+
+        return res.status(200).json({
+            success: true,
+            message: `${productName} - ${variantName} status updated to ${finalStatus}`,
+            returnRequest,
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
         next(err);
     }
-}
+};
 
-export const updateAllReturnRequestItems = async (req: Request, res: Response, next: NextFunction) => {
+export const updateAllReturnRequestItems = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
 
     try {
@@ -256,48 +297,57 @@ export const updateAllReturnRequestItems = async (req: Request, res: Response, n
         const distributorId = req.params.distributor_id;
         const { status } = req.body;
 
-        if (!status || !['accepted', 'rejected'].includes(status)) {
-            return res.status(400).json({ success: false, message: 'Invalid Status' });
+        if (!status || !["accepted", "rejected"].includes(status)) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({ success: false, message: "Invalid Status" });
         }
 
         const distributor = await Distributor.findById(distributorId).session(session);
 
         if (!distributor) {
-            return res.status(404).json({ success: false, message: 'Distributor not found' });
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ success: false, message: "Distributor not found" });
         }
 
         const returnRequest = await ReturnRequest.findById(returnId).session(session);
 
         if (!returnRequest) {
-            return res.status(404).json({ success: false, message: 'Return Request not found' });
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ success: false, message: "Return Request not found" });
         }
 
         if (returnRequest.distributor_id.toString() !== distributor._id.toString()) {
+            await session.abortTransaction();
+            session.endSession();
             return res.status(403).json({
                 success: false,
-                message: 'Return request does not belong to this distributor'
+                message: "Return request does not belong to this distributor",
             });
         }
+
+        // store old values for audit
+        const oldItems = returnRequest.items.map(item => ({
+            variant_id: item.variant_id,
+            status: item.status,
+            quantity: item.quantity,
+        }));
 
         for (const item of returnRequest.items) {
             const distributor_stock = await DistributorStock.findOne({
                 distributor_id: distributorId,
-                variant_id: item.variant_id
-            })
-            .session(session);
+                variant_id: item.variant_id,
+            }).session(session);
 
             let finalStatus = status;
 
-            if (status === 'pending' && (!distributor_stock || distributor_stock.quantity < item.quantity)) {
-                finalStatus = 'insufficient stock';
+            if (!distributor_stock || distributor_stock.quantity < item.quantity) {
+                finalStatus = "insufficient stock";
             }
 
-            if (distributor_stock && status === 'accepted' && distributor_stock.quantity >= item.quantity) {
-                distributor_stock.quantity -= item.quantity;
-                await distributor_stock.save({ session });
-            }
-
-            if(item.status === 'pending'){
+            if (item.status === "pending") {
                 item.status = finalStatus;
             }
         }
@@ -305,38 +355,53 @@ export const updateAllReturnRequestItems = async (req: Request, res: Response, n
         await returnRequest.save({ session });
 
         const distributorNotification = await DistributorNotification.create(
-            [{
-                distributor_id: distributor._id,
-                return_id: returnId,
-                message: `All products on your return request has been ${status}`,
-            }],
+            [
+                {
+                    distributor_id: distributor._id,
+                    return_id: returnId,
+                    message: `All return request items have been updated to ${status}.`,
+                },
+            ],
             { session }
         );
 
         const notification = await distributorNotification[0].populate({
-            path: 'returnRequest',
+            path: "returnRequest",
             populate: [
-                {
-                    path: 'items.variant',
-                    populate: 'product'
-                },
-                { path: 'distributor'}
-            ]
+                { path: "items.variant", populate: "product" },
+                { path: "distributor" },
+            ],
         });
 
         await session.commitTransaction();
         session.endSession();
 
-        await emitDistributorNotification(notification, distributor.id);
+        await emitDistributorNotification(notification, distributor._id.toString());
 
-        await deleteCache('returnRequests:*')
-
-        res.status(200).json({
-            success: true,
-            message: `Requests successfully ${status}`,
-            returnRequest
+        // audit log AFTER commit
+        await AuditLogService.log({
+            action: "RETURN_REQUEST_ALL_ITEMS_UPDATED",
+            description: `All return request items have been updated to ${status}`,
+            ip_address: req.ip || "",
+            role: req?.user?.role?.name || "N/A",
+            severity: "LOW",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user?._id,
+            old_values: oldItems,
+            new_values: returnRequest.items.map(item => ({
+                variant_id: item.variant_id,
+                status: item.status,
+                quantity: item.quantity,
+            })),
         });
 
+        await deleteCache("returnRequests:*");
+
+        return res.status(200).json({
+            success: true,
+            message: `Return request items successfully updated to "${status}"`,
+            returnRequest,
+        });
     } catch (err) {
         await session.abortTransaction();
         session.endSession();
