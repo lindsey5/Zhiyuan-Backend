@@ -9,7 +9,7 @@ import { ReturnRequestAttributes } from "../models/ReturnRequest";
 import ReturnNotification from "../models/ReturnNotification";
 import '../models/ReturnRequest';
 import { StockTransferAttributes } from "../models/StockTransfer";
-import StockTransferNotification from "../models/StockTransferNotification";
+import StockTransferNotification from '../models/StockTransferNotification';
 
 class NotificationService {
     namespace: Namespace;
