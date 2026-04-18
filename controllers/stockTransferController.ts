@@ -264,7 +264,7 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
 
         return res.status(200).json({
             success: true,
-            message: "Stock transfer status updated successfully",
+            message: `Status successfully marked as ${stockTransfer.status}`,
         });
     } catch (err) {
         await session.abortTransaction();
