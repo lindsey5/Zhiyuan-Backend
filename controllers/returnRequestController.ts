@@ -223,16 +223,19 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
             finalStatus = "insufficient stock";
         }
 
+        if (distributor_stock && status === 'accepted' && distributor_stock.quantity >= item.quantity) {
+            distributor_stock.quantity -= item.quantity;
+            await distributor_stock.save({ session });
+        }
+
         if (item.status === "pending") {
             item.status = finalStatus;
         }
 
         await returnRequest.save({ session });
 
-        const productName =
-            distributor_stock?.variant?.product?.product_name || "Unknown Product";
-        const variantName =
-            distributor_stock?.variant?.variant_name || "Unknown Variant";
+        const productName =distributor_stock?.variant?.product?.product_name || "Unknown Product";
+        const variantName = distributor_stock?.variant?.variant_name || "Unknown Variant";
 
         const distributorNotification = await DistributorNotification.create(
             [
@@ -345,6 +348,11 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
 
             if (!distributor_stock || distributor_stock.quantity < item.quantity) {
                 finalStatus = "insufficient stock";
+            }
+
+            if (distributor_stock && status === 'accepted' && distributor_stock.quantity >= item.quantity) {
+                distributor_stock.quantity -= item.quantity;
+                await distributor_stock.save({ session });
             }
 
             if (item.status === "pending") {
