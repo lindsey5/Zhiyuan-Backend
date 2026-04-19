@@ -125,9 +125,9 @@ class NotificationService {
         }
     }
 
-    async sendStockTransferNotification (payload : { distributor_name: string, stockTransfer: StockTransferAttributes}) {
+    async sendStockTransferNotification (payload : { distributor_name: string, stockTransfer: StockTransferAttributes, status: string }) {
         try{
-            const { distributor_name, stockTransfer } = payload;
+            const { distributor_name, stockTransfer, status } = payload;
 
             const user = await User.findById(stockTransfer.sender_id);
 
@@ -135,7 +135,7 @@ class NotificationService {
             
             const userNotification = await UserNotification.create({
                 user_id: user._id,
-                message: `Stock distribution for ${distributor_name} has been successfully marked as received.`
+                message: `Stock distribution for ${distributor_name} has been successfully marked as ${status}`
             })
 
             const stockTransferNotification = await StockTransferNotification.create({

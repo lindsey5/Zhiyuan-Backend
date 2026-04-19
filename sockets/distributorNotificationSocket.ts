@@ -1,7 +1,9 @@
 import type { Server as SocketIOServer, Namespace } from "socket.io";
 import dotenv from 'dotenv';
-import { DistributorNotificationAttributes } from "../models/DistributorNotification";
+import DistributorNotification, { DistributorNotificationAttributes } from "../models/DistributorNotification";
 import socketConnection from "./socketConnection";
+import { DistributorSaleAttributes } from "../models/DistributorSale";
+import Distributor from "../models/Distributor";
 dotenv.config();
 
 export let distributorNotificationNamespace: Namespace;
@@ -12,8 +14,29 @@ export function initDistributorNotificationSocket(io: SocketIOServer): void {
         namespace: distributorNotificationNamespace, 
         message: "User connected to Distributor Notification namespace",
         events: {
-            "parent-distributor-notification" : (sale_ids : string[]) => {
-                
+            "parent-distributor-sale-notification" : async ({ distributor_id, sales } : { distributor_id : string, sales: DistributorSaleAttributes[] }) => {
+                const distributor = await Distributor.findById(distributor_id);
+
+                if(distributor && distributor.parent_distributor_id){
+                     const distributorNotification = await DistributorNotification.create({
+                        distributor_id: distributor.parent_distributor_id,
+                        sale_ids: sales.map(sale => sale.id),
+                        message: `You receive 2% commission from ${distributor.distributor_name}`
+                    });
+
+                    distributorNotification.populate({
+                        path: "sales",
+                        populate: [
+                            { path: 'seller' },
+                            {
+                                path: 'variant',
+                                populate: 'product'
+                            }
+                        ]
+                    })
+
+                    emitDistributorNotification(distributorNotification, distributor.parent_distributor_id.toString());
+                }
             }
         }
     })
