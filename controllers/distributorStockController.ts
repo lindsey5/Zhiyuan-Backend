@@ -220,6 +220,24 @@ export const getDistributorStocks = async (
     }
 };
 
+export const getDistributorStock = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributorStock = await DistributorStock.findOne({
+            variant_id: req.params.variant_id,
+            distributor_id: req.params.distributor_id,
+        })
+
+        if(!distributorStock){
+            return res.status(404).json({ success: false, message: "Distributor stock not found" });
+        }
+
+        res.status(200).json({ success: true, distributorStock });
+
+    }catch(err){
+        next(err);
+    }
+}
+
 export const downloadDistributorStocks = async (
     req: Request,
     res: Response,

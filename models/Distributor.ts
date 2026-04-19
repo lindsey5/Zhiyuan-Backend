@@ -77,8 +77,8 @@ DistributorSchema.virtual("stocks", {
 
 DistributorSchema.virtual("parent_distributor", {
     ref: "Distributor",          
-    localField: "_id", 
-    foreignField: "parent_distributor_id",   
+    localField: "parent_distributor_id", 
+    foreignField: "_id",   
     justOne: true    
 });
 

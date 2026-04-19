@@ -34,7 +34,11 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                                 populate: "product"
                             },
                         },
-                        { path: "sold_by", select: "-password" }
+                        { 
+                            path: "sold_by", 
+                            select: "-password",
+                            populate: 'parent_distributor'
+                        }
                     ]
                 },
                 {

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { createBulkDistributorStock, downloadDistributorStocks, getDistributorStocks, getTotalDistributorStocks } from "../controllers/distributorStockController";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { createBulkDistributorStock, downloadDistributorStocks, getDistributorStock, getDistributorStocks, getTotalDistributorStocks } from "../controllers/distributorStockController";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import validateBody from "../middlewares/validateBody";
@@ -30,6 +30,15 @@ router.get(
     authenticate,
     authorizePermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW),
     downloadDistributorStocks
+)
+
+
+router.get(
+    '/:variant_id/:distributor_id',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    hasAnyPermission(PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW, PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_UPDATE),
+    getDistributorStock
 )
 
 router.get(

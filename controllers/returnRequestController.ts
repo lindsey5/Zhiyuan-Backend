@@ -81,7 +81,7 @@ export const getReturnRequests = async (req: Request, res: Response, next: NextF
                 $mergeObjects: [
                     "$variant",
                     { product: "$product" }
-                ]
+                ] 
                 }
             }
         },
@@ -161,13 +161,6 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
         const variantId = req.params.variant_id;
         const { status } = req.body;
 
-        if (!status || !["accepted", "rejected", "received"].includes(status)) {
-            await session.abortTransaction();
-            session.endSession();
-
-            return res.status(400).json({ success: false, message: "Invalid status" });
-        }
-
         const distributor = await Distributor.findById(distributorId).session(session);
 
         if (!distributor) {
@@ -234,7 +227,7 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
 
         await returnRequest.save({ session });
 
-        const productName =distributor_stock?.variant?.product?.product_name || "Unknown Product";
+        const productName = distributor_stock?.variant?.product?.product_name || "Unknown Product";
         const variantName = distributor_stock?.variant?.variant_name || "Unknown Variant";
 
         const distributorNotification = await DistributorNotification.create(
@@ -300,12 +293,6 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
         const distributorId = req.params.distributor_id;
         const { status } = req.body;
 
-        if (!status || !["accepted", "rejected", "received", "cancelled"].includes(status)) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ success: false, message: "Invalid Status" });
-        }
-
         const distributor = await Distributor.findById(distributorId).session(session);
 
         if (!distributor) {
@@ -314,7 +301,15 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
             return res.status(404).json({ success: false, message: "Distributor not found" });
         }
 
-        const returnRequest = await ReturnRequest.findById(returnId).session(session);
+        const returnRequest = await ReturnRequest.findById(returnId)
+        .populate([
+            { path: 'distributor' },
+            { 
+                path: 'items.variant',
+                populate: "product"
+            }
+        ])
+        .session(session);
 
         if (!returnRequest) {
             await session.abortTransaction();

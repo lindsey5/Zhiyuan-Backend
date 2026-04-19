@@ -58,7 +58,11 @@ class NotificationService {
                             populate: "product"
                         }
                     },
-                    { path: "sold_by", select: "-password" }
+                    { 
+                        path: "sold_by", 
+                        select: "-password", 
+                        populate: 'parent_distributor' 
+                    }
                 ])
                 await deleteCache(`user-notifications:${user._id}:*`)
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
