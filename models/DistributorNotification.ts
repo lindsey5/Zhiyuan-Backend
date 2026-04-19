@@ -60,7 +60,6 @@ DistributorNotificationSchema.virtual("sales", {
     ref: "DistributorSale",          
     localField: "sale_ids", 
     foreignField: "_id",   
-    justOne: true    
 });
 
 DistributorNotificationSchema.virtual("returnRequest", {
