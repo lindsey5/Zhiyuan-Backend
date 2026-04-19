@@ -52,11 +52,11 @@ const PERMISSIONS = {
 
     // Sponsored Items
     SPONSORED_PRODUCT_CREATE: 'sponsored-items:create',
-    SPONSORED_PRODUCT_UPDATE: 'sponsored-items:update',
     SPONSORED_PRODUCT_VIEW_ALL: 'sponsored-items:view:all',
 
     // Transfer Logs
     STOCK_DISTRIBUTION_HISTORY_VIEW_ALL: 'tranfer-logs:view:all',
+    STOCK_DISTRIBUTION_HISTORY_UPDATE: 'transfer-logs:update',
     STOCK_DISTRIBUTION_CREATE: 'distributor-stock:transfer',
 }
 export default PERMISSIONS

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import { getSponsoredItems } from "../controllers/sponsoredItemController";
@@ -10,7 +10,7 @@ router.get(
     '/', 
     createRateLimiter(5 * 1000, 100), 
     authenticate,
-    authorizePermission(PERMISSIONS.SPONSORED_PRODUCT_VIEW_ALL),
+    hasAnyPermission(PERMISSIONS.SPONSORED_PRODUCT_VIEW_ALL, PERMISSIONS.SPONSORED_PRODUCT_CREATE),
     getSponsoredItems
 );
 
