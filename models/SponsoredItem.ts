@@ -3,7 +3,6 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface SponsoredItemAttributes extends Document {
     variant_id: mongoose.Types.ObjectId;
     quantity: number;
-    status: 'pending' | 'accepted' | 'rejected';
 }
 
 const SponsoredItemSchema: Schema<SponsoredItemAttributes> = new Schema(
@@ -19,12 +18,6 @@ const SponsoredItemSchema: Schema<SponsoredItemAttributes> = new Schema(
             required: true,
             default: 0,
         },
-        
-        status: {
-            type: String,
-            enum: ['pending', 'approved', 'rejected'],
-            default: 'pending'
-        }
     },
     {
         timestamps: true,
