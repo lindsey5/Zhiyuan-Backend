@@ -26,21 +26,21 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
         if (cachedValue) {
             return res.status(200).json({
                 success: true,
-                ...JSON.parse(cachedValue)
+                ...JSON.parse(cachedValue),
             });
         }
 
-        const filter: any = { };
+        const filter: any = {};
 
-        if(search){
+        if (search) {
             filter.$or = [
-                { "product.product_name" : { $regex: search, $options: "i" } },
-                { "variant.variant_name" : { $regex: search, $options: "i" } },
-                { "variant.sku" : { $regex: search, $options: "i" } },
-                { "seller.distributor_name" : { $regex: search, $options: "i" } },
-                { "seller.email" : { $regex: search, $options: "i" } },
-                { "seller.distributor_id" : { $regex: search, $options: "i" } }
-            ]
+                { "product.product_name": { $regex: search, $options: "i" } },
+                { "variant.variant_name": { $regex: search, $options: "i" } },
+                { "variant.sku": { $regex: search, $options: "i" } },
+                { "seller.distributor_name": { $regex: search, $options: "i" } },
+                { "seller.email": { $regex: search, $options: "i" } },
+                { "seller.distributor_id": { $regex: search, $options: "i" } },
+            ];
         }
 
         if (startDate || endDate) {
@@ -55,8 +55,8 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
                     from: "variants",
                     localField: "variant_id",
                     foreignField: "_id",
-                    as: "variant"
-                }
+                    as: "variant",
+                },
             },
             { $unwind: "$variant" },
 
@@ -65,8 +65,8 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
                     from: "products",
                     localField: "variant.product_id",
                     foreignField: "_id",
-                    as: "product"
-                }
+                    as: "product",
+                },
             },
             { $unwind: "$product" },
 
@@ -75,45 +75,65 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
                     from: "distributors",
                     localField: "seller_id",
                     foreignField: "_id",
-                    as: "seller"
-                }
+                    as: "seller",
+                },
             },
             { $unwind: "$seller" },
-        ]
 
-        const [distributorSales, total] = await Promise.all([
+            {
+                $lookup: {
+                    from: "distributors",
+                    localField: "seller.parent_distributor_id",
+                    foreignField: "_id",
+                    as: "parent_distributor",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$parent_distributor",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+        ];
+
+        const [distributorSales, totalResult] = await Promise.all([
             DistributorSale.aggregate([
-                ...pipeline,             
+                ...pipeline,
                 { $match: filter },
                 { $sort: { [sortBy]: order } },
                 { $skip: skip },
-                { $limit: limit }
+                { $limit: limit },
             ]),
-            DistributorSale.countDocuments(pipeline),
+
+            DistributorSale.aggregate([
+                ...pipeline,
+                { $match: filter },
+                { $count: "total" },
+            ]),
         ]);
-        
+
+        const total = totalResult[0]?.total || 0;
 
         const responseData = {
             distributorSales,
             page,
             limit,
             totalPages: Math.ceil(total / limit),
-            total
-        }
+            total,
+        };
 
         await redisClient.set(cacheKey, JSON.stringify(responseData), {
-            EX: 60
+            EX: 60,
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            ...responseData
+            ...responseData,
         });
-
     } catch (err) {
         next(err);
     }
-}
+};
 
 export const getDistributorSales = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -149,11 +169,15 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
 
         const filter: any = { seller_id: new mongoose.Types.ObjectId(req.params.id as string) };
 
-        if(search){
+        if (search) {
             filter.$or = [
-                { "variant.variant_name" : { $regex: search, $options: "i" } },
-                { "variant.sku" : { $regex: search, $options: "i" } }
-            ]
+                { "product.product_name": { $regex: search, $options: "i" } },
+                { "variant.variant_name": { $regex: search, $options: "i" } },
+                { "variant.sku": { $regex: search, $options: "i" } },
+                { "seller.distributor_name": { $regex: search, $options: "i" } },
+                { "seller.email": { $regex: search, $options: "i" } },
+                { "seller.distributor_id": { $regex: search, $options: "i" } },
+            ];
         }
 
         if (startDate || endDate) {
@@ -168,8 +192,8 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                     from: "variants",
                     localField: "variant_id",
                     foreignField: "_id",
-                    as: "variant"
-                }
+                    as: "variant",
+                },
             },
             { $unwind: "$variant" },
 
@@ -178,40 +202,71 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                     from: "products",
                     localField: "variant.product_id",
                     foreignField: "_id",
-                    as: "product"
-                }
+                    as: "product",
+                },
             },
             { $unwind: "$product" },
-        ]
 
-        const [distributorSales, total] = await Promise.all([
+            {
+                $lookup: {
+                    from: "distributors",
+                    localField: "seller_id",
+                    foreignField: "_id",
+                    as: "seller",
+                },
+            },
+            { $unwind: "$seller" },
+
+            {
+                $lookup: {
+                    from: "distributors",
+                    localField: "seller.parent_distributor_id",
+                    foreignField: "_id",
+                    as: "parent_distributor",
+                },
+            },
+            {
+                $unwind: {
+                    path: "$parent_distributor",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+        ];
+
+        const [distributorSales, totalResult] = await Promise.all([
             DistributorSale.aggregate([
-                ...pipeline,             
+                ...pipeline,
                 { $match: filter },
                 { $sort: { [sortBy]: order } },
                 { $skip: skip },
-                { $limit: limit }
+                { $limit: limit },
             ]),
-            DistributorSale.countDocuments(pipeline),
+
+            DistributorSale.aggregate([
+                ...pipeline,
+                { $match: filter },
+                { $count: "total" },
+            ]),
         ]);
 
+        const total = totalResult[0]?.total || 0;
 
         const responseData = {
             distributorSales,
             page,
             limit,
             totalPages: Math.ceil(total / limit),
-            total
-        }
+            total,
+        };
 
         await redisClient.set(cacheKey, JSON.stringify(responseData), {
-            EX: 60
+            EX: 60,
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            ...responseData
-        }); 
+            ...responseData,
+        });
 
     } catch (err) {
         next(err);

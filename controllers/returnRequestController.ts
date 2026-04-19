@@ -161,7 +161,7 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
         const variantId = req.params.variant_id;
         const { status } = req.body;
 
-        if (!status || !["accepted", "rejected"].includes(status)) {
+        if (!status || !["accepted", "rejected", "received"].includes(status)) {
             await session.abortTransaction();
             session.endSession();
 
@@ -219,16 +219,16 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
 
         let finalStatus = status;
 
-        if (!distributor_stock || distributor_stock.quantity < item.quantity) {
+        if ((!distributor_stock || distributor_stock.quantity < item.quantity) && distributor_stock && status === 'accepted') {
             finalStatus = "insufficient stock";
         }
 
-        if (distributor_stock && status === 'accepted' && distributor_stock.quantity >= item.quantity) {
+        if (distributor_stock && status === 'received' && distributor_stock.quantity >= item.quantity) {
             distributor_stock.quantity -= item.quantity;
             await distributor_stock.save({ session });
         }
 
-        if (item.status === "pending") {
+        if (item.status === "pending" || item.status === "accepted" || item.status === 'cancelled') {
             item.status = finalStatus;
         }
 
@@ -300,7 +300,7 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
         const distributorId = req.params.distributor_id;
         const { status } = req.body;
 
-        if (!status || !["accepted", "rejected"].includes(status)) {
+        if (!status || !["accepted", "rejected", "received", "cancelled"].includes(status)) {
             await session.abortTransaction();
             session.endSession();
             return res.status(400).json({ success: false, message: "Invalid Status" });
@@ -346,16 +346,16 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
 
             let finalStatus = status;
 
-            if (!distributor_stock || distributor_stock.quantity < item.quantity) {
+            if ((!distributor_stock || distributor_stock.quantity < item.quantity) && item.status === 'pending') {
                 finalStatus = "insufficient stock";
             }
 
-            if (distributor_stock && status === 'accepted' && distributor_stock.quantity >= item.quantity) {
+            if (distributor_stock && status === 'received' && distributor_stock.quantity >= item.quantity) {
                 distributor_stock.quantity -= item.quantity;
                 await distributor_stock.save({ session });
             }
 
-            if (item.status === "pending") {
+            if (item.status === "pending" || item.status === "accepted" || item.status === 'cancelled') {
                 item.status = finalStatus;
             }
         }

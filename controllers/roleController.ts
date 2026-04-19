@@ -203,6 +203,13 @@ export const deleteRole = async (req: AuthRequest, res: Response, next: NextFunc
         const role = await Role.findById(req.params.id).populate("permissions");
         if (!role) return res.status(404).json({ success: false, message: "Role not found." });
 
+        if(role._id.toString() === req.user.role_id.toString()){
+            return res.status(403).json({ 
+                success: false, 
+                message: "Deletion not allowed. You cannot delete the role assigned to your account."
+            })
+        }
+
         const oldValues = role;
         await role.deleteOne();
 
