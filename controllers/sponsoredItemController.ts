@@ -22,9 +22,6 @@ export const createBulkSponsoredItem = async (req: AuthRequest, res: Response, n
             if(!variant) return res.status(404).json({ success: false, message: `Variant id doesn't exist: ${item.variant_id}` });
 
             if(variant.stock < item.quantity) return res.status(400).json({ success: false, message: `Insufficient stock for variant ${variant.variant_name}` });
-            
-            variant.stock -= item.quantity;
-            await variant.save({ session });
         }
 
         const sponsoredItems = await SponsoredItem.insertMany(newSponsoredItems, { session });
@@ -69,6 +66,8 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
         const search = req.query.search?.toString() || "";
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+
+        await SponsoredItem.updateMany({}, { $set: { status: 'pending' }})
 
         const filter: any = {};
         if (startDate || endDate) {
@@ -141,6 +140,15 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
             success: true,
             ...responseData
         })
+    }catch(err){
+        next(err);
+    }
+}
+
+export const updateSponsoredItemStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        
+
     }catch(err){
         next(err);
     }

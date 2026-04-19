@@ -2,7 +2,6 @@ import { NextFunction, Response } from "express";
 import { AuthRequest } from "../types/auth";
 import UserNotification from "../models/UserNotification";
 import redisClient, { deleteCache } from "../config/redis";
-import { populate } from "dotenv";
 
 export const getUserNotifications = async (req : AuthRequest, res : Response, next : NextFunction) => {
     try{
@@ -133,6 +132,20 @@ export const readNotification = async (req : AuthRequest, res : Response, next :
         await deleteCache(`user-notifications:${req.user._id}:*`);
 
         res.status(200).json({ success: true })
+    }catch(err){
+        next(err);
+    }
+}
+
+export const readAllNotifications = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try{
+        await UserNotification.updateMany({ user_id: req.user._id}, { $set: { status: 'read' }});
+
+        res.status(200).json({
+            success: true,
+            message: "All notifications successfully read",
+        })
+
     }catch(err){
         next(err);
     }

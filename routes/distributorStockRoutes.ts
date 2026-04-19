@@ -1,20 +1,9 @@
 import { Router } from "express";
-import { createBulkDistributorStock, downloadDistributorStocks, getDistributorStock, getDistributorStocks, getTotalDistributorStocks } from "../controllers/distributorStockController";
+import { downloadDistributorStocks, getDistributorStock, getDistributorStocks, getTotalDistributorStocks } from "../controllers/distributorStockController";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
-import validateBody from "../middlewares/validateBody";
-import { distributorStockSchema } from "../schema/distributorStockSchema";
 const router = Router();
-
-router.post(
-    '/:id',
-    createRateLimiter(60 * 1000, 20),
-    validateBody(distributorStockSchema),
-    authenticate,
-    authorizePermission(PERMISSIONS.STOCK_DISTRIBUTION_CREATE),
-    createBulkDistributorStock
-);
 
 router.get(
     '/stock/:id',

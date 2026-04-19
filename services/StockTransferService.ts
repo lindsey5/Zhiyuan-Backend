@@ -47,7 +47,7 @@ export default class StockTransferService {
                 [{ 
                     distributor_id: receiver_id, 
                     transfer_id: stockTransfer[0]._id,
-                    message: `${sender} distribute ${totalStocks} ${totalStocks === 1 ? "stock" : "stocks"} to you.`
+                    message: `${sender} requested to distribute ${totalStocks} ${totalStocks === 1 ? "stock" : "stocks"} to you.`
                 }],
                 { session }
             )

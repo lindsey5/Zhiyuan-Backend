@@ -8,6 +8,83 @@ import { emitDistributorNotification } from "../sockets/distributorNotificationS
 import mongoose from "mongoose";
 import Variant from "../models/Variant";
 import AuditLogService from "../services/AuditLogService";
+import Distributor from "../models/Distributor";
+import StockTransferService from "../services/StockTransferService";
+
+export const createStockTransfer = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const stocks = req.body;
+        const distributorId = req.params.id;
+
+        const distributor = await Distributor.findById(distributorId);
+
+        if(!distributor || distributor.status === 'deleted'){
+            return res.status(404).json({ success: false, message: "Distributor not found"})
+        }
+
+        for (const stock of stocks) {
+            const variant = await Variant.findById(stock.variant_id);
+
+            if(!variant) continue;
+
+            if(variant.stock < stock.quantity) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Insufficient stock for ${variant.variant_name}. Please reload the page.`
+                })
+            }
+
+            variant.stock -= stock.quantity;
+
+            await variant.save({ session });
+        }
+
+        const stockTransfer = await StockTransferService.logStockTransfer({
+            sender_id: req.user._id as string,
+            receiver_id: distributorId as string,
+            stocks: stocks.map((stock : any) => ({
+                variant_id: stock.variant_id.toString(),
+                quantity: stock.quantity,
+            })),
+            session,
+        });
+
+        if (!stockTransfer) {
+            throw new Error("Failed to log stock transfer");
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        await AuditLogService.log({
+            action: "STOCK_DISTRIBUTION_CREATED",
+            description: `A new stock distribution has been created and submitted`,
+            ip_address: req.ip || "",
+            role: req.user.role.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user._id,
+            old_values: null,
+            new_values: stockTransfer
+        });
+
+        await deleteCache(`products:*`);
+        await deleteCache(`variants:*`);
+        res.status(201).json({
+            success: true,
+            message: "Stock distribution request successfully created",
+            stockTransfer,
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        next(err);
+    }
+};
 
 export const getStockTransferLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {

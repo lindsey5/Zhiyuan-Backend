@@ -10,7 +10,12 @@ export function initDistributorNotificationSocket(io: SocketIOServer): void {
     distributorNotificationNamespace = io.of("/distributor-notification");
     socketConnection({
         namespace: distributorNotificationNamespace, 
-        message: "User connected to Distributor Notification namespace"
+        message: "User connected to Distributor Notification namespace",
+        events: {
+            "parent-distributor-notification" : (sale_ids : string[]) => {
+                
+            }
+        }
     })
 }
 
