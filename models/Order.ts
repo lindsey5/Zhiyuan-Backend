@@ -17,7 +17,7 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
 
         status: {
             type: String,
-            enum: ["pending", "processing", "delivered", "completed", "cancelled", "refunded"],
+            enum: ["pending", "processing", "delivered", "completed", "cancelled", "refunded", "expired"],
             default: "pending",
             required: true,
         },

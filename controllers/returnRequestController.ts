@@ -20,6 +20,16 @@ export const getReturnRequests = async (req: Request, res: Response, next: NextF
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
         const order = req.query.order && String(req.query.order).toUpperCase() === "ASC" ? 1 : -1;
 
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        await ReturnRequest.updateMany(
+            { createdAt: { $lt: sevenDaysAgo } },
+            { $set: { "items.$[elem].status": "expired" } },
+            { arrayFilters: [{ "elem.status": "pending" }] }
+        );
+
         const cacheKey = `returnRequests:${page}:${limit}:${search}:${startDate}:${endDate}:${order}`;
         const cachedValue = await redisClient.get(cacheKey);
 

@@ -167,6 +167,14 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
         
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        await Order.updateMany(
+            { createdAt: { $lt: today }, status: 'pending' }, 
+            { $set: { status: 'expired' } }
+        )
+
         const filter: any = {};
 
         if (search) {
