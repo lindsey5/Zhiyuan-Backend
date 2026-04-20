@@ -150,6 +150,24 @@ export const getReturnRequests = async (req: Request, res: Response, next: NextF
     }
 }
 
+export const getReturnRequestById = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const returnRequest = await ReturnRequest.findById(req.params.id).populate([
+            { path: 'distributor' },
+            { path: 'items.variant', populate: 'product' }
+        ]);
+
+        if(!returnRequest) return res.status(404).json({ success: false, message: "Return request not found" });
+
+        res.status(200).json({
+            success: true,
+            returnRequest
+        })
+    }catch(err){
+        next(err);
+    }
+}
+
 export const updateReturnRequestItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
 

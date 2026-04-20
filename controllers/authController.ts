@@ -27,7 +27,7 @@ export const login = async (
         const accessToken = generateAccessToken(user._id, user.role?._id);
         const refreshToken = generateRefreshToken(user._id);
 
-        const { password: userPassword, role, _id, ...rest } = user.toObject();
+        const { password: userPassword, role, ...rest } = user.toObject();
 
         res.status(200).json({
             success: true,

@@ -86,6 +86,33 @@ export const createStockTransfer = async (req: AuthRequest, res: Response, next:
     }
 };
 
+export const getStockTransferById = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const stockTransfer = await StockTransfer.findById(req.params.id)
+        .populate([
+            { path: 'sender', select: '-password' },
+            { path: 'receiver', select: '-password' },
+            { 
+                path: 'items', 
+                populate: {
+                    path: 'variant',
+                    populate: 'product'
+                }
+            }
+        ]);
+
+        if(!stockTransfer) return res.status(404).json({ success: false, message: "Stock transfer not found" });
+
+        res.status(200).json({
+            success: true,
+            stockTransfer
+        })
+
+    }catch(err){
+        next(err);
+    }
+}
+
 export const getStockTransferLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const page = Number(req.query.page) || 1;

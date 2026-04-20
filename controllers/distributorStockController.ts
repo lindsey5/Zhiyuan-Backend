@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import DistributorStock from "../models/DistributorStock";
 import Distributor from "../models/Distributor";
 import PDFDocument from "pdfkit";
-import redisClient, { deleteCache } from "../config/redis";
+import redisClient from "../config/redis";
 
 export const getDistributorStocks = async (
     req: Request,
