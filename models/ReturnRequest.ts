@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { DistributorAttributes } from "../types/model-attributes";
 
 export interface ReturnRequestAttributes extends Document {
     distributor_id: mongoose.Types.ObjectId;
+    distributor?: DistributorAttributes;
     items: {
         variant_id: mongoose.Types.ObjectId;
         quantity: number;

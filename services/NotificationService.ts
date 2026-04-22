@@ -5,7 +5,7 @@ import SaleNotification from "../models/SaleNotification";
 import User from "../models/User";
 import UserNotification from "../models/UserNotification";
 import PERMISSIONS from "../utils/permissions";
-import { ReturnRequestAttributes } from "../models/ReturnRequest";
+import ReturnRequest, { ReturnRequestAttributes } from "../models/ReturnRequest";
 import ReturnNotification from "../models/ReturnNotification";
 import '../models/ReturnRequest';
 import { StockTransferAttributes } from "../models/StockTransfer";
@@ -22,6 +22,7 @@ class NotificationService {
 
         this.sendSaleNotification = this.sendSaleNotification.bind(this);
         this.sendReturnNotification = this.sendReturnNotification.bind(this);
+        this.sendCancelReturnNotification = this.sendCancelReturnNotification.bind(this);
         this.sendStockTransferNotification = this.sendStockTransferNotification.bind(this);
         this.sendStockOrderNotification = this.sendStockOrderNotification.bind(this);
     }
@@ -37,7 +38,7 @@ class NotificationService {
                 });
 
             const authorizedUsers = users.filter(user =>
-                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW || p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_UPDATE)
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_SALES_VIEW)
             );
             
             const totalItems = sales.reduce((total, sale) => total + sale.quantity, 0);
@@ -92,7 +93,7 @@ class NotificationService {
                 });
 
             const authorizedUsers = users.filter(user =>
-                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_SALES_VIEW)
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_VIEW || p.action === PERMISSIONS.DISTRIBUTOR_RETURN_REQUEST_UPDATE)
             );
 
             const totalItems = returnRequest.items.reduce((total, item) => total + item.quantity, 0);
@@ -129,6 +130,53 @@ class NotificationService {
         }
     }
 
+    async sendCancelReturnNotification (returnRequest : ReturnRequestAttributes) {
+        try{
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.DISTRIBUTOR_SALES_VIEW)
+            );
+
+            const distributor_name = returnRequest.distributor?.distributor_name || "";
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor_name}'s return request has been cancelled`
+                })
+
+                const returnNotification = await ReturnNotification.create({
+                    return_id: returnRequest._id,
+                    notification_id: userNotification._id
+                })
+
+                await returnNotification.populate({ 
+                    path: "returnRequest", 
+                    populate: [
+                        { path: "items.variant", populate: "product" },
+                        { path: 'distributor', select: '-password' }
+                    ]
+                })
+                await deleteCache(`user-notifications:${user._id}:*`)
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        returnNotification
+                    }
+                })
+            }
+
+
+        }catch(err){
+            console.log(err);
+        }
+    }
+
     async sendStockTransferNotification (payload : { distributor_name: string, stockTransfer: StockTransferAttributes, status: string }) {
         try{
             const { distributor_name, stockTransfer, status } = payload;
@@ -139,7 +187,7 @@ class NotificationService {
             
             const userNotification = await UserNotification.create({
                 user_id: user._id,
-                message: `Stock distribution for ${distributor_name} has been successfully marked as ${status}`
+                message: `Stock distribution for ${distributor_name} has been marked as ${status}`
             })
 
             const stockTransferNotification = await StockTransferNotification.create({

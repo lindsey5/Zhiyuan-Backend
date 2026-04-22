@@ -14,6 +14,7 @@ export function initNotificationSocket(io: SocketIOServer): void {
     const events = {
         "send-sale-notification": notification.sendSaleNotification,
         "send-return-notification" : notification.sendReturnNotification,
+        "send-cancel-return-notification": notification.sendCancelReturnNotification,
         "send-stock-transfer-notification" : notification.sendStockTransferNotification,
         "send-stock-order-notification" : notification.sendStockOrderNotification,
     }
