@@ -56,10 +56,6 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
             [
                 {
                     ...rest,
-                    order_id: `ORD-${Math.random()
-                        .toString(36)
-                        .substring(2, 8)
-                        .toUpperCase()}`,
                     total_amount,
                 },
             ],

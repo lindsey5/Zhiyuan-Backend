@@ -80,6 +80,16 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                         ]
                     }
                 },
+                {
+                    path: 'stockOrderNotification',
+                    populate: {
+                        path: 'stockOrder',
+                        populate: [
+                            { path: 'distributor', select: '-password' },
+                            { path: 'items.variant' }
+                        ]
+                    }
+                }
             ])
             .sort({ createdAt: -1 })
             .skip(skip)

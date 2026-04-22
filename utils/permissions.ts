@@ -58,5 +58,9 @@ const PERMISSIONS = {
     STOCK_DISTRIBUTION_HISTORY_VIEW_ALL: 'tranfer-logs:view:all',
     STOCK_DISTRIBUTION_HISTORY_UPDATE: 'transfer-logs:update',
     STOCK_DISTRIBUTION_CREATE: 'distributor-stock:transfer',
+
+    // Stock Orders
+    STOCK_ORDERS_VIEW_ALL: 'stock-orders:view:all',
+    STOCK_ORDERS_UPDATE: 'stock-orders:update',
 }
 export default PERMISSIONS

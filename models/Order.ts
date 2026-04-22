@@ -75,6 +75,27 @@ OrderSchema.virtual("order_items", {
 OrderSchema.set("toObject", { virtuals: true });
 OrderSchema.set("toJSON", { virtuals: true });
 
+OrderSchema.pre("save", async function (next) {
+    if (!this.order_id) {
+        let unique = false;
+        let generatedId = "";
+
+        while (!unique) {
+            const random = Math.random().toString(36).substring(2, 7).toUpperCase();
+
+            generatedId = `ORD-${random}`;
+
+            const existing = await mongoose.models.Order.findOne({ order_id: generatedId });
+
+            if (!existing) unique = true;
+        }
+
+        this.order_id = generatedId;
+    }
+
+    next();
+});
+
 const Order: Model<OrderAttributes> = mongoose.model("Order", OrderSchema);
 
 export default Order;

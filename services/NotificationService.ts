@@ -10,6 +10,9 @@ import ReturnNotification from "../models/ReturnNotification";
 import '../models/ReturnRequest';
 import { StockTransferAttributes } from "../models/StockTransfer";
 import StockTransferNotification from '../models/StockTransferNotification';
+import { StockOrderAttributes } from "../models/StockOrder";
+import StockOrderNotification from "../models/StockOrderNotification";
+
 
 class NotificationService {
     namespace: Namespace;
@@ -20,6 +23,7 @@ class NotificationService {
         this.sendSaleNotification = this.sendSaleNotification.bind(this);
         this.sendReturnNotification = this.sendReturnNotification.bind(this);
         this.sendStockTransferNotification = this.sendStockTransferNotification.bind(this);
+        this.sendStockOrderNotification = this.sendStockOrderNotification.bind(this);
     }
 
     async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
@@ -171,6 +175,53 @@ class NotificationService {
                 }
             })
 
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+    async sendStockOrderNotification (payload : { distributor_name: string, stockOrder: StockOrderAttributes }) {
+        try{
+            const { distributor_name, stockOrder } = payload;
+    
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.STOCK_ORDERS_VIEW_ALL || p.action === PERMISSIONS.STOCK_ORDERS_UPDATE)
+            );
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor_name} submitted a stock order request.`
+                })
+
+                const stockOrderNotfication = await StockOrderNotification.create({
+                    order_id: stockOrder._id,
+                    notification_id: userNotification._id,
+                })
+
+                await stockOrderNotfication.populate({ 
+                    path: "stockOrder", 
+                    populate: [
+                        { path: "items.variant", populate: "product" },
+                        { path: 'distributor', select: '-password' }
+                    ]
+                })
+
+                await deleteCache(`user-notifications:${user._id}:*`)
+                await deleteCache('stock-order:*');
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        stockOrderNotfication
+                    }
+                })
+            }
         }catch(err){
             console.log(err);
         }

@@ -211,6 +211,7 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
             {
                 $group: {
                     _id: "$_id",
+                    transfer_no: { $first: "$transfer_no" },
                     receiver: { $first: "$receiver" },
                     sender: { $first: "$sender" },
                     createdAt: { $first: "$createdAt" },
@@ -225,6 +226,7 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
         const match: any = {};
         if (search) {
             match.$or = [
+                { transfer_no: { $regex: search, $options: "i" } },
                 { "receiver.distributor_name": { $regex: search, $options: "i" } },
                 { "receiver.email": { $regex: search, $options: "i" } },
                 { "sender.firstname": { $regex: search, $options: "i" } },
