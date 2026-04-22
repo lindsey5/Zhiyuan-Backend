@@ -1,7 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import { setEndDate, setStartDate } from "../utils/utils";
-import redisClient from "../config/redis";
+import redisClient, { deleteCache } from "../config/redis";
 import StockOrder from "../models/StockOrder";
+import DistributorNotification from "../models/DistributorNotification";
+import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import mongoose from "mongoose";
+import AuditLogService from "../services/AuditLogService";
+import { AuthRequest } from "../types/auth";
 
 export const getStockOrders = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -103,7 +108,11 @@ export const getStockOrders = async (req: Request, res: Response, next: NextFunc
 
 export const getStockOrderById = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        const stockOrder = await StockOrder.findById(req.params.id);
+        const stockOrder = await StockOrder.findById(req.params.id)
+        .populate([
+            { path: 'items.variant', populate: 'product' },
+            { path: 'distributor', select: '-password' }
+        ]);
 
         if(!stockOrder) return res.status(404).json({ success: false, message: "Stock Order not found"});
 
@@ -113,3 +122,95 @@ export const getStockOrderById = async (req: Request, res: Response, next: NextF
         next(err);
     }
 }
+
+export const updateStockOrderStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        const stockOrder = await StockOrder.findById(req.params.id).session(session);
+
+        if (!stockOrder) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(404).json({
+                success: false,
+                message: "Stock Order not found"
+            });
+        }
+
+        if (stockOrder.status === req.body.status) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: `The stock order status is already "${req.body.status}". Please refresh the page to see the latest updates.`
+            });
+        }
+
+        const oldStatus = stockOrder.status;
+
+        stockOrder.status = req.body.status;
+        await stockOrder.save({ session });
+
+        const distributorNotification = await DistributorNotification.create(
+            [
+                {
+                    distributor_id: stockOrder.distributor_id,
+                    stock_order_id: stockOrder._id,
+                    message: `Your stock order has been updated to ${req.body.status}.`,
+                },
+            ],
+            { session }
+        );
+
+        const notification = await distributorNotification[0].populate({
+            path: "stockOrder",
+            populate: [
+                {
+                    path: "items.variant",
+                    populate: "product",
+                },
+                { path: "distributor", select: '-password' },
+            ],
+        });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        await emitDistributorNotification(
+            notification,
+            stockOrder.distributor_id.toString()
+        );
+
+        await AuditLogService.log({
+            action: "STOCK_ORDER_UPDATED",
+            description: `Stock order has been updated from ${oldStatus} to ${req.body.status}.`,
+            ip_address: req.ip || "",
+            role: req?.user?.role?.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user?._id,
+            old_values: {
+                status: oldStatus
+            },
+            new_values: {
+                status: req.body.status
+            },
+        });
+
+        await deleteCache("stock-orders:*");
+
+        return res.status(200).json({
+            success: true,
+            message: `Stock order successfully marked as ${req.body.status}`
+        });
+
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        next(err);
+    }
+};

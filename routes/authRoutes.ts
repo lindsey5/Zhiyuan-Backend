@@ -15,7 +15,7 @@ router.post(
 
 router.post(
     '/refreshToken', 
-    createRateLimiter(15 * 60 * 1000, 5), 
+    createRateLimiter(60 * 1000, 20), 
     refreshAccessToken
 );
 
