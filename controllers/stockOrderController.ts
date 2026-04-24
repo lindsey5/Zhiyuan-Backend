@@ -161,8 +161,8 @@ export const updateStockOrderStatus = async (
         const allowedTransitions: Record<string, string[]> = {
             pending: ["approved", "rejected"],
             approved: ["processing", "cancelled"],
-            processing: ["delivered", "failed"],
-            delivered: [],
+            processing: ["delivered", "cancelled"],
+            delivered: ["failed"],
             received: [],
             cancelled: [],
             rejected: [],
