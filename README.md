@@ -12,8 +12,6 @@ A backend service for managing users, roles, permissions, categories, products, 
 ## Features
 - User management
 - Role and permission management
-- Category and product management
-- Order management
 - Audit logs
 - JWT authentication and authorization
 - Full API documentation via Swagger at `/docs`
