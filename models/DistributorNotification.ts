@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
+import { StockTransferAttributes } from "./StockTransfer";
 
 export interface DistributorNotificationAttributes extends Document {
     distributor_id: mongoose.Types.ObjectId;
@@ -7,6 +8,7 @@ export interface DistributorNotificationAttributes extends Document {
     stock_order_id?: mongoose.Types.ObjectId;
     sale_ids?: mongoose.Types.ObjectId[];
     message: string;
+    stockTransfer: StockTransferAttributes;
     status: 'read' | 'unread'
 }
 

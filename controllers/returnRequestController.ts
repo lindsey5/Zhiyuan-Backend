@@ -178,7 +178,11 @@ export const getReturnRequestById = async (req: Request, res: Response, next: Ne
     }
 }
 
-export const updateReturnRequestItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updateReturnRequestItem = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
     const session = await mongoose.startSession();
 
     try {
@@ -232,26 +236,57 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
             distributor_id: distributorId,
             variant_id: item.variant_id,
         })
-            .populate({
-                path: "variant",
-                populate: "product",
-            })
-            .session(session);
+        .populate({
+            path: "variant",
+            populate: "product",
+        })
+        .session(session);
+
+        // Allowed transitions (cannot go backwards)
+        const allowedTransitions: Record<string, string[]> = {
+            pending: ["accepted", "rejected", "insufficient stock"],
+            accepted: ["received", "cancelled"],
+            received: [],
+            rejected: [],
+            cancelled: [],
+            expired: [],
+            "insufficient stock": [],
+        };
 
         let finalStatus = status;
 
-        if ((!distributor_stock || distributor_stock.quantity < item.quantity) && distributor_stock && status === 'accepted') {
+        // If accepted but stock is insufficient
+        if (
+            (!distributor_stock || distributor_stock.quantity < item.quantity) &&
+            status === "accepted"
+        ) {
             finalStatus = "insufficient stock";
         }
 
-        if (distributor_stock && status === 'received' && distributor_stock.quantity >= item.quantity) {
+        const allowedNextStatuses = allowedTransitions[item.status] || [];
+
+        // Prevent invalid/backward update
+        if (!allowedNextStatuses.includes(finalStatus)) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: `Cannot update item status from ${item.status} to ${finalStatus}. Please reload the page`,
+            });
+        }
+
+        // Deduct stock only if status becomes received
+        if (
+            distributor_stock &&
+            finalStatus === "received" &&
+            distributor_stock.quantity >= item.quantity
+        ) {
             distributor_stock.quantity -= item.quantity;
             await distributor_stock.save({ session });
         }
 
-        if (item.status === "pending" || item.status === "accepted" || item.status === 'cancelled') {
-            item.status = finalStatus;
-        }
+        item.status = finalStatus;
 
         await returnRequest.save({ session });
 
@@ -259,25 +294,25 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
         const variantName = distributor_stock?.variant?.variant_name || "Unknown Variant";
 
         const distributorNotification = await DistributorNotification.create(
-            [
-                {
-                    distributor_id: distributor._id,
-                    return_id: returnId,
-                    message: `Your return request for ${productName} - ${variantName} has been updated to ${finalStatus}.`,
-                },
-            ],
-            { session }
+        [
+            {
+            distributor_id: distributor._id,
+            return_id: returnId,
+            message: `Your return request for ${productName} - ${variantName} has been updated to ${finalStatus}.`,
+            },
+        ],
+        { session }
         );
 
         const notification = await distributorNotification[0].populate({
-            path: "returnRequest",
-            populate: [
-                {
-                    path: "items.variant",
-                    populate: "product",
-                },
-                { path: "distributor" },
-            ],
+        path: "returnRequest",
+        populate: [
+            {
+            path: "items.variant",
+            populate: "product",
+            },
+            { path: "distributor" },
+        ],
         });
 
         await session.commitTransaction();
@@ -287,7 +322,7 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
 
         await AuditLogService.log({
             action: "RETURN_REQUEST_ITEM_STATUS_UPDATED",
-            description: `Return request for ${productName} - ${variantName} has been updated to ${finalStatus}.".`,
+            description: `Return request for ${productName} - ${variantName} has been updated from ${oldItemStatus} to ${finalStatus}.`,
             ip_address: req.ip || "",
             role: req?.user?.role?.name || "N/A",
             severity: "MEDIUM",
@@ -311,7 +346,11 @@ export const updateReturnRequestItem = async (req: AuthRequest, res: Response, n
     }
 };
 
-export const updateAllReturnRequestItems = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updateAllReturnRequestItems = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+) => {
     const session = await mongoose.startSession();
 
     try {
@@ -331,11 +370,11 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
 
         const returnRequest = await ReturnRequest.findById(returnId)
         .populate([
-            { path: 'distributor' },
-            { 
-                path: 'items.variant',
-                populate: "product"
-            }
+            { path: "distributor" },
+            {
+            path: "items.variant",
+            populate: "product",
+            },
         ])
         .session(session);
 
@@ -354,8 +393,19 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
             });
         }
 
+        // Allowed status transitions for return request items
+        const allowedTransitions: Record<string, string[]> = {
+            pending: ["accepted", "rejected", "insufficient stock"],
+            accepted: ["received"],
+            received: [],
+            rejected: [],
+            cancelled: [],
+            expired: [],
+            "insufficient stock": [],
+        };
+
         // store old values for audit
-        const oldItems = returnRequest.items.map(item => ({
+        const oldItems = returnRequest.items.map((item) => ({
             variant_id: item.variant_id,
             status: item.status,
             quantity: item.quantity,
@@ -369,39 +419,55 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
 
             let finalStatus = status;
 
-            if ((!distributor_stock || distributor_stock.quantity < item.quantity) && item.status === 'pending') {
+            // if not enough stock, override request status
+            if (
+                (!distributor_stock || distributor_stock.quantity < item.quantity) &&
+                item.status === "pending"
+            ) {
                 finalStatus = "insufficient stock";
             }
 
-            if (distributor_stock && status === 'received' && distributor_stock.quantity >= item.quantity) {
+            const allowedNextStatuses = allowedTransitions[item.status] || [];
+
+            // prevent backward/invalid updates
+            if (!allowedNextStatuses.includes(finalStatus)) {
+                await session.abortTransaction();
+                session.endSession();
+
+                return res.status(400).json({
+                    success: false,
+                    message: `Cannot update item (${item.variant_id}) status from "${item.status}" to "${finalStatus}". Please reload the page.`,
+                });
+            }
+
+            // Deduct stock only when status becomes received
+            if (distributor_stock && finalStatus === "received" && distributor_stock.quantity >= item.quantity) {
                 distributor_stock.quantity -= item.quantity;
                 await distributor_stock.save({ session });
             }
 
-            if (item.status === "pending" || item.status === "accepted" || item.status === 'cancelled') {
-                item.status = finalStatus;
-            }
+            item.status = finalStatus;
         }
 
         await returnRequest.save({ session });
 
         const distributorNotification = await DistributorNotification.create(
-            [
-                {
-                    distributor_id: distributor._id,
-                    return_id: returnId,
-                    message: `All return request items have been updated to ${status}.`,
-                },
-            ],
-            { session }
+        [
+            {
+            distributor_id: distributor._id,
+            return_id: returnId,
+            message: `All return request items have been updated to ${status}.`,
+            },
+        ],
+        { session }
         );
 
         const notification = await distributorNotification[0].populate({
-            path: "returnRequest",
-            populate: [
-                { path: "items.variant", populate: "product" },
-                { path: "distributor" },
-            ],
+        path: "returnRequest",
+        populate: [
+            { path: "items.variant", populate: "product" },
+            { path: "distributor" },
+        ],
         });
 
         await session.commitTransaction();
@@ -419,7 +485,7 @@ export const updateAllReturnRequestItems = async (req: AuthRequest, res: Respons
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user?._id,
             old_values: oldItems,
-            new_values: returnRequest.items.map(item => ({
+            new_values: returnRequest.items.map((item) => ({
                 variant_id: item.variant_id,
                 status: item.status,
                 quantity: item.quantity,

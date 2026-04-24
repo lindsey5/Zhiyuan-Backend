@@ -12,6 +12,7 @@ import { StockTransferAttributes } from "../models/StockTransfer";
 import StockTransferNotification from '../models/StockTransferNotification';
 import { StockOrderAttributes } from "../models/StockOrder";
 import StockOrderNotification from "../models/StockOrderNotification";
+import Distributor from "../models/Distributor";
 
 
 class NotificationService {
@@ -25,6 +26,7 @@ class NotificationService {
         this.sendCancelReturnNotification = this.sendCancelReturnNotification.bind(this);
         this.sendStockTransferNotification = this.sendStockTransferNotification.bind(this);
         this.sendStockOrderNotification = this.sendStockOrderNotification.bind(this);
+        this.sendStockOrderUpdate = this.sendStockOrderUpdate.bind(this);
     }
 
     async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
@@ -248,12 +250,12 @@ class NotificationService {
                     message: `${distributor_name} submitted a stock order request.`
                 })
 
-                const stockOrderNotfication = await StockOrderNotification.create({
+                const stockOrderNotification = await StockOrderNotification.create({
                     order_id: stockOrder._id,
                     notification_id: userNotification._id,
                 })
 
-                await stockOrderNotfication.populate({ 
+                await stockOrderNotification.populate({ 
                     path: "stockOrder", 
                     populate: [
                         { path: "items.variant", populate: "product" },
@@ -266,10 +268,58 @@ class NotificationService {
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
-                        stockOrderNotfication
+                        stockOrderNotification
                     }
                 })
             }
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+    async sendStockOrderUpdate (stockOrder : StockOrderAttributes) {
+        try{
+            const distributor = await Distributor.findById(stockOrder.distributor_id);
+
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.STOCK_ORDERS_VIEW_ALL || p.action === PERMISSIONS.STOCK_ORDERS_UPDATE)
+            );
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor?.distributor_name} stock order has been ${stockOrder.status}`
+                })
+
+                const stockOrderNotification = await StockOrderNotification.create({
+                    order_id: stockOrder._id,
+                    notification_id: userNotification._id,
+                })
+
+                await stockOrderNotification.populate({ 
+                    path: "stockOrder", 
+                    populate: [
+                        { path: "items.variant", populate: "product" },
+                        { path: 'distributor', select: '-password' }
+                    ]
+                })
+
+                await deleteCache(`user-notifications:${user._id}:*`)
+                await deleteCache('stock-orders:*');
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        stockOrderNotification
+                    }
+                })
+            }
+
         }catch(err){
             console.log(err);
         }

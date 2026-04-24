@@ -66,7 +66,6 @@ export default class StockTransferService {
                     }
                 ]
             })
-
             await emitDistributorNotification(notification, receiver_id)
             await deleteCache("stock-transfer-logs:*")
             return stockTransfer

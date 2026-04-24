@@ -283,25 +283,29 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
     }
 };
 
-export const updateStockTransferLogStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updateStockTransferLogStatus = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
     const session = await mongoose.startSession();
 
     try {
         session.startTransaction();
 
         const stockTransfer = await StockTransfer.findById(req.params.id)
-            .session(session)
-            .populate([
-                { path: "sender" },
-                { path: "receiver" },
-                {
-                    path: "items",
-                    populate: {
-                        path: "variant",
-                        populate: "product",
-                    },
-                },
-            ]);
+        .session(session)
+        .populate([
+            { path: "sender" },
+            { path: "receiver" },
+            {
+            path: "items",
+            populate: {
+                path: "variant",
+                populate: "product",
+            },
+            },
+        ]);
 
         if (!stockTransfer) {
             await session.abortTransaction();
@@ -313,69 +317,114 @@ export const updateStockTransferLogStatus = async (req: AuthRequest, res: Respon
             });
         }
 
-        if(req.body.status === 'cancelled' || req.body.status === 'rejected' || req.body.status === 'failed'){
-            for(const item of stockTransfer.items){
-                const variant = await Variant.findById(item.variant_id);
+        const newStatus = req.body.status;
+        const currentStatus = stockTransfer.status;
 
-                if(!variant) continue;
+        if (currentStatus === newStatus) {
+            await session.abortTransaction();
+            session.endSession();
 
-                variant.stock += item.quantity;
-                await variant.save({ session })
-            }
+            return res.status(400).json({
+                success: false,
+                message: `The stock transfer status is already "${newStatus}".`,
+            });
         }
 
-        stockTransfer.status = req.body.status;
+        // Allowed status transitions (cannot go backwards)
+        const allowedTransitions: Record<string, string[]> = {
+            pending: ["cancelled"],
+            approved: ["processing", "cancelled"],
+            processing: ["delivered", "cancelled"],
+            delivered: ["failed"],
+            received: [],
+            cancelled: [],
+            rejected: [],
+            failed: [],
+        };
+
+        const allowedNextStatuses = allowedTransitions[currentStatus] || [];
+
+        if (!allowedNextStatuses.includes(newStatus)) {
+        await session.abortTransaction();
+        session.endSession();
+
+        return res.status(400).json({
+            success: false,
+            message: `Cannot update stock transfer status from ${currentStatus} to ${newStatus}. Please reload the page`,
+        });
+        }
+
+        const oldStatus = stockTransfer.status;
+
+        // Return stock to main inventory if cancelled/rejected/failed
+        if (newStatus === "cancelled" || newStatus === "rejected" || newStatus === "failed") {
+        for (const item of stockTransfer.items) {
+            const variant = await Variant.findById(item.variant_id).session(session);
+
+            if (!variant) continue;
+
+            variant.stock += item.quantity;
+            await variant.save({ session });
+        }
+        }
+
+        stockTransfer.status = newStatus;
         await stockTransfer.save({ session });
 
-        const message = `Stock distribution status has been updated to ${req.body.status}.`;
+        const message = `Stock distribution status has been updated to ${newStatus}.`;
 
         const distributorNotification = await DistributorNotification.create(
-            [
-                {
-                    distributor_id: stockTransfer.receiver_id,
-                    transfer_id: stockTransfer._id,
-                    message,
-                },
-            ],
-            { session }
+        [
+            {
+            distributor_id: stockTransfer.receiver_id,
+            transfer_id: stockTransfer._id,
+            message,
+            },
+        ],
+        { session }
         );
 
         const notification = await distributorNotification[0].populate({
-            path: "stockTransfer",
-            populate: {
+        path: "stockTransfer",
+        populate: [
+            {
                 path: "items",
                 populate: {
                     path: "variant",
                     populate: "product",
                 },
             },
+            { path: 'sender', select: '-password'},
+            { path: 'receiver', select: '-password'},
+        ]
         });
 
         await session.commitTransaction();
         session.endSession();
-        
+
         // emit AFTER commit
         await emitDistributorNotification(notification, stockTransfer.receiver_id.toString());
+
         await deleteCache("stock-transfer-logs:*");
-        await deleteCache(`products:*`);
-        await deleteCache(`variants:*`);
-        await deleteCache(`distributor-stocks:*`);
-                
+        await deleteCache("products:*");
+        await deleteCache("variants:*");
+        await deleteCache("distributor-stocks:*");
+
         await AuditLogService.log({
             action: "STOCK_DISTRIBUTION_UPDATED",
-            description: `A stock distribution has been updated to ${stockTransfer.status}`,
+            description: `A stock distribution has been updated from ${oldStatus} to ${newStatus}`,
             ip_address: req.ip || "",
             role: req.user.role.name || "N/A",
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user._id,
-            old_values: null,
-            new_values: stockTransfer
+            old_values: { status: oldStatus },
+            new_values: { status: newStatus },
         });
 
         return res.status(200).json({
-            success: true,
-            message: `Status successfully marked as ${stockTransfer.status}`,
+        success: true,
+        message: `Status successfully marked as ${newStatus}`,
         });
     } catch (err) {
         await session.abortTransaction();

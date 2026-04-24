@@ -123,7 +123,11 @@ export const getStockOrderById = async (req: Request, res: Response, next: NextF
     }
 }
 
-export const updateStockOrderStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const updateStockOrderStatus = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -136,45 +140,72 @@ export const updateStockOrderStatus = async (req: AuthRequest, res: Response, ne
 
             return res.status(404).json({
                 success: false,
-                message: "Stock Order not found"
+                message: "Stock Order not found",
             });
         }
 
-        if (stockOrder.status === req.body.status) {
+        const newStatus = req.body.status;
+        const currentStatus = stockOrder.status;
+
+        if (currentStatus === newStatus) {
             await session.abortTransaction();
             session.endSession();
 
             return res.status(400).json({
                 success: false,
-                message: `The stock order status is already "${req.body.status}". Please refresh the page to see the latest updates.`
+                message: `The stock order status is already ${newStatus}. Please refresh the page to see the latest updates.`,
+            });
+        }
+
+        // Allowed status transitions (cannot go backwards)
+        const allowedTransitions: Record<string, string[]> = {
+            pending: ["approved", "rejected"],
+            approved: ["processing", "cancelled"],
+            processing: ["delivered", "failed"],
+            delivered: [],
+            received: [],
+            cancelled: [],
+            rejected: [],
+            failed: [],
+        };
+
+        const allowedNextStatuses = allowedTransitions[currentStatus] || [];
+
+        if (!allowedNextStatuses.includes(newStatus)) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: `Cannot update stock order status from ${currentStatus} to ${newStatus}. Please reload the page`,
             });
         }
 
         const oldStatus = stockOrder.status;
 
-        stockOrder.status = req.body.status;
+        stockOrder.status = newStatus;
         await stockOrder.save({ session });
 
         const distributorNotification = await DistributorNotification.create(
-            [
-                {
-                    distributor_id: stockOrder.distributor_id,
-                    stock_order_id: stockOrder._id,
-                    message: `Your stock order has been updated to ${req.body.status}.`,
-                },
-            ],
-            { session }
+        [
+            {
+            distributor_id: stockOrder.distributor_id,
+            stock_order_id: stockOrder._id,
+            message: `Your stock order has been updated to ${newStatus}.`,
+            },
+        ],
+        { session }
         );
 
         const notification = await distributorNotification[0].populate({
-            path: "stockOrder",
-            populate: [
-                {
-                    path: "items.variant",
-                    populate: "product",
-                },
-                { path: "distributor", select: '-password' },
-            ],
+        path: "stockOrder",
+        populate: [
+            {
+            path: "items.variant",
+            populate: "product",
+            },
+            { path: "distributor", select: "-password" },
+        ],
         });
 
         await session.commitTransaction();
@@ -187,27 +218,26 @@ export const updateStockOrderStatus = async (req: AuthRequest, res: Response, ne
 
         await AuditLogService.log({
             action: "STOCK_ORDER_UPDATED",
-            description: `Stock order has been updated from ${oldStatus} to ${req.body.status}.`,
+            description: `Stock order has been updated from ${oldStatus} to ${newStatus}.`,
             ip_address: req.ip || "",
             role: req?.user?.role?.name || "N/A",
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user?._id,
             old_values: {
-                status: oldStatus
+                status: oldStatus,
             },
             new_values: {
-                status: req.body.status
+                status: newStatus,
             },
         });
 
         await deleteCache("stock-orders:*");
 
         return res.status(200).json({
-            success: true,
-            message: `Stock order successfully marked as ${req.body.status}`
+        success: true,
+        message: `Stock order successfully marked as ${newStatus}`,
         });
-
     } catch (err) {
         await session.abortTransaction();
         session.endSession();
