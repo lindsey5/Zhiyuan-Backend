@@ -1,5 +1,5 @@
 # Zhiyuan Backend
-A backend service for managing users, roles, permissions, categories, products, orders, user reviews and audit logs. Includes full Swagger API documentation, Cloudinary Integration and ZOD validation.
+A backend service for managing users, roles, permissions, categories, products, orders and more. Includes full Swagger API documentation, Cloudinary Integration and ZOD validation.
 
 ## Technologies:
 - Node.js
