@@ -222,6 +222,8 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 
 export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFunction) => {
     try{
+        if(!req.body.payment_method) return res.status(400).json({ success: false, message: "Payment method is required" })
+
         const order = await Order.findById(req.params.id);
 
         if(!order){
@@ -239,6 +241,7 @@ export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFun
         }
 
         order.payment_status = 'paid'
+        order.payment_method = req.body.payment_method;
 
         if(order.delivery_type === 'pickup'){
             order.status = 'completed'
