@@ -26,7 +26,7 @@ class NotificationService {
         this.sendCancelReturnNotification = this.sendCancelReturnNotification.bind(this);
         this.sendStockTransferNotification = this.sendStockTransferNotification.bind(this);
         this.sendStockOrderNotification = this.sendStockOrderNotification.bind(this);
-        this.sendStockOrderUpdate = this.sendStockOrderUpdate.bind(this);
+        this.sendStockOrderCancel = this.sendStockOrderCancel.bind(this);
     }
 
     async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
@@ -277,7 +277,7 @@ class NotificationService {
         }
     }
 
-    async sendStockOrderUpdate (stockOrder : StockOrderAttributes) {
+    async sendStockOrderCancel (stockOrder : StockOrderAttributes) {
         try{
             const distributor = await Distributor.findById(stockOrder.distributor_id);
 
