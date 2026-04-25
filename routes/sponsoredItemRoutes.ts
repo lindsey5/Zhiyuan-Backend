@@ -10,7 +10,7 @@ router.get(
     '/', 
     createRateLimiter(5 * 1000, 100), 
     authenticate,
-    hasAnyPermission(PERMISSIONS.SPONSORED_PRODUCT_VIEW_ALL, PERMISSIONS.SPONSORED_PRODUCT_CREATE),
+    hasAnyPermission(PERMISSIONS.SPONSORED_PRODUCT_VIEW_ALL, PERMISSIONS.SPONSORED_PRODUCT_UPDATE),
     getSponsoredItems
 );
 

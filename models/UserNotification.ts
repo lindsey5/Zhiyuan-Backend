@@ -70,6 +70,13 @@ UserNotificationSchema.virtual("stockOrderNotification", {
     justOne: true,
 });
 
+UserNotificationSchema.virtual("sponsoredItemNotification", {
+    ref: "SponsoredItemNotification",
+    localField: "_id",
+    foreignField: "notification_id",
+    justOne: true,
+});
+
 UserNotificationSchema.set("toJSON", { virtuals: true });
 UserNotificationSchema.set("toObject", { virtuals: true });
 

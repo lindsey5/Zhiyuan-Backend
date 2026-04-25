@@ -13,6 +13,8 @@ import StockTransferNotification from '../models/StockTransferNotification';
 import { StockOrderAttributes } from "../models/StockOrder";
 import StockOrderNotification from "../models/StockOrderNotification";
 import Distributor from "../models/Distributor";
+import SponsoredItem, { SponsoredItemAttributes } from "../models/SponsoredItem";
+import SponsoredItemNotification from "../models/SponsoredItemNotification";
 
 
 class NotificationService {
@@ -27,6 +29,7 @@ class NotificationService {
         this.sendStockTransferNotification = this.sendStockTransferNotification.bind(this);
         this.sendStockOrderNotification = this.sendStockOrderNotification.bind(this);
         this.sendStockOrderCancel = this.sendStockOrderCancel.bind(this);
+        this.sendSponsoredItemNotification = this.sendSponsoredItemNotification.bind(this);
     }
 
     async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
@@ -320,6 +323,57 @@ class NotificationService {
                 })
             }
 
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+    async sendSponsoredItemNotification (sponsored_item : SponsoredItemAttributes) {
+        try{
+            const distributor = await Distributor.findById(sponsored_item.distributor_id);
+
+            if(!distributor) return;
+
+            const distributor_name = distributor.distributor_name;
+    
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.SPONSORED_PRODUCT_UPDATE|| p.action === PERMISSIONS.SPONSORED_PRODUCT_VIEW_ALL)
+            );
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor_name} wants to sponsored a product`
+                })
+
+                const sponsoredItemNotification = await SponsoredItemNotification.create({
+                    notification_id: userNotification._id,
+                    sponsored_id: sponsored_item._id
+                })
+
+                await sponsoredItemNotification.populate({ 
+                    path: "sponsored_item", 
+                    populate: [
+                        { path: "variant", populate: "product" },
+                        { path: 'distributor', select: '-password' }
+                    ]
+                })
+
+                await deleteCache(`user-notifications:${user._id}:*`)
+                await deleteCache('sponsored-items:*');
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        sponsoredItemNotification
+                    }
+                })
+            }
         }catch(err){
             console.log(err);
         }

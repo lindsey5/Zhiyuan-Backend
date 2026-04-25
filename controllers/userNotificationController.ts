@@ -89,6 +89,19 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                             { path: 'items.variant' }
                         ]
                     }
+                },
+                {
+                    path: 'sponsoredItemNotification',
+                    populate: {
+                        path: 'sponsored-item',
+                        populate: [
+                            {
+                                path: 'variant',
+                                populate: 'product'
+                            },
+                            { path: 'distributor', select: '-password' }
+                        ]
+                    }
                 }
             ])
             .sort({ createdAt: -1 })
