@@ -44,6 +44,8 @@ const PERMISSIONS = {
     // Distributor Sales
     DISTRIBUTOR_SALES_VIEW: 'distributor-sales:view',
 
+    DISTRIBUTOR_COMMISSIONS_VIEW: 'distributor-commissions:view',
+
     DISTRIBUTOR_RETURN_REQUEST_VIEW: 'distributor-return:view',
     DISTRIBUTOR_RETURN_REQUEST_UPDATE: 'distributor-return:update',
 

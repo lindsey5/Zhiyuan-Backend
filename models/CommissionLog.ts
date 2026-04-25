@@ -40,6 +40,22 @@ const CommissionLogSchema: Schema<CommissionLogAttributes> = new Schema(
 
 CommissionLogSchema.index({ sale_id: 1, receiver_id: 1, commission_amount: 1, createdAt: -1 })
 
+CommissionLogSchema.virtual("sales", {
+    ref: "DistributorSale",          
+    localField: "sale_ids", 
+    foreignField: "_id",   
+});
+
+CommissionLogSchema.virtual("receiver", {
+    ref: "Distributor",
+    localField: "receiver_id",
+    foreignField: "_id",
+    justOne: true
+})
+
+CommissionLogSchema.set("toObject", { virtuals: true });
+CommissionLogSchema.set("toJSON", { virtuals: true });
+
 const CommissionLog: Model<CommissionLogAttributes> = mongoose.model(
     "CommissionLog",
     CommissionLogSchema
