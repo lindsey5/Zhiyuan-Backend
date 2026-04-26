@@ -93,7 +93,7 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                 {
                     path: 'sponsoredItemNotification',
                     populate: {
-                        path: 'sponsored-item',
+                        path: 'sponsored_item',
                         populate: [
                             {
                                 path: 'variant',
