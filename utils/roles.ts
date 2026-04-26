@@ -64,6 +64,23 @@ const ROLES = {
             'stock-orders:view:all',
             'stock-orders:update',
         ]
+    },
+    "Inventory": {
+        name: 'Inventory',
+        description: 'Manages Inventory',
+        permissions: [
+            // Product management
+            'product:read:all',
+            'product:create',
+            'product:update',
+            'product:delete',
+
+            //Category management
+            'category:read:all',
+            'category:create',
+            'category:update',
+            'category:delete',
+        ]
     }
 }
 
