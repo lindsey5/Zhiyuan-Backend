@@ -218,7 +218,7 @@ export const updateStockOrderStatus = async (
 
         await AuditLogService.log({
             action: "STOCK_ORDER_UPDATED",
-            description: `Stock order has been updated from ${oldStatus} to ${newStatus}.`,
+            description: `Stock order ${stockOrder.stock_order_id} has been updated from ${oldStatus} to ${newStatus}.`,
             ip_address: req.ip || "",
             role: req?.user?.role?.name || "N/A",
             severity: "MEDIUM",

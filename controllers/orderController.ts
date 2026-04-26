@@ -6,6 +6,8 @@ import Variant from "../models/Variant";
 import OrderItem from "../models/OrderItem";
 import mongoose from "mongoose";
 import OrderService from "../services/OrderService";
+import AuditLogService from "../services/AuditLogService";
+import { AuthRequest } from "../types/auth";
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -187,7 +189,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     }
 };
 
-export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFunction) => {
+export const orderMarkAsPaid = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
 
     try {
@@ -233,6 +235,8 @@ export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFun
             });
         }
 
+        const oldOrder = order;
+
         if (order.payment_status === "paid") {
             await session.abortTransaction();
             session.endSession();
@@ -269,6 +273,17 @@ export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFun
         if (order.status === "completed") {
             await OrderService.decreaseStockForOrder(order.order_items, session);
         }
+        await AuditLogService.log({
+            action: "ORDER_PAID",
+            description: `Order ${order.order_id} has been marked as paid.`,
+            ip_address: req.ip || "",
+            role: req?.user?.role?.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user?._id,
+            old_values: oldOrder,
+            new_values: order,
+        });
 
         await order.save({ session });
 
@@ -287,7 +302,7 @@ export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFun
     }
 };
 
-export const updateOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const updateOrderStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
 
     try {
@@ -360,6 +375,22 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
 
         await session.commitTransaction();
         session.endSession();
+
+        await AuditLogService.log({
+            action: "ORDER_UPDATED",
+            description: `Order ${order.order_id} has been updated from ${currentStatus} to ${newStatus}.`,
+            ip_address: req.ip || "",
+            role: req?.user?.role?.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user?._id,
+            old_values: {
+                status: currentStatus,
+            },
+            new_values: {
+                status: newStatus,
+            },
+        });
 
         return res.status(200).json({
             success: true,
