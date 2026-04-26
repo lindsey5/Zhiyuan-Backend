@@ -36,6 +36,7 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
 
         if(search){
             filter.$or = [
+                { sponsored_id: { $regex: search, $options: "i" } },
                 { "distributor.distributor_name" : { $regex: search, $options: "i" } },
                 { "distributor.distributor_id" : { $regex: search, $options: "i" } },
                 { "distributor.email" : { $regex: search, $options: "i" } },
