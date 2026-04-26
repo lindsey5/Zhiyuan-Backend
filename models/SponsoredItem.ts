@@ -5,7 +5,7 @@ export interface SponsoredItemAttributes extends Document {
     distributor_id: mongoose.Types.ObjectId;
     variant_id: mongoose.Types.ObjectId;
     quantity: number;
-    status: 'pending' | 'approved' | 'rejected' | 'expired',
+    status: 'pending' | 'approved' | 'completed' | 'cancelled' | 'rejected' | 'expired',
 }
 
 const SponsoredItemSchema: Schema<SponsoredItemAttributes> = new Schema(
@@ -33,7 +33,7 @@ const SponsoredItemSchema: Schema<SponsoredItemAttributes> = new Schema(
 
         status: {
             type: String,
-            enum: ['pending', 'approved', 'rejected', 'expired'],
+            enum: ['pending', 'approved', 'completed', 'cancelled', 'rejected', 'expired'],
             default: 'pending',
             required: true
         }

@@ -36,7 +36,10 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
 
         if(search){
             filter.$or = [
-                { "product.product_name" : { $regex: search, $options: "i" } },
+                { "distributor.distributor_name" : { $regex: search, $options: "i" } },
+                { "distributor.distributor_id" : { $regex: search, $options: "i" } },
+                { "distributor.email" : { $regex: search, $options: "i" } },
+                { "variant.product.product_name" : { $regex: search, $options: "i" } },
                 { "variant.variant_name" : { $regex: search, $options: "i" } },
                 { "variant.sku" : { $regex: search, $options: "i" } },
             ]
@@ -48,6 +51,15 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
 
         const [sponsoredItems, total] = await Promise.all([
             SponsoredItem.aggregate([
+                {
+                    $lookup: {
+                        from: "distributors",
+                        localField: "distributor_id",
+                        foreignField: "_id",
+                        as: "distributor"
+                    }
+                },
+                { $unwind: "$distributor" },
                 {
                     $lookup: {
                         from: "variants",

@@ -367,6 +367,7 @@ class NotificationService {
 
                 await deleteCache(`user-notifications:${user._id}:*`)
                 await deleteCache('sponsored-items:*');
+                
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
