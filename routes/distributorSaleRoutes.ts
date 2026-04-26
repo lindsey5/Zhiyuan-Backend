@@ -31,7 +31,7 @@ router.get(
   "/",
   createRateLimiter(5 * 60 * 1000, 100),
   authenticate,
-  authorizePermission(PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
+  authorizePermission(PERMISSIONS.DISTRIBUTOR_SALES_VIEW_ALL),
   getAllDistributorSales
 );
 
@@ -249,7 +249,7 @@ router.get(
     '/download',
     createRateLimiter(5 * 60 * 1000, 5),
     authenticate,
-    authorizePermission(PERMISSIONS.DISTRIBUTOR_SALES_VIEW),
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_SALES_VIEW_ALL),
     downloadAllDistributorSales
 )
 

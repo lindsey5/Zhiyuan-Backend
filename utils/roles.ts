@@ -39,6 +39,9 @@ const ROLES = {
 
             // Distributor Sales
             'distributor-sales:view',
+            'distributor-sales:view:all',
+
+            // Distributor Commissions
             'distributor-commissions:view',
 
             // Distributor Return Request
