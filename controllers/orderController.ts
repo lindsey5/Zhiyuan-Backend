@@ -5,11 +5,7 @@ import { setEndDate, setStartDate } from "../utils/utils";
 import Variant from "../models/Variant";
 import OrderItem from "../models/OrderItem";
 import mongoose from "mongoose";
-import User from "../models/User";
-import UserNotification from "../models/UserNotification";
-import PERMISSIONS from "../utils/permissions";
-import OrderNotification from "../models/OrderNotification";
-import { emitOrderNotification } from "../sockets/orderSocket";
+import OrderService from "../services/OrderService";
 
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
@@ -78,59 +74,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
             .session(session);
 
         // must use session
-        const users = await User.find({ status: "active" })
-            .populate({
-                path: "role",
-                populate: { path: "permissions" },
-            })
-            .session(session);
-
-        const authorizedUsers = users.filter((user) =>
-            user.role?.permissions?.some(
-                (p) =>
-                    p.action === PERMISSIONS.ORDER_READ_ALL ||
-                    p.action === PERMISSIONS.ORDER_UPDATE
-            )
-        );
-
-        for (const user of authorizedUsers) {
-            const userNotification = await UserNotification.create(
-                [
-                    {
-                        user_id: user._id,
-                        message: `New order created: ${order[0].order_id}`,
-                    },
-                ],
-                { session }
-            );
-
-            const orderNotification = await OrderNotification.create(
-                [
-                    {
-                        order_id: order[0]._id,
-                        notification_id: userNotification[0]._id,
-                    },
-                ],
-                { session }
-            );
-
-            await orderNotification[0].populate({
-                path: "order",
-                populate: {
-                    path: "order_items",
-                    populate: {
-                        path: "variant",
-                        populate: "product",
-                    },
-                },
-            });
-
-            await emitOrderNotification(
-                userNotification[0],
-                orderNotification[0],
-                user.id
-            );
-        }
+        OrderService.sendOrderNotification({ order: order[0] });
 
         await session.commitTransaction();
         session.endSession();
@@ -149,6 +93,29 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         next(err);
     }
 };
+
+export const getOrderById = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const order = await Order.findById(req.params.id)
+        .populate({
+            path: "order_items",
+            populate: {
+                path: 'variant',
+                populate: 'product'
+            }
+        });
+
+        if(!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        res.status(200).json({
+            success: true,
+            order
+        })
+
+    }catch(err){
+        next(err);
+    }
+}
 
 export const getOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -221,65 +188,188 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 };
 
 export const orderMarkAsPaid = async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        if(!req.body.payment_method) return res.status(400).json({ success: false, message: "Payment method is required" })
+    const session = await mongoose.startSession();
 
-        const order = await Order.findById(req.params.id);
+    try {
+        session.startTransaction();
 
-        if(!order){
-            return res.status(404).json({
-                success: false,
-                message: "Order not found"
-            })
-        }
+        if (!req.body.payment_method) {
+            await session.abortTransaction();
+            session.endSession();
 
-        if(order.payment_status === 'paid') {
             return res.status(400).json({
                 success: false,
-                message: "This order is already paid"
-            })
+                message: "Payment method is required",
+            });
         }
 
-        order.payment_status = 'paid'
+        if (!req.body.payment) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: "Payment is required",
+            });
+        }
+
+        const order = await Order.findById(req.params.id)
+            .populate({
+                path: "order_items",
+                populate: {
+                    path: "variant",
+                    populate: "product",
+                },
+            })
+            .session(session);
+
+        if (!order) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(404).json({
+                success: false,
+                message: "Order not found",
+            });
+        }
+
+        if (order.payment_status === "paid") {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: "This order is already paid",
+            });
+        }
+
+        const payment = Number(req.body.payment);
+        const change = payment - order.total_amount;
+
+        if (payment < order.total_amount) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: "Payment is insufficient",
+            });
+        }
+
+        order.payment = payment;
+        order.change = change;
+        order.payment_status = "paid";
         order.payment_method = req.body.payment_method;
 
-        if(order.delivery_type === 'pickup'){
-            order.status = 'completed'
+        if (order.delivery_type === "pickup") {
+            order.status = "completed";
         }
 
-        await order.save();
+        // update stock if completed
+        if (order.status === "completed") {
+            await OrderService.decreaseStockForOrder(order.order_items, session);
+        }
+
+        await order.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
 
         res.status(200).json({
             success: true,
             message: "Order successfully marked as paid",
-        })
-
-    }catch(err){
+            order,
+        });
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
         next(err);
     }
-}
+};
 
-export const updateOrderStatus= async (req: Request, res: Response, next: NextFunction) => {
-    try{
-        const order = await Order.findById(req.params.id);
+export const updateOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+    const session = await mongoose.startSession();
 
-        if(!order){
+    try {
+        session.startTransaction();
+
+        const order = await Order.findById(req.params.id) 
+            .populate({
+                path: "order_items",
+                populate: {
+                    path: "variant",
+                    populate: "product",
+                },
+            })
+            .session(session);
+
+        if (!order) {
+            await session.abortTransaction();
+            session.endSession();
+
             return res.status(404).json({
                 success: false,
-                message: "Order not found"
-            })
+                message: "Order not found",
+            });
         }
 
-        order.status = req.body.status;
+        if (order.payment_status !== "paid") {
+            await session.abortTransaction();
+            session.endSession();
 
-        await order.save();
+            return res.status(400).json({
+                success: false,
+                message: "Order should be paid first",
+            });
+        }
 
-        res.status(200).json({
+        const allowedTransitions: Record<string, string[]> = {
+            pending: ["processing", "cancelled"],
+            processing: ["delivered", "cancelled"],
+            delivered: ["completed", "refunded", "failed"],
+            completed: ["refunded"],
+            cancelled: [],
+            refunded: [],
+            expired: [],
+            failed: [],
+        };
+
+        const currentStatus = order.status;
+        const newStatus = req.body.status;
+
+        const allowedNextStatuses = allowedTransitions[currentStatus] || [];
+
+        if (!allowedNextStatuses.includes(newStatus)) {
+            await session.abortTransaction();
+            session.endSession();
+
+            return res.status(400).json({
+                success: false,
+                message: `Cannot update order status from ${currentStatus} to ${newStatus}. Please reload the page`,
+            });
+        }
+
+        order.status = newStatus;
+
+        // stock deduction only when completed
+        if (order.status === "completed") {
+            await OrderService.decreaseStockForOrder(order.order_items, session);
+        }
+
+        await order.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(200).json({
             success: true,
-            message: `Order ${order.order_id} successfully marked as ${req.body.status}`
-        })
+            message: `Order ${order.order_id} successfully marked as ${newStatus}`,
+            order
+        });
 
-    }catch(err){
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
         next(err);
     }
-}
+};

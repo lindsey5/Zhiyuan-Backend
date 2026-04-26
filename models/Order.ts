@@ -16,7 +16,7 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
 
         status: {
             type: String,
-            enum: ["pending", "processing", "delivered", "completed", "cancelled", "refunded", "expired"],
+            enum: ["pending", "processing", "delivered", "completed", "cancelled", "refunded", "expired", "failed"],
             default: "pending",
             required: true,
         },
@@ -52,7 +52,17 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
 
         payment_method: {
             type: String,
-            enum: ["COD", "GCash", "Card", "Paymaya"],
+            enum: ["cash", "gcash", "card", "paymaya"],
+        },
+         
+        payment: {
+            type: Number,
+            required: false,
+        },
+        
+        change: {
+            type: Number,
+            required: false
         },
 
         payment_status: {
