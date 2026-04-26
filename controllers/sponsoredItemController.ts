@@ -118,3 +118,13 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
         next(err);
     }
 }
+
+export const updateSponsoredItemStatus = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        
+
+
+    }catch(err){
+        next(err);
+    }
+}

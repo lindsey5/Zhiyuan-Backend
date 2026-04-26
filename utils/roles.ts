@@ -22,15 +22,9 @@ const ROLES = {
         permissions: [
             // Product management
             'product:read:all',
-            'product:create',
-            'product:update',
-            'product:delete',
 
             // Category management
             'category:read:all',
-            'category:create',
-            'category:update',
-            'category:delete',
 
             // Distributor Management
             'distributor:read:all',
@@ -61,7 +55,7 @@ const ROLES = {
             // Transfer Logs
             'tranfer-logs:view:all',
             'transfer-logs:update',
-            'distributor-stock:transfer',
+            'transfer-logs:create',
 
             // Stock Orders
             'stock-orders:view:all',
