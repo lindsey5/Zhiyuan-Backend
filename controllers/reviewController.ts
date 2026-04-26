@@ -1,10 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 import Review from "../models/Review";
-import redisClient from "../config/redis";
+import redisClient, { deleteCache } from "../config/redis";
 
 export const createReview = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const review = await Review.create(req.body);
+
+        await deleteCache('reviews:*')
 
         res.status(201).json({
             success: true,

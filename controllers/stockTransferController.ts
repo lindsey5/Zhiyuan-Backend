@@ -121,7 +121,7 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
         const search = req.query.search as string;
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
-        const status = req.query.status || "";
+        const status = req.query.status ? String(req.query.status) : "";
 
         const cacheKey = `stock-transfer-logs:${search}:${page}:${limit}:${startDate}:${endDate}:${status}`;
 
@@ -134,132 +134,68 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
             });
         }
 
-        const pipeline: any[] = [
-            // Lookup receiver
-            {
-                $lookup: {
-                    from: "distributors",
-                    localField: "receiver_id",
-                    foreignField: "_id",
-                    as: "receiver",
-                },
-            },
-            { $unwind: "$receiver" },
+        const { stockTransferLogs, total } = await StockTransferService.getTransferLogs({
+            search,
+            limit, 
+            skip,
+            status,
+            startDate,
+            endDate
+        });
 
-            // Lookup sender
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "sender_id",
-                    foreignField: "_id",
-                    as: "sender",
-                },
-            },
-            { $unwind: "$sender" },
-
-            // Lookup items
-            {
-                $lookup: {
-                    from: "stocktransferitems",
-                    localField: "_id",
-                    foreignField: "transfer_id",
-                    as: "items",
-                },
-            },
-            { $unwind: "$items" },
-
-            // Lookup variant
-            {
-                $lookup: {
-                    from: "variants",
-                    localField: "items.variant_id",
-                    foreignField: "_id",
-                    as: "variant",
-                },
-            },
-            { $unwind: "$variant" },
-
-            // Lookup product (inside variant)
-            {
-                $lookup: {
-                    from: "products",
-                    localField: "variant.product_id",
-                    foreignField: "_id",
-                    as: "product",
-                },
-            },
-            { $unwind: "$product" },
-
-            // Attach variant + product into items
-            {
-                $addFields: {
-                    "items.variant": {
-                        $mergeObjects: ["$variant", { product: "$product" }],
-                    },
-                },
-            },
-
-            // Remove temporary fields
-            {
-                $project: {
-                    variant: 0,
-                    product: 0,
-                },
-            },
-
-            // Group items back into array
-            {
-                $group: {
-                    _id: "$_id",
-                    transfer_no: { $first: "$transfer_no" },
-                    receiver: { $first: "$receiver" },
-                    sender: { $first: "$sender" },
-                    createdAt: { $first: "$createdAt" },
-                    updatedAt: { $first: "$updatedAt" },
-                    status: { $first: '$status' },
-                    items: { $push: "$items" },
-                },
-            },
-        ];
-
-        // Build search & date filter
-        const match: any = {};
-        if (search) {
-            match.$or = [
-                { transfer_no: { $regex: search, $options: "i" } },
-                { "receiver.distributor_name": { $regex: search, $options: "i" } },
-                { "receiver.email": { $regex: search, $options: "i" } },
-                { "sender.firstname": { $regex: search, $options: "i" } },
-                { "sender.lastname": { $regex: search, $options: "i" } },
-                { "sender.email": { $regex: search, $options: "i" } },
-            ];
+        const responseData = {
+            stockTransferLogs,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            total,
         }
 
-        if(status){
-            match.status = status;
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        })
+
+        res.status(200).json({
+            success: true,
+            ...responseData
+        })
+        
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getMyOwnTransferLogs = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const search = req.query.search as string;
+        const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
+        const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
+        const status = req.query.status ? String(req.query.status) : "";
+
+        const cacheKey = `stock-transfer-logs:${req.user._id.toString()}:${search}:${page}:${limit}:${startDate}:${endDate}:${status}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
         }
 
-        if (startDate || endDate) {
-            match.createdAt = {};
-            if (startDate) match.createdAt.$gte = startDate;
-            if (endDate) match.createdAt.$lte = endDate;
-        }
-
-        if (Object.keys(match).length > 0) {
-            pipeline.push({ $match: match });
-        }
-
-        // Count total documents
-        const countPipeline = [...pipeline, { $count: "total" }];
-        const countResult = await StockTransfer.aggregate(countPipeline);
-        const total = countResult[0]?.total || 0;
-
-        // Sort, skip, limit for pagination
-        pipeline.push({ $sort: { createdAt: -1 } });
-        pipeline.push({ $skip: skip });
-        pipeline.push({ $limit: limit });
-
-        const stockTransferLogs = await StockTransfer.aggregate(pipeline);
+        const { stockTransferLogs, total } = await StockTransferService.getTransferLogs({
+            search,
+            limit, 
+            skip,
+            startDate,
+            endDate,
+            status,
+            getOwn: true,
+            myId: req.user._id
+        });
 
         const responseData = {
             stockTransferLogs,
@@ -284,9 +220,9 @@ export const getStockTransferLogs = async (req: Request, res: Response, next: Ne
 };
 
 export const updateStockTransferLogStatus = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
 ) => {
     const session = await mongoose.startSession();
 
@@ -315,6 +251,13 @@ export const updateStockTransferLogStatus = async (
                 success: false,
                 message: "Stock transfer not found",
             });
+        }
+
+        if(stockTransfer.sender_id?.toString() === req.user._id){
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized"
+            })
         }
 
         const newStatus = req.body.status;

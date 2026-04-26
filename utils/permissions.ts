@@ -58,6 +58,7 @@ const PERMISSIONS = {
 
     // Transfer Logs
     STOCK_DISTRIBUTION_HISTORY_VIEW_ALL: 'tranfer-logs:view:all',
+    STOCK_DISTRIBUTION_HISTORY_VIEW_OWN: 'tranfer-logs:view:own',
     STOCK_DISTRIBUTION_HISTORY_UPDATE: 'transfer-logs:update',
     STOCK_DISTRIBUTION_CREATE: 'transfer-logs:create',
 
