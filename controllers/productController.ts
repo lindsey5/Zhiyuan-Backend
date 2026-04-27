@@ -7,6 +7,7 @@ import Category from "../models/Category";
 import Product from "../models/Product";
 import mongoose from "mongoose";
 import redisClient, { deleteCache } from "../config/redis";
+import OrderItem from "../models/OrderItem";
 
 export const createProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const uploadedPublicIds: string[] = [];
@@ -500,3 +501,84 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
         next(err);
     }
 }
+
+export const getMostSellingProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const mostSellingProducts = await OrderItem.aggregate([
+            // 1. Join Orders
+            {
+            $lookup: {
+                from: "orders",
+                localField: "order_id",
+                foreignField: "_id",
+                as: "order",
+            },
+            },
+            { $unwind: "$order" },
+
+            // 2. Only completed orders
+            {
+            $match: {
+                "order.status": "completed",
+            },
+            },
+
+            // 3. Group by variant
+            {
+            $group: {
+                _id: "$variant_id",
+                totalSold: { $sum: "$quantity" },
+                totalRevenue: { $sum: "$amount" },
+            },
+            },
+
+            // 4. Sort best selling
+            {
+            $sort: { totalSold: -1 },
+            },
+
+            // 5. Limit top results
+            {
+            $limit: 10,
+            },
+
+            // 6. Populate Variant
+            {
+            $lookup: {
+                from: "variants",
+                localField: "_id",
+                foreignField: "_id",
+                as: "variant",
+            },
+            },
+            { $unwind: "$variant" },
+
+            // 7. Populate Product inside Variant
+            {
+            $lookup: {
+                from: "products",
+                localField: "variant.product_id",
+                foreignField: "_id",
+                as: "variant.product",
+            },
+            },
+
+            // 8. Convert product array → object
+            {
+            $addFields: {
+                "variant.product": {
+                $arrayElemAt: ["$variant.product", 0],
+                },
+            },
+            },
+        ]);
+
+
+        res.status(200).json({
+            success: true,
+            mostSellingProducts
+        })
+    }catch(err){
+        next(err);
+    }
+};
