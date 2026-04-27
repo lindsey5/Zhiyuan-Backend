@@ -5,7 +5,7 @@ import SaleNotification from "../models/SaleNotification";
 import User from "../models/User";
 import UserNotification from "../models/UserNotification";
 import PERMISSIONS from "../utils/permissions";
-import ReturnRequest, { ReturnRequestAttributes } from "../models/ReturnRequest";
+import { ReturnRequestAttributes } from "../models/ReturnRequest";
 import ReturnNotification from "../models/ReturnNotification";
 import '../models/ReturnRequest';
 import { StockTransferAttributes } from "../models/StockTransfer";
@@ -349,7 +349,7 @@ class NotificationService {
             for(const user of authorizedUsers){
                 const userNotification = await UserNotification.create({
                     user_id: user._id,
-                    message: `${distributor_name} wants to sponsored a product`
+                    message: `${distributor_name} wants to sponsor a product`
                 })
 
                 const sponsoredItemNotification = await SponsoredItemNotification.create({
@@ -367,7 +367,7 @@ class NotificationService {
 
                 await deleteCache(`user-notifications:${user._id}:*`)
                 await deleteCache('sponsored-items:*');
-                
+
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
