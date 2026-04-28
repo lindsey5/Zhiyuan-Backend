@@ -3,6 +3,10 @@ import { Response } from "express";
 import SponsoredItem from "../models/SponsoredItem";
 import { setEndDate, setStartDate } from "../utils/utils";
 import redisClient from "../config/redis";
+import DistributorNotification from "../models/DistributorNotification";
+import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import mongoose from "mongoose";
+import { success } from "zod";
 
 export const getSponsoredItems = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -119,12 +123,125 @@ export const getSponsoredItems = async (req: Request, res: Response, next: NextF
     }
 }
 
-export const updateSponsoredItemStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const getSponsoredItemById = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        
+        const sponsoredItem = await SponsoredItem.findById(req.params.id)
+        .populate([
+            {
+                path: "variant",
+                populate: "product",
+            },
+            { path: "distributor", select: "-password" },
+        ]);
 
+        if(!sponsoredItem){
+            return res.status(404).json({
+                success: false,
+                message: "Sponsored Item not found",
+            })
+        }
+
+        res.status(200).json({
+            success: true,
+            sponsoredItem
+        })
 
     }catch(err){
         next(err);
     }
 }
+
+export const updateSponsoredItemStatus = async (req: Request, res: Response, next: NextFunction) => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const newStatus = req.body.status;
+
+        const sponsoredItem = await SponsoredItem.findById(req.params.id)
+        .populate([
+            {
+                path: "variant",
+                populate: "product",
+            },
+            { path: "distributor", select: "-password" },
+        ])
+        .session(session);
+
+        if (!sponsoredItem) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({
+                success: false,
+                message: "Sponsored Item not found",
+            });
+        }
+
+        const currentStatus = sponsoredItem.status;
+
+        const allowedTransitions: Record<string, string[]> = {
+            pending: ["approved", "rejected"],
+            approved: ["cancelled"],
+            completed: [],
+            cancelled: [],
+            rejected: [],
+            expired: [],
+        };
+
+        const allowedNextStatuses = allowedTransitions[currentStatus] || [];
+
+        if (!allowedNextStatuses.includes(newStatus)) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({
+                success: false,
+                message: `Cannot change status from ${currentStatus} to ${newStatus}. Please reload the page`,
+            });
+        }
+
+        sponsoredItem.status = newStatus;
+        await sponsoredItem.save({ session });
+
+        const distributorNotification = await DistributorNotification.create(
+        [
+            {
+                distributor_id: sponsoredItem.distributor_id,
+                sponsored_id: sponsoredItem._id,
+                message: `Your sponsored product request has been ${newStatus}.`,
+            },
+        ],
+        { session }
+        );
+
+        const notification = await distributorNotification[0].populate({
+            path: "sponsoredItem",
+            populate: [
+                {
+                path: "variant",
+                populate: "product",
+                },
+                { path: "distributor", select: "-password" },
+            ],
+        });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        await emitDistributorNotification(
+            notification,
+            sponsoredItem.distributor_id.toString()
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: `Sponsored Item successfully marked as ${newStatus}`,
+            sponsoredItem
+        });
+
+    } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        next(err);
+    }
+};

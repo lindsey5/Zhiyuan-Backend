@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document, Model, mongo } from "mongoose";
 import { StockTransferAttributes } from "./StockTransfer";
 
 export interface DistributorNotificationAttributes extends Document {
@@ -7,6 +7,7 @@ export interface DistributorNotificationAttributes extends Document {
     return_id?: mongoose.Types.ObjectId;
     stock_order_id?: mongoose.Types.ObjectId;
     sale_ids?: mongoose.Types.ObjectId[];
+    sponsored_id?: mongoose.Types.ObjectId;
     message: string;
     stockTransfer: StockTransferAttributes;
     status: 'read' | 'unread'
@@ -38,6 +39,11 @@ const DistributorNotificationSchema: Schema<DistributorNotificationAttributes> =
         stock_order_id: {
             type: Schema.Types.ObjectId,
             ref: 'StockOrder'
+        },
+
+        sponsored_id: {
+            type: Schema.Types.ObjectId,
+            ref: 'SponsoredItem',
         },
 
         message: {
@@ -84,6 +90,12 @@ DistributorNotificationSchema.virtual("stockOrder", {
     justOne: true    
 });
 
+DistributorNotificationSchema.virtual("sponsoredItem", {
+    ref: "SponsoredItem",
+    localField: "sponsored_id",
+    foreignField: "_id",
+    justOne: true
+})
 
 DistributorNotificationSchema.set("toObject", { virtuals: true });
 DistributorNotificationSchema.set("toJSON", { virtuals: true });

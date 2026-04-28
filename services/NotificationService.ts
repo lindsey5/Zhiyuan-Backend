@@ -28,7 +28,7 @@ class NotificationService {
         this.sendCancelReturnNotification = this.sendCancelReturnNotification.bind(this);
         this.sendStockTransferNotification = this.sendStockTransferNotification.bind(this);
         this.sendStockOrderNotification = this.sendStockOrderNotification.bind(this);
-        this.sendStockOrderCancel = this.sendStockOrderCancel.bind(this);
+        this.sendStockOrderUpdate = this.sendStockOrderUpdate.bind(this);
         this.sendSponsoredItemNotification = this.sendSponsoredItemNotification.bind(this);
     }
 
@@ -280,7 +280,7 @@ class NotificationService {
         }
     }
 
-    async sendStockOrderCancel (stockOrder : StockOrderAttributes) {
+    async sendStockOrderUpdate (stockOrder : StockOrderAttributes) {
         try{
             const distributor = await Distributor.findById(stockOrder.distributor_id);
 
@@ -313,8 +313,7 @@ class NotificationService {
                     ]
                 })
 
-                await deleteCache(`user-notifications:${user._id}:*`)
-                await deleteCache('stock-orders:*');
+                await deleteCache(`user-notifications:${user._id}:*`);
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
@@ -323,6 +322,9 @@ class NotificationService {
                 })
             }
 
+            await deleteCache('stock-orders:*');
+            await deleteCache('products:*');
+            await deleteCache('variants:*');
         }catch(err){
             console.log(err);
         }
