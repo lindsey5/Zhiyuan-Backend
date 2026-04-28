@@ -76,6 +76,7 @@ class NotificationService {
                     }
                 ])
                 await deleteCache(`user-notifications:${user._id}:*`)
+
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
@@ -84,6 +85,10 @@ class NotificationService {
                 })
             }
 
+            await deleteCache(`commissions:${distributor_id}:*`);
+            await deleteCache(`distributor-sales:*`);
+            await deleteCache(`distributor-stocks:${distributor_id}:*`);
+            await deleteCache(`distributor-items-sold:${distributor_id}:*`);
         }catch(err){
             console.log(err);
         }
@@ -122,7 +127,7 @@ class NotificationService {
                         { path: 'distributor', select: '-password' }
                     ]
                 })
-                await deleteCache(`user-notifications:${user._id}:*`)
+                await deleteCache(`user-notifications:${user._id}:*`);
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
@@ -130,6 +135,8 @@ class NotificationService {
                     }
                 })
             }
+
+            await deleteCache('return-requests:*');
 
         }catch(err){
             console.log(err);
@@ -177,7 +184,7 @@ class NotificationService {
                 })
             }
 
-
+            await deleteCache('return-requests:*');
         }catch(err){
             console.log(err);
         }
@@ -220,7 +227,7 @@ class NotificationService {
             await deleteCache("stock-transfer-logs:*");
             await deleteCache(`products:*`);
             await deleteCache(`variants:*`);
-            await deleteCache(`distributor-stocks:*`);
+            await deleteCache(`distributor-stocks:${stockTransfer.receiver_id.toString()}:*`);
 
             this.namespace.to(user._id.toString()).emit("receive-notification", { 
                 userNotification: {
@@ -268,7 +275,6 @@ class NotificationService {
                 })
 
                 await deleteCache(`user-notifications:${user._id}:*`)
-                await deleteCache('stock-orders:*');
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
@@ -276,6 +282,8 @@ class NotificationService {
                     }
                 })
             }
+
+            await deleteCache('stock-orders:*');
         }catch(err){
             console.log(err);
         }
@@ -326,6 +334,7 @@ class NotificationService {
             await deleteCache('stock-orders:*');
             await deleteCache('products:*');
             await deleteCache('variants:*');
+            await deleteCache(`distributor-stocks:${stockOrder.distributor_id.toString()}:*`)
         }catch(err){
             console.log(err);
         }
@@ -369,7 +378,6 @@ class NotificationService {
                 })
 
                 await deleteCache(`user-notifications:${user._id}:*`)
-                await deleteCache('sponsored-items:*');
 
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
@@ -378,6 +386,8 @@ class NotificationService {
                     }
                 })
             }
+
+            await deleteCache('sponsored-items:*');
         }catch(err){
             console.log(err);
         }
@@ -421,8 +431,7 @@ class NotificationService {
                 })
 
                 await deleteCache(`user-notifications:${user._id}:*`)
-                await deleteCache('sponsored-items:*');
-
+                
                 this.namespace.to(user._id.toString()).emit("receive-notification", { 
                     userNotification: {
                         ...userNotification.toObject(),
@@ -430,6 +439,8 @@ class NotificationService {
                     }
                 })
             }
+            await deleteCache(`distributor-stocks:${sponsored_item.distributor_id.toString()}:*`)
+            await deleteCache('sponsored-items:*');
         }catch(err){
             console.log(err);
         }

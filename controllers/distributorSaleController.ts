@@ -617,7 +617,7 @@ export const getDistributorSalesToday = async (req: Request, res: Response, next
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-sales:today:${distributor?.id}`;
+        const cacheKey = `distributor-sales:${distributor?.id}:today`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -654,7 +654,7 @@ export const getDistributorSalesThisMonth = async (req: Request, res: Response, 
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-sales:this-month:${distributor?.id}`;
+        const cacheKey = `distributor-sales:${distributor?.id}:this-month`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -691,7 +691,7 @@ export const getDistributorSalesThisWeek = async (req: Request, res: Response, n
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-sales:this-week:${distributor?.id}`;
+        const cacheKey = `distributor-sales:${distributor?.id}:this-week`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -728,8 +728,7 @@ export const getDistributorSalesThisYear = async (req: Request, res: Response, n
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-sales:this-year:${distributor?.id}`;
-
+        const cacheKey = `distributor-sales:${distributor?.id}:this-year`;
         const cachedValue = await redisClient.get(cacheKey);
 
         if (cachedValue) {
@@ -764,7 +763,7 @@ export const getDistributorItemsSoldToday = async (req: Request, res: Response, 
         if(!distributor && req.params.id){
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
-        const cacheKey = `distributor-items-sold:today:${distributor?.id}`;
+        const cacheKey = `distributor-items-sold:${distributor?.id}:today`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -801,7 +800,7 @@ export const getDistributorItemsSoldThisWeek = async (req: Request, res: Respons
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-items-sold:this-week:${distributor?.id}`;
+       const cacheKey = `distributor-items-sold:${distributor?.id}:this-week`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -839,7 +838,7 @@ export const getDistributorItemsSoldThisMonth = async (req: Request, res: Respon
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-items-sold:this-month:${distributor?.id}`;
+        const cacheKey = `distributor-items-sold:${distributor?.id}:this-month`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -877,12 +876,29 @@ export const getDistributorItemsSoldThisYear = async (req: Request, res: Respons
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
+        const cacheKey = `distributor-items-sold:${distributor?.id}:this-year`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const totalQuantity = await DistributorSaleService.getDistributorItemsSold({
             distributorId: distributor?.id,
             period: 'thisYear'
         })
         
-        res.status(200).json({ success: true, totalQuantity })
+        const responseData = { totalQuantity };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({ success: true, ...responseData });
 
     }catch(err){
         next(err);
@@ -898,7 +914,7 @@ export const getDistributorMonthlySales = async (req: Request, res: Response, ne
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-sales:monthly:${distributor?.id}:${year}`;
+        const cacheKey = `distributor-sales:${distributor?.id}:${year}:monthly:`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -936,7 +952,7 @@ export const getDistributorItemsSoldPerMonth = async (req: Request, res: Respons
             return res.status(404).json({ success: false, message: 'Distributor not found.' });
         }
 
-        const cacheKey = `distributor-items-sold:monthly:${distributor?.id}:${year}`;
+        const cacheKey = `distributor-items-sold:${distributor?.id}:${year}:monthly`;
 
         const cachedValue = await redisClient.get(cacheKey);
 

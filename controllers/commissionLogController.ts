@@ -90,6 +90,17 @@ export const getCommissions = async (req: Request, res: Response, next: NextFunc
         const startDate = req.query.startDate ? setStartDate(req.query.startDate as string) : null;
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
 
+        const cacheKey = `commissions:${req.params.distributor_id}:${page}:${limit}:${startDate}:${endDate}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
         const distributor = await Distributor.findById(req.params.distributor_id);
 
         if(!distributor){
@@ -125,13 +136,22 @@ export const getCommissions = async (req: Request, res: Response, next: NextFunc
 
         const totalPages = Math.ceil(total / limit);
 
-        res.status(200).json({
-            success: true,
+         const responseData = {
             page,
             limit,
             totalPages,
             total,
             commissions
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+        
+
+        res.status(200).json({
+             success: true,
+            ...responseData,
         });
 
     }catch(err){
