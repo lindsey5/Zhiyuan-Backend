@@ -258,7 +258,7 @@ router.get(
   '/most-selling',
   createRateLimiter(5 * 60 * 1000, 100),
   authenticate,
-  authorizePermission(PERMISSIONS.DASHBOARD_VIEW),
+  hasAnyPermission(PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.DISTRIBUTOR_REPORTS_VIEW),
   getDistributorMostSellingProducts
 )
 
