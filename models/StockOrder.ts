@@ -7,7 +7,7 @@ export interface StockOrderAttributes extends Document {
     items: {
         variant_id: mongoose.Types.ObjectId;
         quantity: number;
-    };
+    }[];
     status: 'pending' | 'approved'| 'processing' | 'delivered' | 'received' | 'cancelled' | 'rejected' | 'failed';
 }
 

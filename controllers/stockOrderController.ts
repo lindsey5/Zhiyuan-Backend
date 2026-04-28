@@ -7,6 +7,7 @@ import { emitDistributorNotification } from "../sockets/distributorNotificationS
 import mongoose from "mongoose";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
+import Variant from "../models/Variant";
 
 export const getStockOrders = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -181,6 +182,31 @@ export const updateStockOrderStatus = async (
             });
         }
 
+        for(const item of stockOrder.items){
+            const variant = await Variant.findOne({
+                _id: item.variant_id,
+                status: 'active'
+            }).populate('product');
+
+            if(!variant) {
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(404).json({
+                    success: false,
+                    message: `Variant not exist. ID: ${item.variant_id}`
+                })
+            }
+
+            if(variant.stock < item.quantity){
+                await session.abortTransaction();
+                session.endSession();
+                return res.status(404).json({
+                    success: false,
+                    message: `Insufficient Stock for ${variant.product?.product_name} - ${variant.variant_name}`
+                })
+            }
+        }
+
         const oldStatus = stockOrder.status;
 
         stockOrder.status = newStatus;
@@ -235,8 +261,8 @@ export const updateStockOrderStatus = async (
         await deleteCache("stock-orders:*");
 
         return res.status(200).json({
-        success: true,
-        message: `Stock order successfully marked as ${newStatus}`,
+            success: true,
+            message: `Stock order successfully marked as ${newStatus}`,
         });
     } catch (err) {
         await session.abortTransaction();
