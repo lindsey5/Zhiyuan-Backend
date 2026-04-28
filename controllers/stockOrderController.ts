@@ -19,7 +19,7 @@ export const getStockOrders = async (req: Request, res: Response, next: NextFunc
         const endDate = req.query.endDate ? setEndDate(req.query.endDate as string) : null;
         const status = req.query.status || "";
         
-        const cacheKey = `stock-orders:${page}:${limit}:${search}:${startDate}:${endDate}`;
+        const cacheKey = `stock-orders:${page}:${limit}:${search}:${startDate}:${endDate}:${status}`;
 
         const cachedValue = await redisClient.get(cacheKey);
 
@@ -43,8 +43,8 @@ export const getStockOrders = async (req: Request, res: Response, next: NextFunc
         }
 
         const pipeline : any = [
+            { $match: matchStage },
             {
-                $match: matchStage,
                 $lookup: {
                     from: "distributors",
                     localField: "distributor_id",
