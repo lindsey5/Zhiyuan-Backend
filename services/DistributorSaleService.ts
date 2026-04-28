@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 import DistributorSale from "../models/DistributorSale";
-
-const monthNames = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
+import { monthNames } from "../utils/utils";
 
 class DistributorSaleService {
     static async getDistributorSales ({ distributorId, period } : { distributorId?: string, period: Period}) {

@@ -13,7 +13,7 @@ import StockTransferNotification from '../models/StockTransferNotification';
 import { StockOrderAttributes } from "../models/StockOrder";
 import StockOrderNotification from "../models/StockOrderNotification";
 import Distributor from "../models/Distributor";
-import SponsoredItem, { SponsoredItemAttributes } from "../models/SponsoredItem";
+import { SponsoredItemAttributes } from "../models/SponsoredItem";
 import SponsoredItemNotification from "../models/SponsoredItemNotification";
 
 

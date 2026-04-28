@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Order from "../models/Order";
 import '../models/OrderItem';
-import { setEndDate, setStartDate } from "../utils/utils";
+import { monthNames, setEndDate, setStartDate } from "../utils/utils";
 import Variant from "../models/Variant";
 import OrderItem from "../models/OrderItem";
 import mongoose from "mongoose";
@@ -404,3 +404,76 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response, next: N
         next(err);
     }
 };
+
+export const getOrderMonthlySales = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const year = Number(req.query.year) || new Date().getFullYear();
+        
+        const monthlySales = await OrderService.getMonthlyOrderSalesByYear(year);
+
+        res.status(200).json({
+            success: true,
+            monthlySales
+        })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getOrderSalesToday = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+
+        const sales = await OrderService.getOrderSales({
+            period: "today"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getOrderSalesThisWeek = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+
+        const sales = await OrderService.getOrderSales({
+            period: "thisWeek"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getOrderSalesThisMonth = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+
+        const sales = await OrderService.getOrderSales({
+            period: "thisMonth"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getOrderSalesThisYear = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+
+        const sales = await OrderService.getOrderSales({
+            period: "thisYear"
+        })
+
+        res.status(200).json({ success: true, sales })
+
+    }catch(err){
+        next(err);
+    }
+}
+

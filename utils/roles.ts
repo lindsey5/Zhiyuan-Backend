@@ -12,7 +12,9 @@ const ROLES = {
         permissions: [
             'order:read:all',
             'order:update',
+            "order:sales:view",
             'product:read:all',
+            'product:low-stock:view',
             'category:read:all'
         ]
     },
@@ -22,6 +24,7 @@ const ROLES = {
         permissions: [
             // Product management
             'product:read:all',
+            'product:low-stock:view',
 
             // Category management
             'category:read:all',

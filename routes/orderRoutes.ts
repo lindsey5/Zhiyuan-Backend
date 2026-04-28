@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
-import { createOrder, getOrderById, getOrders, orderMarkAsPaid, updateOrderStatus } from "../controllers/orderController";
+import { createOrder, getOrderById, getOrderMonthlySales, getOrders, getOrderSalesThisMonth, getOrderSalesThisWeek, getOrderSalesThisYear, getOrderSalesToday, orderMarkAsPaid, updateOrderStatus } from "../controllers/orderController";
 
 const router = Router();
 
@@ -18,6 +18,46 @@ router.get(
     authenticate,
     hasAnyPermission(PERMISSIONS.ORDER_READ_ALL, PERMISSIONS.ORDER_UPDATE),
     getOrders
+)
+
+router.get(
+    '/sales/monthly',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    hasAnyPermission(PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.ORDER_SALES_VIEW),
+    getOrderMonthlySales
+)
+
+router.get(
+    '/sales/today',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.ORDER_SALES_VIEW),
+    getOrderSalesToday
+)
+
+router.get(
+    '/sales/this-week',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.ORDER_SALES_VIEW),
+    getOrderSalesThisWeek
+)
+
+router.get(
+    '/sales/this-month',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.ORDER_SALES_VIEW),
+    getOrderSalesThisMonth
+)
+
+router.get(
+    '/sales/this-year',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.ORDER_SALES_VIEW),
+    getOrderSalesThisYear
 )
 
 router.get(
