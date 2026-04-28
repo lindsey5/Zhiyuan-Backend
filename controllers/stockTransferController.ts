@@ -301,14 +301,14 @@ export const updateStockTransferLogStatus = async (
 
         // Return stock to main inventory if cancelled/rejected/failed
         if (newStatus === "cancelled" || newStatus === "rejected" || newStatus === "failed") {
-        for (const item of stockTransfer.items) {
-            const variant = await Variant.findById(item.variant_id).session(session);
+            for (const item of stockTransfer.items) {
+                const variant = await Variant.findById(item.variant_id).session(session);
 
-            if (!variant) continue;
+                if (!variant) continue;
 
-            variant.stock += item.quantity;
-            await variant.save({ session });
-        }
+                variant.stock += item.quantity;
+                await variant.save({ session });
+            }
         }
 
         stockTransfer.status = newStatus;
