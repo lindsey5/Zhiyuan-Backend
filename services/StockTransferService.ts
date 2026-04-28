@@ -182,6 +182,14 @@ export default class StockTransferService {
                         items: { $push: "$items" },
                     },
                 },
+                {
+                    $project: {
+                        "sender.password": 0,
+                        "sender.__v": 0,
+                        "receiver.password": 0,
+                        "receiver.__v": 0,
+                    }
+                }
             ];
     
             // Build search & date filter

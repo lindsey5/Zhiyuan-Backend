@@ -94,6 +94,14 @@ export const getAllDistributorSales = async (req: Request, res: Response, next: 
                     preserveNullAndEmptyArrays: true,
                 },
             },
+            {
+                $project: {
+                    "seller.password": 0,
+                    "seller.__v": 0,
+                    "parent_distributor.password": 0,
+                    "parent_distributor.__v": 0,
+                }
+            }
         ];
 
         const [distributorSales, totalResult] = await Promise.all([
@@ -231,6 +239,15 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                     preserveNullAndEmptyArrays: true,
                 },
             },
+
+            {
+                $project: {
+                    "seller.password": 0,
+                    "seller.__v": 0,
+                    "parent_distributor.password": 0,
+                    "parent_distributor.__v": 0,
+                }
+            }
         ];
 
         const [distributorSales, totalResult] = await Promise.all([
