@@ -12,6 +12,7 @@ import {
     getDistributorItemsSoldThisYear,
     getDistributorItemsSoldToday,
     getDistributorMonthlySales,
+    getDistributorMostSellingProducts,
     getDistributorSales,
     getDistributorSalesThisMonth,
     getDistributorSalesThisWeek,
@@ -251,6 +252,14 @@ router.get(
     authenticate,
     authorizePermission(PERMISSIONS.DISTRIBUTOR_SALES_VIEW_ALL),
     downloadAllDistributorSales
+)
+
+router.get(
+  '/most-selling',
+  createRateLimiter(5 * 60 * 1000, 100),
+  authenticate,
+  authorizePermission(PERMISSIONS.DASHBOARD_VIEW),
+  getDistributorMostSellingProducts
 )
 
 /**

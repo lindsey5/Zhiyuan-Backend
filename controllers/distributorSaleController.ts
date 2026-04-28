@@ -975,3 +975,79 @@ export const getDistributorItemsSoldPerMonth = async (req: Request, res: Respons
         next(err);
     }
 }
+
+export const getDistributorMostSellingProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const mostSellingProducts = await DistributorSale.aggregate([
+            // 1. Group by variant
+            {
+                $group: {
+                    _id: "$variant_id",
+                    totalSold: { $sum: "$quantity" },
+                    totalRevenue: { $sum: "$total_amount" },
+                },
+            },
+
+            // 2. Sort
+            {
+                $sort: { totalSold: -1 },
+            },
+
+            // 3. Limit top 10
+            {
+                $limit: 10,
+            },
+
+            // 4. Lookup VARIANT
+            {
+                $lookup: {
+                    from: "variants",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "variant",
+                },
+            },
+
+            // 5. Unwind variant
+            {
+                $unwind: "$variant",
+            },
+
+            // 6. Lookup PRODUCT inside VARIANT
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "variant.product_id",
+                    foreignField: "_id",
+                    as: "variant.product",
+                },
+            },
+
+            // 7. Unwind product (inside variant)
+            {
+                $unwind: {
+                    path: "$variant.product",
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+
+            // 8. Final shape
+            {
+                $project: {
+                    _id: 0,
+                    variant_id: "$_id",
+                    totalSold: 1,
+                    totalRevenue: 1,
+                    variant: 1,
+                },
+            },
+        ]);
+
+        res.status(200).json({
+            success: true,
+            mostSellingProducts
+        })
+    } catch(err) {
+        next(err);
+    }
+}
