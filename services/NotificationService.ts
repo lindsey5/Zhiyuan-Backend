@@ -88,7 +88,7 @@ class NotificationService {
             await deleteCache(`commissions:${distributor_id}:*`);
             await deleteCache(`distributor-sales:*`);
             await deleteCache(`distributor-stocks:${distributor_id}:*`);
-            await deleteCache(`distributor-items-sold:${distributor_id}:*`);
+            await deleteCache(`distributor-items-sold:*`);
         }catch(err){
             console.log(err);
         }
