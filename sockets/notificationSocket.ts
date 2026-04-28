@@ -19,6 +19,7 @@ export function initNotificationSocket(io: SocketIOServer): void {
         "send-stock-order-notification" : notification.sendStockOrderNotification,
         "send-stock-order-update": notification.sendStockOrderUpdate,
         "send-sponsored-item-notification" : notification.sendSponsoredItemNotification,
+        "send-sponsored-item-update" : notification.sendSponsoredItemUpdateNotification,
     }
 
     socketConnection({
