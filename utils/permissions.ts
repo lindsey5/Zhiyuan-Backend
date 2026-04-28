@@ -16,6 +16,7 @@ const PERMISSIONS = {
 
     // Product management
     PRODUCT_READ_ALL: 'product:read:all',
+    PRODUCT_LOW_STOCK_VIEW: 'product:low-stock:view',
     PRODUCT_CREATE: 'product:create',
     PRODUCT_UPDATE: 'product:update',
     PRODUCT_DELETE: 'product:delete',

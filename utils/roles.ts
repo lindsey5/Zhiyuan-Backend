@@ -71,6 +71,7 @@ const ROLES = {
         permissions: [
             // Product management
             'product:read:all',
+            'product:low-stock:view',
             'product:create',
             'product:update',
             'product:delete',

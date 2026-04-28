@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate, authorizePermission } from "../middlewares/authMiddleware";
+import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
 import {
@@ -121,7 +121,7 @@ router.get(
   "/monthly",
   createRateLimiter(5 * 60 * 1000, 100),
   authenticate,
-  authorizePermission(PERMISSIONS.DISTRIBUTOR_REPORTS_VIEW),
+  hasAnyPermission(PERMISSIONS.DISTRIBUTOR_REPORTS_VIEW, PERMISSIONS.DASHBOARD_VIEW),
   getDistributorMonthlySales
 );
 
@@ -129,7 +129,7 @@ router.get(
   "/items-sold",
   createRateLimiter(5 * 60 * 1000, 100),
   authenticate,
-  authorizePermission(PERMISSIONS.DISTRIBUTOR_REPORTS_VIEW),
+  hasAnyPermission(PERMISSIONS.DISTRIBUTOR_REPORTS_VIEW, PERMISSIONS.DASHBOARD_VIEW),
   getDistributorItemsSoldPerMonth
 );
 

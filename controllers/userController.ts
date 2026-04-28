@@ -408,3 +408,17 @@ export const isEmailExist = async (req: Request, res: Response, next: NextFuncti
         next(err);
     }
 }
+
+export const getTotalUsers = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const totalUsers = await User.countDocuments({ status: 'active' });
+
+        res.status(200).json({
+            success: true, 
+            totalUsers,
+        })
+
+    }catch(err){
+        next(err);
+    }
+}

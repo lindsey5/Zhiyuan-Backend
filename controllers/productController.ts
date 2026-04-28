@@ -582,3 +582,123 @@ export const getMostSellingProducts = async (req: Request, res: Response, next: 
         next(err);
     }
 };
+
+export const getTotalProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+
+        const totalProducts = await Product.countDocuments({ status: 'active' });
+
+        res.status(200).json({
+            success: true,
+            totalProducts
+        })
+
+    } catch(err) {
+        next(err);
+    }
+}
+
+export const getTotalLowStockProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const totalLowStockProducts = await Variant.countDocuments({
+            status: 'active',
+            stock: { $lte: 10 }
+        })
+
+        res.status(200).json({
+            success: true,
+            totalLowStockProducts
+        })
+
+    }catch(err){
+        next(err);
+    }
+}
+
+export const getLowStockProducts = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const search = req.query.search ? String(req.query.search) : "";
+        const category = req.query.category ? String(req.query.category) : "";
+        const sortBy = req.query.sortBy ? String(req.query.sortBy) : "variant_name";
+        const order = req.query.order && String(req.query.order).toUpperCase() === "DESC" ? -1 : 1;
+
+        const cacheKey = `variants:low-stocks:${page}:${limit}:${search}:${category}:${sortBy}:${order}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
+        // Build filter for variants
+        const variantFilter: any = { status: 'active', stock: { $lte: 10 } };
+        if (search) {
+            variantFilter.$or = [
+                { variant_name: { $regex: search, $options: "i" } },
+                { sku: { $regex: search, $options: "i" } },
+                { "product.product_name" : { $regex: search, $options: "i" }}
+            ];
+        }
+
+        const pipeline: any[] = [
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "product_id",
+                    foreignField: "_id",
+                    as: "product",
+                },
+            },
+            { $unwind: "$product" },
+            { $match: variantFilter },
+        ];
+
+        if (category) {
+            pipeline.push({ $match: { "product.category": category } });
+        }
+
+        pipeline.push(
+            { $sort: { [sortBy]: order } },
+            { $skip: skip },
+            { $limit: limit }
+        );
+
+        const [variants, totalCount] = await Promise.all([
+            Variant.aggregate(pipeline),
+            Variant.countDocuments(variantFilter)
+                .populate({
+                    path: "product",
+                    match: { ...(category ? { category } : {}) },
+                })
+                .exec(),
+        ]);
+
+        const totalPages = Math.ceil(totalCount / limit);
+
+        const responseData = {
+            page,
+            limit,
+            totalPages,
+            total: totalCount,
+            variants,
+        }
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
+        });
+    } catch (err) {
+        next(err);
+    }
+}

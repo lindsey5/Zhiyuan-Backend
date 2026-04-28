@@ -280,3 +280,19 @@ export const getTopDistributors = async (req: Request, res: Response, next: Next
         next(err);
     }
 }
+
+export const getTotalDistributors = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const totalDistributors = await Distributor.countDocuments({
+            status: 'active'
+        });
+
+        res.status(200).json({
+            success: true,
+            totalDistributors
+        })
+
+    } catch(err) {
+        next(err);
+    }
+}

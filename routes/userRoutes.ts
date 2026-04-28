@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changePassword, createUser, deleteUser, getUsers, getUsersCount, isEmailExist, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
+import { changePassword, createUser, deleteUser, getTotalUsers, getUsers, getUsersCount, isEmailExist, updateUser, userGetOwn, userUpdateOwn } from "../controllers/userController";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import validateBody from "../middlewares/validateBody";
@@ -32,6 +32,14 @@ router.get(
     authorizePermission(PERMISSIONS.USER_READ_ALL),
     getUsers
 );
+
+router.get(
+    '/total',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.DASHBOARD_VIEW),
+    getTotalUsers
+)
 
 router.put(
     '/me',
