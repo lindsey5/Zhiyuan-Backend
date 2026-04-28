@@ -6,7 +6,6 @@ import redisClient from "../config/redis";
 import DistributorNotification from "../models/DistributorNotification";
 import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
 import mongoose from "mongoose";
-import { success } from "zod";
 
 export const getSponsoredItems = async (req: Request, res: Response, next: NextFunction) => {
     try{
