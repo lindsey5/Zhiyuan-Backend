@@ -30,7 +30,8 @@ const ReviewSchema: Schema<ReviewAttributes> = new Schema(
     { timestamps: true }
 );
 
-ReviewSchema.index({ createdAt: 1 });
+ReviewSchema.index({ rating: 1 });
+ReviewSchema.index({ createdAt: -1 });
 
 const Review: Model<ReviewAttributes> = mongoose.model("Review", ReviewSchema);
 

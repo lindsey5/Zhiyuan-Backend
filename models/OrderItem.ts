@@ -42,6 +42,11 @@ const OrderItemSchema: Schema<OrderItemAttributes> = new Schema(
     { timestamps: true } 
 );
 
+OrderItemSchema.index({ order_id: 1 });
+OrderItemSchema.index({ variant_id: 1 });
+OrderItemSchema.index({ order_id: 1, variant_id: 1 });
+OrderItemSchema.index({ createdAt: -1 });
+
 OrderItemSchema.virtual("variant", {
     ref: "Variant",
     localField: "variant_id",

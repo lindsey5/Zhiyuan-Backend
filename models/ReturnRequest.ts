@@ -47,6 +47,12 @@ const ReturnRequestSchema: Schema<ReturnRequestAttributes> = new Schema(
     }
 );
 
+ReturnRequestSchema.index({ createdAt: -1 });
+ReturnRequestSchema.index({ distributor_id: 1, createdAt: -1 });
+ReturnRequestSchema.index({ "items.status": 1 });
+ReturnRequestSchema.index({ "items.variant_id": 1 });
+ReturnRequestSchema.index({ "items.status": 1, createdAt: -1 });
+
 ReturnRequestSchema.virtual("items.variant", {
     ref: "Variant",
     localField: "items.variant_id",

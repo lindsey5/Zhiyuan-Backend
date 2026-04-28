@@ -22,6 +22,9 @@ const OrderNotificationSchema: Schema<OrderNotificationAttributes> = new Schema(
     { timestamps: true } 
 );
 
+OrderNotificationSchema.index({ notification_id: 1 });
+OrderNotificationSchema.index({ order_id: 1 });
+
 OrderNotificationSchema.virtual("order", {
     ref: "Order",
     localField: "order_id",

@@ -28,7 +28,10 @@ const SaleNotificationSchema: Schema<SaleNotificationAttributes> = new Schema(
     { timestamps: true } 
 );
 
-SaleNotificationSchema.index({ user_id: 1 })
+SaleNotificationSchema.index({ notification_id: 1 });
+SaleNotificationSchema.index({ distributor_id: 1 });
+SaleNotificationSchema.index({ distributor_id: 1, createdAt: -1 });
+SaleNotificationSchema.index({ sale_ids: 1 });
 
 SaleNotificationSchema.virtual("sold_by", {
     ref: "Distributor",

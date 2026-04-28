@@ -75,14 +75,14 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
     { timestamps: true } 
 );
 
-OrderSchema.virtual("order_items", {
-    ref: "OrderItem",
-    localField: "_id",
-    foreignField: "order_id",
-});
+OrderSchema.index({ order_id: 1 }, { unique: true });
+OrderSchema.index({ customer_name: 1 });
 
-OrderSchema.set("toObject", { virtuals: true });
-OrderSchema.set("toJSON", { virtuals: true });
+OrderSchema.index({ createdAt: -1 });
+OrderSchema.index({ status: 1, createdAt: -1 });
+OrderSchema.index({ payment_status: 1, createdAt: -1 });
+OrderSchema.index({ payment_method: 1, createdAt: -1 });
+OrderSchema.index({ delivery_type: 1, createdAt: -1 });
 
 OrderSchema.pre("save", async function (next) {
     if (!this.order_id) {
@@ -104,6 +104,15 @@ OrderSchema.pre("save", async function (next) {
 
     next();
 });
+
+OrderSchema.virtual("order_items", {
+    ref: "OrderItem",
+    localField: "_id",
+    foreignField: "order_id",
+});
+
+OrderSchema.set("toObject", { virtuals: true });
+OrderSchema.set("toJSON", { virtuals: true });
 
 const Order: Model<OrderAttributes> = mongoose.model("Order", OrderSchema);
 

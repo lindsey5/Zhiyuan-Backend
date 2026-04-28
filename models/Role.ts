@@ -23,6 +23,8 @@ const RoleSchema: Schema<RoleAttributes> = new Schema(
     { timestamps: true }
 );
 
+RoleSchema.index({ createdAt: -1 });
+
 RoleSchema.virtual("permissions", {
     ref: "Permission",
     localField: "_id",

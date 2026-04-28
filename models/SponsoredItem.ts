@@ -63,6 +63,13 @@ SponsoredItemSchema.pre("save", async function (next) {
     next();
 });
 
+SponsoredItemSchema.index({ createdAt: -1 });
+SponsoredItemSchema.index({ status: 1, createdAt: -1 });
+SponsoredItemSchema.index({ distributor_id: 1, createdAt: -1 });
+SponsoredItemSchema.index({ variant_id: 1 });
+SponsoredItemSchema.index({ sponsored_id: 1 });
+SponsoredItemSchema.index({ status: 1, distributor_id: 1 });
+
 SponsoredItemSchema.virtual("variant", {
     ref: "Variant",          
     localField: "variant_id", 

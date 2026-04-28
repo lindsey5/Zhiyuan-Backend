@@ -3,13 +3,13 @@ import { SaleNotificationAttributes } from "./SaleNotification";
 import { ReturnNotificationAttributes } from "./ReturnNotification";
 import { OrderNotificationAttributes } from "./OrderNotification";
 
-export interface UserNotificationAttributes extends Document{
-    user_id: mongoose.Types.ObjectId;
-    message: string;
-    status: 'read' | 'unread';
-    saleNotification?: SaleNotificationAttributes;
-    returnNotification?: ReturnNotificationAttributes;
-    orderNotification?: OrderNotificationAttributes;
+export interface UserNotificationAttributes extends Document {
+  user_id: mongoose.Types.ObjectId;
+  message: string;
+  status: "read" | "unread";
+  saleNotification?: SaleNotificationAttributes;
+  returnNotification?: ReturnNotificationAttributes;
+  orderNotification?: OrderNotificationAttributes;
 }
 
 const UserNotificationSchema: Schema<UserNotificationAttributes> = new Schema(
@@ -24,16 +24,22 @@ const UserNotificationSchema: Schema<UserNotificationAttributes> = new Schema(
             type: String,
             required: true,
         },
+
         status: {
             type: String,
-            default: 'unread',
-            required: true
-        }
+            enum: ["read", "unread"],
+            default: "unread",
+            required: true,
+        },
     },
-    { timestamps: true } 
+    { timestamps: true }
 );
 
-UserNotificationSchema.index({ user_id: 1 })
+UserNotificationSchema.index({ user_id: 1, createdAt: -1 });
+UserNotificationSchema.index({ user_id: 1, status: 1 });
+UserNotificationSchema.index({ createdAt: -1 });
+UserNotificationSchema.index({ status: 1 });
+
 
 UserNotificationSchema.virtual("saleNotification", {
     ref: "SaleNotification",
@@ -80,9 +86,6 @@ UserNotificationSchema.virtual("sponsoredItemNotification", {
 UserNotificationSchema.set("toJSON", { virtuals: true });
 UserNotificationSchema.set("toObject", { virtuals: true });
 
-const UserNotification: Model<UserNotificationAttributes> = mongoose.model(
-    "UserNotification",
-    UserNotificationSchema
-);
+const UserNotification: Model<UserNotificationAttributes> =  mongoose.model("UserNotification", UserNotificationSchema);
 
 export default UserNotification;

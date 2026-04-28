@@ -22,7 +22,7 @@ const StockTransferNotificationSchema: Schema<StockTransferNotificationAttribute
     { timestamps: true } 
 );
 
-StockTransferNotificationSchema.index({ user_id: 1 })
+StockTransferNotificationSchema.index({ notification_id: 1, stock_transfer_id: 1 })
 
 StockTransferNotificationSchema.virtual("stockTransfer", {
     ref: "StockTransfer",
