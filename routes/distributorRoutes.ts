@@ -35,6 +35,8 @@ router.get(
 router.get(
     '/top',
     createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_RANKINGS_VIEW),
     getTopDistributors
 )
 

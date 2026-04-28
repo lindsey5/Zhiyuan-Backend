@@ -39,6 +39,7 @@ const ROLES = {
 
             // Distributor Stats
             'distributor-stats:view',
+            'distributor-rankings:view',
 
             // Distributor Sales
             'distributor-sales:view',

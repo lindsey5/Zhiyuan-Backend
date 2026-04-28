@@ -42,6 +42,7 @@ const PERMISSIONS = {
 
     // Distributor Stats
     DISTRIBUTOR_STATS_VIEW: 'distributor-stats:view',
+    DISTRIBUTOR_RANKINGS_VIEW: 'distributor-rankings:view',
 
     // Distributor Sales
     DISTRIBUTOR_SALES_VIEW: 'distributor-sales:view',
