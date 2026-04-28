@@ -75,9 +75,7 @@ const OrderSchema: Schema<OrderAttributes> = new Schema(
     { timestamps: true } 
 );
 
-OrderSchema.index({ order_id: 1 }, { unique: true });
 OrderSchema.index({ customer_name: 1 });
-
 OrderSchema.index({ createdAt: -1 });
 OrderSchema.index({ status: 1, createdAt: -1 });
 OrderSchema.index({ payment_status: 1, createdAt: -1 });

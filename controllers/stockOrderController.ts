@@ -44,6 +44,7 @@ export const getStockOrders = async (req: Request, res: Response, next: NextFunc
 
         const pipeline : any = [
             {
+                $match: matchStage,
                 $lookup: {
                     from: "distributors",
                     localField: "distributor_id",

@@ -48,7 +48,6 @@ const StockOrderSchema: Schema<StockOrderAttributes> = new Schema(
 StockOrderSchema.index({ createdAt: -1 });
 StockOrderSchema.index({ status: 1, createdAt: -1 });
 StockOrderSchema.index({ distributor_id: 1, createdAt: -1 });
-StockOrderSchema.index({ stock_order_id: 1 });
 StockOrderSchema.index({ distributor_id: 1, status: 1 });
 
 StockOrderSchema.pre("save", async function (next) {

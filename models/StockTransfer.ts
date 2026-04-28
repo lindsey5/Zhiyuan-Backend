@@ -44,7 +44,6 @@ StockTransferSchema.index({ createdAt: -1 });
 StockTransferSchema.index({ status: 1, createdAt: -1 });
 StockTransferSchema.index({ sender_id: 1, createdAt: -1 });
 StockTransferSchema.index({ receiver_id: 1, createdAt: -1 });
-StockTransferSchema.index({ transfer_no: 1 });
 StockTransferSchema.index({ sender_id: 1, status: 1, createdAt: -1 });
 
 StockTransferSchema.virtual("receiver", {
