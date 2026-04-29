@@ -15,5 +15,3 @@ services:
 
     env_file:
       - .env
-
-    command: npm start
