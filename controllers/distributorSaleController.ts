@@ -993,9 +993,9 @@ export const getDistributorItemsSoldPerMonth = async (req: Request, res: Respons
     }
 }
 
-export const getDistributorMostSellingProducts = async (req: Request, res: Response, next: NextFunction) => {
+export const getDistributorBestSellingProducts = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        const mostSellingProducts = await DistributorSale.aggregate([
+        const bestSellingProducts = await DistributorSale.aggregate([
             // 1. Group by variant
             {
                 $group: {
@@ -1062,7 +1062,7 @@ export const getDistributorMostSellingProducts = async (req: Request, res: Respo
 
         res.status(200).json({
             success: true,
-            mostSellingProducts
+            bestSellingProducts
         })
     } catch(err) {
         next(err);

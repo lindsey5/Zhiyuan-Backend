@@ -502,9 +502,9 @@ export const searchProduct = async (req: Request, res: Response, next: NextFunct
     }
 }
 
-export const getMostSellingProducts = async (req: Request, res: Response, next: NextFunction) => {
+export const getBestSellingProducts = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        const mostSellingProducts = await OrderItem.aggregate([
+        const bestSellingProducts = await OrderItem.aggregate([
             // 1. Join Orders
             {
             $lookup: {
@@ -576,7 +576,7 @@ export const getMostSellingProducts = async (req: Request, res: Response, next: 
 
         res.status(200).json({
             success: true,
-            mostSellingProducts
+            bestSellingProducts
         })
     }catch(err){
         next(err);

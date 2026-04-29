@@ -6,13 +6,13 @@ import {
     downloadAllDistributorSales,
     downloadDistributorSales,
     getAllDistributorSales,
+    getDistributorBestSellingProducts,
     getDistributorItemsSoldPerMonth,
     getDistributorItemsSoldThisMonth,
     getDistributorItemsSoldThisWeek,
     getDistributorItemsSoldThisYear,
     getDistributorItemsSoldToday,
     getDistributorMonthlySales,
-    getDistributorMostSellingProducts,
     getDistributorSales,
     getDistributorSalesThisMonth,
     getDistributorSalesThisWeek,
@@ -255,11 +255,11 @@ router.get(
 )
 
 router.get(
-  '/most-selling',
+  '/best-selling',
   createRateLimiter(5 * 60 * 1000, 100),
   authenticate,
   hasAnyPermission(PERMISSIONS.DASHBOARD_VIEW, PERMISSIONS.DISTRIBUTOR_REPORTS_VIEW),
-  getDistributorMostSellingProducts
+  getDistributorBestSellingProducts
 )
 
 /**

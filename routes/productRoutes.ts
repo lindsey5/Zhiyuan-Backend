@@ -2,7 +2,7 @@ import { Router } from "express";
 import { handleMulterError, createProductUploads } from "../middlewares/multer";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
-import { createProduct, deleteProduct, getLowStockProducts, getMostSellingProducts, getProductById, getProducts, getTotalLowStockProducts, getTotalProducts, searchProduct, updateProduct } from "../controllers/productController";
+import { createProduct, deleteProduct, getLowStockProducts, getBestSellingProducts, getProductById, getProducts, getTotalLowStockProducts, getTotalProducts, searchProduct, updateProduct } from "../controllers/productController";
 import validateBody from "../middlewares/validateBody";
 import { createProductSchema, updateProductSchema } from "../schema/productSchema";
 import createRateLimiter from "../utils/rate-limit";
@@ -34,9 +34,9 @@ router.get(
 )
 
 router.get(
-    '/most-selling',
+    '/best-selling',
     createRateLimiter(5 * 1000, 100),
-    getMostSellingProducts
+    getBestSellingProducts
 )
 
 router.get(
