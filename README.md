@@ -152,7 +152,7 @@ npm run insert-products # Inserts demo products into the database.
 |    └── roles.ts        
 ```
 
-## Quick Install (Recommended)
+## 🚀 Quick Start (Recommended)
 
 ## 1. Clone the repository
 ```bash
@@ -175,7 +175,10 @@ npm run setup-roles
 npm run create-user
 ```
 
-## 5. Start the server
+## 5. Start the server 
+You can run this project either using **npm** or **Docker**
+
+## 🟢 Option 1: Run with NPM
 ```bash
 # For development
 npm run dev
@@ -183,6 +186,15 @@ npm run dev
 # For production
 npm build
 npm start
+```
+
+## 🐳 Option 2: Run with Docker
+```bash
+# For development
+docker compose up --build
+
+# For production
+docker compose -f docker-compose.prod.yml up --build
 ```
 
 ## Environment Variables
