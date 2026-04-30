@@ -8,6 +8,7 @@ export interface DistributorNotificationAttributes extends Document {
     stock_order_id?: mongoose.Types.ObjectId;
     sale_ids?: mongoose.Types.ObjectId[];
     sponsored_id?: mongoose.Types.ObjectId;
+    withdrawal_id?: mongoose.Types.ObjectId;
     message: string;
     stockTransfer: StockTransferAttributes;
     status: 'read' | 'unread'
@@ -44,6 +45,10 @@ const DistributorNotificationSchema: Schema<DistributorNotificationAttributes> =
         sponsored_id: {
             type: Schema.Types.ObjectId,
             ref: 'SponsoredItem',
+        },
+        withdrawal_id: {
+            type: Schema.Types.ObjectId,
+            ref: 'WithdrawalRequest',
         },
 
         message: {
@@ -95,7 +100,14 @@ DistributorNotificationSchema.virtual("sponsoredItem", {
     localField: "sponsored_id",
     foreignField: "_id",
     justOne: true
-})
+});
+
+DistributorNotificationSchema.virtual("withdrawalRequest", {
+    ref: "WithdrawalRequest",          
+    localField: "withdrawal_id", 
+    foreignField: "_id",   
+    justOne: true    
+});
 
 DistributorNotificationSchema.set("toObject", { virtuals: true });
 DistributorNotificationSchema.set("toJSON", { virtuals: true });

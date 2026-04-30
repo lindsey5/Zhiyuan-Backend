@@ -207,7 +207,7 @@ export const updateStockOrderStatus = async (
                 })
             }
         }
-
+        const oldValues = stockOrder;
         const oldStatus = stockOrder.status;
 
         stockOrder.status = newStatus;
@@ -251,12 +251,8 @@ export const updateStockOrderStatus = async (
             severity: "MEDIUM",
             user_agent: req?.headers["user-agent"] || "",
             user_id: req.user?._id,
-            old_values: {
-                status: oldStatus,
-            },
-            new_values: {
-                status: newStatus,
-            },
+            old_values: oldValues,
+            new_values: stockOrder,
         });
 
         await deleteCache("stock-orders:*");
