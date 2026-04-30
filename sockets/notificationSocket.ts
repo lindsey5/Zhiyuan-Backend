@@ -21,6 +21,7 @@ export function initNotificationSocket(io: SocketIOServer): void {
         "send-sponsored-item-notification" : notification.sendSponsoredItemNotification,
         "send-sponsored-item-update" : notification.sendSponsoredItemUpdateNotification,
         "send-withdrawal-notification" : notification.sendWithdrawalNotification,
+        "send-withdrawal-update" : notification.sendWithdrawalUpdateNotification,
     }
 
     socketConnection({

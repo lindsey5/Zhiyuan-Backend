@@ -33,6 +33,7 @@ class NotificationService {
         this.sendSponsoredItemNotification = this.sendSponsoredItemNotification.bind(this);
         this.sendSponsoredItemUpdateNotification = this.sendSponsoredItemUpdateNotification.bind(this);
         this.sendWithdrawalNotification = this.sendWithdrawalNotification.bind(this);
+        this.sendWithdrawalUpdateNotification = this.sendWithdrawalUpdateNotification.bind(this);
     }
 
     async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
@@ -486,6 +487,55 @@ class NotificationService {
                 const userNotification = await UserNotification.create({
                     user_id: user._id,
                     message: `${distributor_name} requested to withdraw ${formatToPeso(withdrawalRequest.amount)}`
+                })
+
+                const withdrawalNotification = await WithdrawalNotification.create({
+                    notification_id: userNotification._id,
+                    withdrawal_id: withdrawalRequest._id
+                })
+
+                await withdrawalNotification.populate({ 
+                    path: 'withdrawalRequest',
+                    populate: { path: 'distributor', select: '-password' }
+                })
+
+                await deleteCache(`user-notifications:${user._id}:*`)
+                
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        withdrawalNotification
+                    }
+                })
+            }
+            await deleteCache(`withdrawal-requests:*`)
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+    async sendWithdrawalUpdateNotification (withdrawalRequest : WithdrawalRequestAttributes) {
+        try{
+            const distributor = await Distributor.findById(withdrawalRequest.distributor_id);
+
+            if(!distributor) return;
+
+            const distributor_name = distributor.distributor_name;
+    
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.WITHDRAWAL_REQUEST_UPDATE || p.action === PERMISSIONS.WITHDRAWAL_REQUEST_VIEW_ALL)
+            );
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor_name} withdrawal request has been ${withdrawalRequest.status}`
                 })
 
                 const withdrawalNotification = await WithdrawalNotification.create({
