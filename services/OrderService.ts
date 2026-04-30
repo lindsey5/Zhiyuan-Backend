@@ -29,7 +29,7 @@ class OrderService {
             const userNotification = await UserNotification.create(
                 {
                     user_id: user._id,
-                    message: `New order created: ${order.order_id}`,
+                    message: `New walk-in order has been placed. Order ID: ${order.order_id}`
                 },
             );
 

@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 import Product from "../models/Product";
 import Variant from "../models/Variant";
 import dotenv from 'dotenv';
+import dns from "node:dns/promises";
+
 dotenv.config();
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const productsData = [
     {

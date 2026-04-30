@@ -3,7 +3,10 @@ import Role from '../models/Role';
 import mongoose from 'mongoose';
 import User from '../models/User';
 import dotenv from 'dotenv';
+import dns from "node:dns/promises";
+
 dotenv.config();
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const rl = readline.createInterface({
   input: process.stdin,

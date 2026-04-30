@@ -7,7 +7,6 @@ import UserNotification from "../models/UserNotification";
 import PERMISSIONS from "../utils/permissions";
 import { ReturnRequestAttributes } from "../models/ReturnRequest";
 import ReturnNotification from "../models/ReturnNotification";
-import '../models/ReturnRequest';
 import { StockTransferAttributes } from "../models/StockTransfer";
 import StockTransferNotification from '../models/StockTransferNotification';
 import { StockOrderAttributes } from "../models/StockOrder";
@@ -15,7 +14,9 @@ import StockOrderNotification from "../models/StockOrderNotification";
 import Distributor from "../models/Distributor";
 import { SponsoredItemAttributes } from "../models/SponsoredItem";
 import SponsoredItemNotification from "../models/SponsoredItemNotification";
-
+import { WithdrawalRequestAttributes } from "../models/WithdrawalRequest";
+import { formatToPeso } from "../utils/utils";
+import WithdrawalNotification from "../models/WithdrawalNotification";
 
 class NotificationService {
     namespace: Namespace;
@@ -31,9 +32,12 @@ class NotificationService {
         this.sendStockOrderUpdate = this.sendStockOrderUpdate.bind(this);
         this.sendSponsoredItemNotification = this.sendSponsoredItemNotification.bind(this);
         this.sendSponsoredItemUpdateNotification = this.sendSponsoredItemUpdateNotification.bind(this);
+        this.sendWithdrawalNotification = this.sendWithdrawalNotification.bind(this);
     }
 
     async sendSaleNotification (payload : { distributor_id: string, distributor_name: string, sales: DistributorSaleAttributes[]}) {
+        if(!payload) return;
+        
         try{
             const { distributor_id, distributor_name, sales } = payload;
 
@@ -95,6 +99,8 @@ class NotificationService {
     }
 
     async sendReturnNotification (payload : { returnRequest : ReturnRequestAttributes, distributor_name: string, distributor_id: string }) {
+        if(!payload) return;
+        
         try{
             const { distributor_name, returnRequest } = payload;
             const users = await User.find({ status: 'active' })
@@ -144,6 +150,8 @@ class NotificationService {
     }
 
     async sendCancelReturnNotification (returnRequest : ReturnRequestAttributes) {
+        if(!returnRequest) return;
+
         try{
             const users = await User.find({ status: 'active' })
                 .populate({
@@ -191,6 +199,8 @@ class NotificationService {
     }
 
     async sendStockTransferNotification (payload : { distributor_name: string, stockTransfer: StockTransferAttributes, status: string }) {
+        if(!payload) return;
+        
         try{
             const { distributor_name, stockTransfer, status } = payload;
 
@@ -242,6 +252,8 @@ class NotificationService {
     }
 
     async sendStockOrderNotification (payload : { distributor_name: string, stockOrder: StockOrderAttributes }) {
+        if(!payload) return;
+        
         try{
             const { distributor_name, stockOrder } = payload;
     
@@ -290,6 +302,8 @@ class NotificationService {
     }
 
     async sendStockOrderUpdate (stockOrder : StockOrderAttributes) {
+        if(!stockOrder) return;
+
         try{
             const distributor = await Distributor.findById(stockOrder.distributor_id);
 
@@ -341,6 +355,8 @@ class NotificationService {
     }
 
     async sendSponsoredItemNotification (sponsored_item : SponsoredItemAttributes) {
+        if(!sponsored_item) return;
+
         try{
             const distributor = await Distributor.findById(sponsored_item.distributor_id);
 
@@ -394,6 +410,8 @@ class NotificationService {
     }
 
     async sendSponsoredItemUpdateNotification (sponsored_item : SponsoredItemAttributes) {
+        if(!sponsored_item) return;
+
         try{
             const distributor = await Distributor.findById(sponsored_item.distributor_id);
 
@@ -441,6 +459,55 @@ class NotificationService {
             }
             await deleteCache(`distributor-stocks:${sponsored_item.distributor_id.toString()}:*`)
             await deleteCache('sponsored-items:*');
+        }catch(err){
+            console.log(err);
+        }
+    }
+
+    async sendWithdrawalNotification (withdrawalRequest : WithdrawalRequestAttributes) {
+        try{
+            const distributor = await Distributor.findById(withdrawalRequest.distributor_id);
+
+            if(!distributor) return;
+
+            const distributor_name = distributor.distributor_name;
+    
+            const users = await User.find({ status: 'active' })
+                .populate({
+                    path: "role",
+                    populate: { path: "permissions" }
+                });
+
+            const authorizedUsers = users.filter(user =>
+                user.role?.permissions?.some(p => p.action === PERMISSIONS.WITHDRAWAL_REQUEST_UPDATE || p.action === PERMISSIONS.WITHDRAWAL_REQUEST_VIEW_ALL)
+            );
+
+            for(const user of authorizedUsers){
+                const userNotification = await UserNotification.create({
+                    user_id: user._id,
+                    message: `${distributor_name} requested to withdraw ${formatToPeso(withdrawalRequest.amount)}`
+                })
+
+                const withdrawalNotification = await WithdrawalNotification.create({
+                    notification_id: userNotification._id,
+                    withdrawal_id: withdrawalRequest._id
+                })
+
+                await withdrawalNotification.populate({ 
+                    path: 'withdrawalRequest',
+                    populate: { path: 'distributor', select: '-password' }
+                })
+
+                await deleteCache(`user-notifications:${user._id}:*`)
+                
+                this.namespace.to(user._id.toString()).emit("receive-notification", { 
+                    userNotification: {
+                        ...userNotification.toObject(),
+                        withdrawalNotification
+                    }
+                })
+            }
+            await deleteCache(`withdrawal-requests:*`)
         }catch(err){
             console.log(err);
         }

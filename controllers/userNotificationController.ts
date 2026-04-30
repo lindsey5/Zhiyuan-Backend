@@ -102,6 +102,13 @@ export const getUserNotifications = async (req : AuthRequest, res : Response, ne
                             { path: 'distributor', select: '-password' }
                         ]
                     }
+                },
+                {
+                    path: 'withdrawalNotification',
+                    populate: {
+                        path: 'withdrawalRequest',
+                        populate: { path: 'distributor', select: '-password' }
+                    }
                 }
             ])
             .sort({ createdAt: -1 })

@@ -2,8 +2,10 @@ import Role from '../models/Role';
 import User from '../models/User';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import dns from "node:dns/promises";
 
 dotenv.config();
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 (async () => {
   try {

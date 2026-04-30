@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 import Role from "../models/Role";
 import Permission from "../models/Permission";
 import dotenv from 'dotenv';
+import dns from "node:dns/promises";
+
 dotenv.config();
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const setupRoles = async () => {
     try {

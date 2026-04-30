@@ -22,6 +22,7 @@ import sponsoredItemRoutes from "./routes/sponsoredItemRoutes";
 import returnRequestRoutes from "./routes/returnRequestRoutes";
 import stockOrderRoutes from "./routes/stockOrderRoutes";
 import reviewRoutes from "./routes/reviewRoutes";
+import withdrawalRequestRoutes from "./routes/withdrawalRequestRoutes";
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use('/api/sponsored-items', sponsoredItemRoutes);
 app.use('/api/return-requests', returnRequestRoutes);
 app.use('/api/stock-orders', stockOrderRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/withdrawal-requests', withdrawalRequestRoutes);
 app.use(errorHandler);
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {

@@ -83,6 +83,13 @@ UserNotificationSchema.virtual("sponsoredItemNotification", {
     justOne: true,
 });
 
+UserNotificationSchema.virtual("withdrawalNotification", {
+    ref: "WithdrawalNotification",
+    localField: "_id",
+    foreignField: "notification_id",
+    justOne: true,
+});
+
 UserNotificationSchema.set("toJSON", { virtuals: true });
 UserNotificationSchema.set("toObject", { virtuals: true });
 

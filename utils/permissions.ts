@@ -57,6 +57,10 @@ const PERMISSIONS = {
     // Distributor Reports
     DISTRIBUTOR_REPORTS_VIEW: 'distributor-reports:view',
 
+    // Withdrawal Requests
+    WITHDRAWAL_REQUEST_VIEW_ALL: 'withdrawal-requests:view:all',
+    WITHDRAWAL_REQUEST_UPDATE: 'withdrawal-requests:view:update',
+
     // Sponsored Items
     SPONSORED_PRODUCT_UPDATE: 'sponsored-items:update',
     SPONSORED_PRODUCT_VIEW_ALL: 'sponsored-items:view:all',
