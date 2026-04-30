@@ -6,6 +6,8 @@ import redisClient from "../config/redis";
 import DistributorNotification from "../models/DistributorNotification";
 import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
 import mongoose from "mongoose";
+import AuditLogService from "../services/AuditLogService";
+import { AuthRequest } from "../types/auth";
 
 export const getSponsoredItems = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -150,7 +152,7 @@ export const getSponsoredItemById = async (req: Request, res: Response, next: Ne
     }
 }
 
-export const updateSponsoredItemStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const updateSponsoredItemStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
     const session = await mongoose.startSession();
 
     try {
@@ -176,7 +178,7 @@ export const updateSponsoredItemStatus = async (req: Request, res: Response, nex
                 message: "Sponsored Item not found",
             });
         }
-
+        const oldData = sponsoredItem;
         const currentStatus = sponsoredItem.status;
 
         const allowedTransitions: Record<string, string[]> = {
@@ -232,9 +234,21 @@ export const updateSponsoredItemStatus = async (req: Request, res: Response, nex
             sponsoredItem.distributor_id.toString()
         );
 
+        await AuditLogService.log({
+            action: "SPONSOR_PRODUCT_STATUS_UPDATED",
+            description: `Sponsored product request ${sponsoredItem.sponsored_id} has been updated from ${currentStatus} to ${newStatus}.`,
+            ip_address: req.ip || "",
+            role: req?.user?.role?.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user?._id,
+            old_values: oldData,
+            new_values: sponsoredItem,
+        });
+
         return res.status(200).json({
             success: true,
-            message: `Sponsored Item successfully marked as ${newStatus}`,
+            message: `Sponsored product successfully marked as ${newStatus}`,
             sponsoredItem
         });
 
