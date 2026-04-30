@@ -7,6 +7,7 @@ import DistributorNotification from "../models/DistributorNotification";
 import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";
+import Distributor from "../models/Distributor";
 
 export const getWithdrawalRequests = async (req: Request, res: Response, next: NextFunction) => {
     try{
@@ -169,6 +170,23 @@ export const updateWithdrawalRequestStatus = async (req: AuthRequest, res: Respo
 
         withdrawalRequest.status = newStatus;
         await withdrawalRequest.save({ session });
+
+        if(withdrawalRequest.status === 'completed') {
+            const distributor = await Distributor.findById(withdrawalRequest.distributor_id);
+
+            if(!distributor) {
+                await session.abortTransaction();
+                session.endSession();
+
+                return res.status(404).json({ 
+                    success: false,
+                    message: 'Cannot update status: Distributor not exist'
+                })
+            }
+
+            distributor.wallet_balance -= withdrawalRequest.amount;
+            await distributor.save({ session });
+        }
 
         const distributorNotification = await DistributorNotification.create(
         [
