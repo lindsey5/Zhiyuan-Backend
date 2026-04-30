@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 export interface WithdrawalRequestMethod extends Document{
-    type: "cash" | "bank" | "gcash" | "maya";
+    type: "cash" | "card" | "gcash" | "maya";
     account_name?: string;
     account_number?: string;
     bank_name?: string;
@@ -24,7 +24,7 @@ const WithdrawalRequestSchema: Schema<WithdrawalRequestAttributes> = new Schema(
         withdrawal_method: {
             type: {
                 type: String,
-                enum: ["cash", "bank", "gcash", "maya"],
+                enum: ["cash", "card", "gcash", "maya"],
                 required: true,
             },
 
