@@ -60,6 +60,7 @@ const ROLES = {
             'sponsored-items:view:all',
 
             // Transfer Logs
+            'tranfer-logs:view:all',
             'tranfer-logs:view:own',
             'transfer-logs:update',
             'transfer-logs:create',
