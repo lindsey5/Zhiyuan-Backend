@@ -257,23 +257,22 @@ export const updateVariant = async (req: AuthRequest, res: Response, next: NextF
         const oldValues = variant.toObject();
 
         if(updatedVariant.image_url && updatedVariant.image_url !== oldValues.image_url){
-            if (updatedVariant.thumbnail_url.startsWith("data:image")) {
+            if (updatedVariant.image_url.startsWith("data:image")) {
                 const { public_id, secure_url } = await uploadBase64(updatedVariant.image_url);
 
                 updatedVariant.image_public_id = public_id;
                 updatedVariant.image_url = secure_url;
+
+                await deleteFile(variant.image_public_id)
             }
 
         }
-
         // Update variant fields
         variant.set(updatedVariant);
         await variant.save({ session })
 
         await session.commitTransaction();
         session.endSession();
-
-        if(oldValues.image_public_id !== variant.image_public_id) await deleteFile(variant.image_public_id)
         
         await AuditLogService.log({
             action: "UPDATE_VARIANT",
