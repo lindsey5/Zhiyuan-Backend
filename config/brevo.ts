@@ -7,6 +7,6 @@ export const brevo = new SibApiV3Sdk.TransactionalEmailsApi();
 
 // Shared sender info
 export const sender = {
-    name: 'Zhiyuan Enterprice Inc.',
+    name: 'Zhiyuan Enterprice Group Inc.',
     email: process.env.EMAIL_USER as string,
 };
