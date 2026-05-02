@@ -81,6 +81,7 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
         const search = (req.query.search as string) || "";
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
+        const id = req.query.id ? String(req.query.id) : null;
 
         const sortBy = (req.query.sortBy as string) || "createdAt";
         const order = (req.query.order as string) === "asc" ? 1 : -1;
@@ -106,6 +107,10 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
                 { distributor_id: { $regex: search, $options: "i" }},
             ]
         };
+
+        if(id) {
+            matchQuery._id = { $ne: new mongoose.Types.ObjectId(id) }
+        }
 
         const allowedSortFields = [
             "distributor_name",
