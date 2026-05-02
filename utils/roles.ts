@@ -31,7 +31,8 @@ const ROLES = {
 
             // Distributor Management
             'distributor:read:all',
-            'distrubutor:create',
+            'distributor:create',
+            'distributor:update',
             'distributor:delete',
             'distributor:downline:view',
 
