@@ -86,7 +86,7 @@ StockTransferSchema.pre("save", async function (next) {
         while (!unique) {
             const random = Math.random().toString(36).substring(2, 7).toUpperCase();
 
-            generatedNo = `ST-${random}`;
+            generatedNo = `D-${random}`;
 
             const existing = await mongoose.models.StockTransfer.findOne({ transfer_no: generatedNo });
 
