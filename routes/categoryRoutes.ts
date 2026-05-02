@@ -10,9 +10,9 @@ const router = Router();
 
 router.post('/', 
     createRateLimiter(60 * 1000, 20),
+    validateBody(categorySchema), 
     authenticate,
     authorizePermission(PERMISSIONS.CATEGORY_CREATE),
-    validateBody(categorySchema), 
     createCategory
 );
 
@@ -23,9 +23,9 @@ router.get('/',
 
 router.put('/:id', 
     createRateLimiter(60 * 1000, 20),
+    validateBody(categorySchema),
     authenticate,
     authorizePermission(PERMISSIONS.CATEGORY_UPDATE),
-    validateBody(categorySchema),
     updateCategory
 )
 

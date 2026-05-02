@@ -12,10 +12,10 @@ const router = Router();
 router.post(
     '/', 
     createRateLimiter(60 * 1000, 20),
+    validateBody(createProductSchema),
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_CREATE),
     createProductUploads,
-    validateBody(createProductSchema),
     handleMulterError,
     createProduct
 );
@@ -80,9 +80,9 @@ router.delete(
 router.put(
     '/:id',
     createRateLimiter(60 * 1000, 20),
+    validateBody(updateProductSchema),
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_UPDATE),
-    validateBody(updateProductSchema),
     updateProduct
 )
 

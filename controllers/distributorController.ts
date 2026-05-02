@@ -225,6 +225,41 @@ export const getDownlineDistributors = async (req: Request, res: Response, next:
     }
 }
 
+export const updateDistributor = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor) return res.status(404).json({ success: false, message: 'Distributor not found' });
+        
+        const oldValues = distributor;
+
+        distributor.set(req.body);
+
+        distributor.save();
+
+        await AuditLogService.log({
+            action: "DISTRIBUTOR_UPDATE",
+            description: 'Distributor successfully updated',
+            ip_address: req.ip || "",
+            role: req?.user?.role?.name || "N/A",
+            severity: "MEDIUM",
+            user_agent: req?.headers["user-agent"] || "",
+            user_id: req.user?._id,
+            old_values: oldValues,
+            new_values: distributor,
+        });
+
+        res.status(200).json({
+            success: true,
+            distributor,
+            message: "Distributor successfully updated",
+        })
+
+    } catch (err) {
+        next(err);
+    }
+}
+
 export const deleteDistributorById = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const existingDistributor = await Distributor.findById(req.params.id);

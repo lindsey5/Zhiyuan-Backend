@@ -1,16 +1,16 @@
 import { Router } from "express";
-import { createDistributor, deleteDistributorById, getDistributorById, getDistributors, getDownlineDistributors, getTopDistributors, getTotalDistributors } from "../controllers/distributorController";
+import { createDistributor, deleteDistributorById, getDistributorById, getDistributors, getDownlineDistributors, getTopDistributors, getTotalDistributors, updateDistributor } from "../controllers/distributorController";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
-import { distributorSchema } from "../schema/distributorSchema";
+import { createDistributorSchema, updateDistributorSchema } from "../schema/distributorSchema";
 import validateBody from "../middlewares/validateBody";
 const router = Router();
 
 router.post(
     '/', 
-    validateBody(distributorSchema),
     createRateLimiter(60 * 1000, 20),
+    validateBody(createDistributorSchema),
     authenticate,
     authorizePermission(PERMISSIONS.DISTRIBUTOR_CREATE),
     createDistributor
@@ -62,6 +62,15 @@ router.get(
     authenticate,
     hasAnyPermission(PERMISSIONS.DISTRIBUTOR_STOCK_VIEW, PERMISSIONS.DISTRIBUTOR_SALES_VIEW, PERMISSIONS.DISTRIBUTOR_STATS_VIEW),
     getDistributorById
+)
+
+router.put(
+    '/:id',
+    createRateLimiter(60 * 1000, 20),
+    validateBody(updateDistributorSchema),
+    authenticate,
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_UPDATE),
+    updateDistributor
 )
 
 router.delete(

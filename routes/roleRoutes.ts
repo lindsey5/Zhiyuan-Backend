@@ -11,9 +11,9 @@ const router = Router();
 router.post(
     '/',
     createRateLimiter(60 * 1000, 20),
+    validateBody(createAndUpdateRoleSchema),
     authenticate,
     authorizePermission(PERMISSIONS.ROLE_CREATE),
-    validateBody(createAndUpdateRoleSchema),
     createRole
 );
 
@@ -50,9 +50,9 @@ router.get(
 router.put(
     '/:id',
     createRateLimiter(60 * 1000, 20),
+    validateBody(createAndUpdateRoleSchema),
     authenticate,
     authorizePermission(PERMISSIONS.ROLE_UPDATE),
-    validateBody(createAndUpdateRoleSchema),
     updateRole
 )
 

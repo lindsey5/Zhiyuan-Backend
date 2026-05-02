@@ -3,6 +3,8 @@ import { authenticate, authorizePermission, hasAnyPermission } from "../middlewa
 import PERMISSIONS from "../utils/permissions";
 import { deleteVariant, downloadVariants, getVariantById, getVariants, searchVariant, updateVariant } from "../controllers/variantController";
 import createRateLimiter from "../utils/rate-limit";
+import validateBody from "../middlewares/validateBody";
+import { updateVariantSchema } from "../schema/productSchema";
 
 const router = Router();
 
@@ -43,6 +45,7 @@ router.get(
 router.put(
     '/:id',
     createRateLimiter(60 * 1000, 20),
+    validateBody(updateVariantSchema),
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_UPDATE),
     updateVariant

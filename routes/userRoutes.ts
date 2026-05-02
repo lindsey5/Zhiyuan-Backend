@@ -11,9 +11,9 @@ const router = Router();
 router.post(
     '/', 
     createRateLimiter(60 * 1000, 20),
+    validateBody(createUserSchema),
     authenticate, 
     authorizePermission(PERMISSIONS.USER_CREATE),
-    validateBody(createUserSchema),
     createUser
 );
 
@@ -44,25 +44,25 @@ router.get(
 router.put(
     '/me',
     createRateLimiter(5 * 1000, 100),
-    authenticate,
     validateBody(updateUserSchema),
+    authenticate,
     userUpdateOwn
 )
 
 router.put(
     '/:id',
     createRateLimiter(60 * 1000, 20),
+    validateBody(updateUserSchema),
     authenticate,
     authorizePermission(PERMISSIONS.USER_UPDATE),
-    validateBody(updateUserSchema),
     updateUser
 )
 
 router.patch(
     '/change-password',
     createRateLimiter(60 * 1000, 20),
-    authenticate,
     validateBody(changePasswordSchema),
+    authenticate,
     changePassword
 )
 

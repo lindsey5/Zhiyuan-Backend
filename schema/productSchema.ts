@@ -40,7 +40,7 @@ export const createProductSchema = z.object({
 .strict();
 
 
-const updateVariantSchema = z.object({
+export const updateVariantSchema = z.object({
     _id: z.string().optional(),
     product_id: z.string().optional(),
     variant_name: z.string()
