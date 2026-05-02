@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createDistributor, deleteDistributorById, getDistributorById, getDistributors, getTopDistributors, getTotalDistributors } from "../controllers/distributorController";
+import { createDistributor, deleteDistributorById, getDistributorById, getDistributors, getDownlineDistributors, getTopDistributors, getTotalDistributors } from "../controllers/distributorController";
 import { authenticate, authorizePermission, hasAnyPermission } from "../middlewares/authMiddleware";
 import PERMISSIONS from "../utils/permissions";
 import createRateLimiter from "../utils/rate-limit";
@@ -46,6 +46,14 @@ router.get(
     authenticate,
     authorizePermission(PERMISSIONS.DASHBOARD_VIEW),
     getTotalDistributors
+)
+
+router.get(
+    '/downline/:id',
+    createRateLimiter(5 * 1000, 100),
+    authenticate,
+    authorizePermission(PERMISSIONS.DISTRIBUTOR_DOWNLINE_VIEW),
+    getDownlineDistributors
 )
 
 router.get(

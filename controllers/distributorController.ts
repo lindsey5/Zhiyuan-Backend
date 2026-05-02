@@ -186,6 +186,45 @@ export const getDistributors = async (req: Request, res: Response, next: NextFun
     }
 };
 
+export const getDownlineDistributors = async (req: Request, res: Response, next: NextFunction) => {
+    try{
+        const distributor = await Distributor.findById(req.params.id);
+
+        if(!distributor) return res.status(404).json({ success: false, message: 'Distributor not found' });
+
+        const cacheKey = `distributors:downline:${distributor.id}`;
+
+        const cachedValue = await redisClient.get(cacheKey);
+
+        if (cachedValue) {
+            return res.status(200).json({
+                success: true,
+                ...JSON.parse(cachedValue)
+            });
+        }
+
+        const downlineDistributors = await Distributor.find({ parent_distributor_id: distributor._id })
+            .populate('parent_distributor')
+            .select('-password');
+
+        const responseData = {
+            downlineDistributors
+        };
+
+        await redisClient.set(cacheKey, JSON.stringify(responseData), {
+            EX: 60
+        });
+
+        res.status(200).json({
+            success: true,
+            ...responseData
+        })
+
+    } catch (err) {
+        next(err);
+    }
+}
+
 export const deleteDistributorById = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const existingDistributor = await Distributor.findById(req.params.id);

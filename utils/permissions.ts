@@ -36,6 +36,7 @@ const PERMISSIONS = {
     DISTRIBUTOR_READ_ALL: 'distributor:read:all',
     DISTRIBUTOR_CREATE: 'distrubutor:create',
     DISTRIBUTOR_DELETE: 'distributor:delete',
+    DISTRIBUTOR_DOWNLINE_VIEW: 'distributor:downline:view',
     
     // Distributor Stock Management
     DISTRIBUTOR_STOCK_VIEW: 'distributor-stock:view',

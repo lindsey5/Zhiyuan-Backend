@@ -33,6 +33,7 @@ const ROLES = {
             'distributor:read:all',
             'distrubutor:create',
             'distributor:delete',
+            'distributor:downline:view',
 
             // Distributor Stock Management
             'distributor-stock:view',
