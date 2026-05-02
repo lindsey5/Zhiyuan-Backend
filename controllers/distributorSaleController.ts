@@ -250,7 +250,7 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
             }
         ];
 
-        const [distributorSales, totalResult] = await Promise.all([
+        const [distributorSales, totalResult, totalSalesResult] = await Promise.all([
             DistributorSale.aggregate([
                 ...pipeline,
                 { $match: filter },
@@ -264,9 +264,22 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                 { $match: filter },
                 { $count: "total" },
             ]),
+
+            DistributorSale.aggregate([
+                ...pipeline,
+                { $match: filter },
+                {
+                    $group: {
+                        _id: null,
+                        totalSalesAmount: { $sum: "$total_amount" },
+                        totalQuantitySold: { $sum: "$quantity" },
+                    },
+                },
+            ]),
         ]);
 
         const total = totalResult[0]?.total || 0;
+        const totalSales = totalSalesResult[0]?.totalSalesAmount || 0;
 
         const responseData = {
             distributorSales,
@@ -274,6 +287,7 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
             limit,
             totalPages: Math.ceil(total / limit),
             total,
+            totalSales,
         };
 
         await redisClient.set(cacheKey, JSON.stringify(responseData), {
