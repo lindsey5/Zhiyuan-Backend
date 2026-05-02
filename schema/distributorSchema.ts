@@ -11,5 +11,7 @@ export const distributorSchema = z.object({
         .max(100, "Email must not exceed 100 characters"),
     parent_distributor_id: z 
         .string()
-        .optional()
+        .optional(),
+    commission_rate: z.number().positive('commission_rate should be positive'),
+    child_commission_rate: z.number().positive('child_commission_rate should be positive'),
 }).strict()

@@ -29,6 +29,12 @@ const DistributorSchema: Schema<DistributorAttributes> = new Schema(
             default: 5,
         },
 
+        child_commission_rate: {
+            type: Number,
+            required: true,
+            default: 2
+        },
+
         wallet_balance: {
             type: Number,
             required: true,

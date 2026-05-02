@@ -96,6 +96,7 @@ export interface DistributorAttributes extends Document {
     parent_distributor_id: Types.ObjectId | null;
     distributor_name: string;
     commission_rate: number;
+    child_commission_rate: number;
     wallet_balance: number;
     email: string;
     password: string;
