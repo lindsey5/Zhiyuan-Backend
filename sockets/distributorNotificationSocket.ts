@@ -25,7 +25,7 @@ export function initDistributorNotificationSocket(io: SocketIOServer): void {
                     const distributorNotification = await DistributorNotification.create({
                         distributor_id: distributor.parent_distributor_id,
                         sale_ids: sales.map(sale => sale.id),
-                        message: `You receive ${parentDistributor.child_commission_rate} commission from ${distributor.distributor_name}`
+                        message: `You receive ${parentDistributor.child_commission_rate}% commission from ${distributor.distributor_name} sales`
                     });
 
                     distributorNotification.populate({
