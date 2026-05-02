@@ -18,10 +18,14 @@ export function initDistributorNotificationSocket(io: SocketIOServer): void {
                 const distributor = await Distributor.findById(distributor_id);
 
                 if(distributor && distributor.parent_distributor_id){
-                     const distributorNotification = await DistributorNotification.create({
+                    const parentDistributor = await Distributor.findById(distributor.parent_distributor_id);
+
+                    if(!parentDistributor) return;
+
+                    const distributorNotification = await DistributorNotification.create({
                         distributor_id: distributor.parent_distributor_id,
                         sale_ids: sales.map(sale => sale.id),
-                        message: `You receive 2% commission from ${distributor.distributor_name}`
+                        message: `You receive ${parentDistributor.child_commission_rate} commission from ${distributor.distributor_name}`
                     });
 
                     distributorNotification.populate({
