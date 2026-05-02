@@ -41,12 +41,18 @@ export const formatDate = (date: Date | string | null | undefined): string => {
     return `${year}-${month}-${day} ${formattedHours}:${minutes} ${ampm}`;
 };
 
-export function formatToPeso (num : number) {
+export function formatNumber (num : number) {
     const formatted = num.toLocaleString('en-us', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
 
+    return `${formatted}`;
+}
+
+export function formatToPeso (num : number) {
+    const formatted = formatNumber(num);
+    
     return `₱ ${formatted}`;
 }
 

@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import DistributorSale from "../models/DistributorSale";
-import { formatDate, setEndDate, setStartDate } from "../utils/utils";
+import { formatDate, formatNumber, setEndDate, setStartDate } from "../utils/utils";
 import mongoose from "mongoose";
 import Distributor from "../models/Distributor";
 import DistributorSaleService from "../services/DistributorSaleService";
@@ -426,7 +426,7 @@ export const downloadDistributorSales = async (req: Request, res: Response, next
             const variantName = sale.variant?.variant_name || "";
             const sku = sale.variant?.sku || "";
             const qty = String(sale.quantity ?? "");
-            const total = sale.total_amount.toFixed(2);
+            const total = formatNumber(sale.total_amount);
             const soldAt = formatDate(sale.createdAt);
 
             const heights = [
@@ -480,7 +480,7 @@ export const downloadDistributorSales = async (req: Request, res: Response, next
         doc.text(`Total Quantity Sold: ${totalSalesResult[0]?.totalQuantitySold}`, startX, rowY);
         rowY += 15;
 
-        doc.text(`Total Sales Amount: ${totalSalesResult[0]?.totalSalesAmount.toFixed(2) || 0}`, startX, rowY);
+        doc.text(`Total Sales Amount: ${formatNumber(totalSalesResult[0]?.totalSalesAmount || 0)}`, startX, rowY);
         rowY += 15;
 
         // underline
@@ -637,7 +637,7 @@ export const downloadAllDistributorSales = async (req: Request, res: Response, n
             const variantName = sale.variant?.variant_name || "";
             const sku = sale.variant?.sku || "";
             const qty = String(sale.quantity ?? "");
-            const total = sale.total_amount.toFixed(2);
+            const total = formatNumber(sale.total_amount);
             const soldAt = formatDate(sale.createdAt);
 
             const heights = [
@@ -692,7 +692,7 @@ export const downloadAllDistributorSales = async (req: Request, res: Response, n
         doc.text(`Total Quantity Sold: ${totalSalesResult[0]?.totalQuantitySold}`, startX, rowY);
         rowY += 15;
 
-        doc.text(`Total Sales Amount: ${totalSalesResult[0]?.totalSalesAmount.toFixed(2) || 0}`, startX, rowY);
+        doc.text(`Total Sales Amount: ${formatNumber(totalSalesResult[0]?.totalSalesAmount || 0)}`, startX, rowY);
         rowY += 15;
 
         // underline
