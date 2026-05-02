@@ -21,7 +21,6 @@ router.get(
     downloadDistributorStocks
 )
 
-
 router.get(
     '/:variant_id/:distributor_id',
     createRateLimiter(5 * 1000, 100),
