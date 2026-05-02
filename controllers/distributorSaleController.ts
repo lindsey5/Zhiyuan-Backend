@@ -272,7 +272,6 @@ export const getDistributorSales = async (req: Request, res: Response, next: Nex
                     $group: {
                         _id: null,
                         totalSalesAmount: { $sum: "$total_amount" },
-                        totalQuantitySold: { $sum: "$quantity" },
                     },
                 },
             ]),
@@ -335,7 +334,7 @@ export const downloadDistributorSales = async (req: Request, res: Response, next
             if (endDate) filter.createdAt.$lte = endDate;
         }
 
-        const distributorSalesData = await DistributorSale.aggregate([
+        const pipeline = [
             {
                 $lookup: {
                     from: "variants",
@@ -353,10 +352,25 @@ export const downloadDistributorSales = async (req: Request, res: Response, next
                     as: "product",
                 },
             },
-            { $unwind: "$product" },
             { $match: filter },
+        ]
+
+        const distributorSalesData = await DistributorSale.aggregate([
+            ...pipeline,
+            { $unwind: "$product" },
             { $sort: { createdAt: -1 } },
         ]);
+
+        const totalSalesResult = await DistributorSale.aggregate([
+            ...pipeline,
+            {
+                $group: {
+                    _id: null,
+                    totalSalesAmount: { $sum: "$total_amount" },
+                    totalQuantitySold: { $sum: "$quantity" },
+                },
+            },
+        ])
 
         // PDF GENERATION
         const doc = new PDFDocument({ margin: 30, size: "A4" });
@@ -448,7 +462,32 @@ export const downloadDistributorSales = async (req: Request, res: Response, next
 
             rowY += rowHeight;
         });
+        if (rowY + 60 > pageBottom) {
+            doc.addPage();
+            rowY = doc.y;
+        }
+        rowY += 15;
+        // TOTALS SECTION
+        doc.moveDown(2);
 
+        doc.font("Helvetica-Bold").fontSize(10);
+
+        doc.text("Summary", startX, rowY);
+        rowY += 15;
+
+        doc.font("Helvetica").fontSize(9);
+
+        doc.text(`Total Quantity Sold: ${totalSalesResult[0]?.totalQuantitySold}`, startX, rowY);
+        rowY += 15;
+
+        doc.text(`Total Sales Amount: ${totalSalesResult[0]?.totalSalesAmount.toFixed(2) || 0}`, startX, rowY);
+        rowY += 15;
+
+        // underline
+        doc
+            .moveTo(startX, rowY)
+            .lineTo(570, rowY)
+            .stroke();
         doc.end();
 
         const pdfBuffer = await pdfBufferPromise;
