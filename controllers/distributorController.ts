@@ -208,7 +208,7 @@ export const getDownlineDistributors = async (req: Request, res: Response, next:
             });
         }
 
-        const downlineDistributors = await Distributor.find({ parent_distributor_id: distributor._id })
+        const downlineDistributors = await Distributor.find({ parent_distributor_id: distributor._id, status: 'active' })
             .populate('parent_distributor')
             .select('-password');
 
