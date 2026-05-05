@@ -12,11 +12,11 @@ const router = Router();
 router.post(
     '/', 
     createRateLimiter(60 * 1000, 20),
+    createProductUploads,
+    handleMulterError,
     validateBody(createProductSchema),
     authenticate,
     authorizePermission(PERMISSIONS.PRODUCT_CREATE),
-    createProductUploads,
-    handleMulterError,
     createProduct
 );
 
