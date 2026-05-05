@@ -379,6 +379,7 @@ export const isEmailExist = async (req: Request, res: Response, next: NextFuncti
 
         const existingEmail = await User.findOne({
             email: req.query.email,
+            status: 'active',
             _id: { $ne: new mongoose.Types.ObjectId(req.query.id as string) }
         })
 
