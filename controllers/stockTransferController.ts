@@ -275,8 +275,7 @@ export const updateStockTransferLogStatus = async (
 
         // Allowed status transitions (cannot go backwards)
         const allowedTransitions: Record<string, string[]> = {
-            pending: ["cancelled"],
-            approved: ["processing", "cancelled"],
+            pending: ["cancelled", "processing"],
             processing: ["delivered", "cancelled"],
             delivered: ["failed"],
             received: [],

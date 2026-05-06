@@ -6,7 +6,7 @@ export interface StockTransferAttributes extends Document {
     transfer_no: string;
     sender_id?: mongoose.Types.ObjectId | null;
     receiver_id: mongoose.Types.ObjectId;
-    status: 'pending' | 'approved'| 'processing' | 'delivered' | 'received' | 'cancelled' | 'rejected' | 'failed';
+    status: 'pending' | 'processing' | 'delivered' | 'received' | 'cancelled' | 'rejected' | 'failed';
     receiver: DistributorAttributes;
     items: StockTransferItemAttributes[];
     sender: UserAttributes;
