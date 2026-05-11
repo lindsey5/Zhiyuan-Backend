@@ -43,7 +43,7 @@ export const sendAcountDetails = async (
                 Please log in and change your password immediately for security purposes.
             </p>
 
-            <a href="${process.env.EMAIL_URL}"
+            <a href="${process.env.URL}"
                 style="display: inline-block; margin-top: 20px; background: #111827; color: white; padding: 12px 18px;
                 text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: bold;">
                 Login Now
