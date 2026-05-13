@@ -4,7 +4,7 @@ import SponsoredItem from "../models/SponsoredItem";
 import { setEndDate, setStartDate } from "../utils/utils";
 import redisClient from "../config/redis";
 import DistributorNotification from "../models/DistributorNotification";
-import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import { emitDistributorNotification } from "../sockets/namespaces/distributorNotification.namespace";
 import mongoose from "mongoose";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";

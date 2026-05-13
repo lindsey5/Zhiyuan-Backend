@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import ReturnRequest from "../models/ReturnRequest";
 import DistributorStock from "../models/DistributorStock";
 import Distributor from "../models/Distributor";
-import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import { emitDistributorNotification } from "../sockets/namespaces/distributorNotification.namespace";
 import DistributorNotification from "../models/DistributorNotification";
 import mongoose from "mongoose";
 import { setEndDate, setStartDate } from "../utils/utils";

@@ -3,7 +3,7 @@ import { setEndDate, setStartDate } from "../utils/utils";
 import redisClient, { deleteCache } from "../config/redis";
 import StockOrder from "../models/StockOrder";
 import DistributorNotification from "../models/DistributorNotification";
-import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import { emitDistributorNotification } from "../sockets/namespaces/distributorNotification.namespace";
 import mongoose from "mongoose";
 import AuditLogService from "../services/AuditLogService";
 import { AuthRequest } from "../types/auth";

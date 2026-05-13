@@ -3,7 +3,7 @@ import OrderNotification from "../models/OrderNotification";
 import User from "../models/User";
 import UserNotification from "../models/UserNotification";
 import Variant from "../models/Variant";
-import { emitOrderNotification } from "../sockets/orderSocket";
+import { emitOrderNotification } from "../sockets/namespaces/order.namespace";
 import { OrderAttributes, OrderItemAttributes } from "../types/model-attributes";
 import PERMISSIONS from "../utils/permissions";
 import Order from "../models/Order";

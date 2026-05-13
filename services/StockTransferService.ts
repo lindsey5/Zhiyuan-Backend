@@ -1,7 +1,7 @@
 import mongoose, { Types } from "mongoose";
 import StockTransfer from "../models/StockTransfer";
 import StockTransferItem from "../models/StockTransferItem";
-import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import { emitDistributorNotification } from "../sockets/namespaces/distributorNotification.namespace";
 import DistributorNotification from "../models/DistributorNotification";
 import { deleteCache } from "../config/redis";
 

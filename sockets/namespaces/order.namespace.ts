@@ -1,13 +1,13 @@
 import type { Server as SocketIOServer, Namespace } from "socket.io";
 import dotenv from 'dotenv';
-import socketConnection from "./socketConnection";
-import { OrderNotificationAttributes } from "../models/OrderNotification";
-import { UserNotificationAttributes } from "../models/UserNotification";
+import socketConnection from "../socketConnection";
+import { OrderNotificationAttributes } from "../../models/OrderNotification";
+import { UserNotificationAttributes } from "../../models/UserNotification";
 dotenv.config();
 
 export let orderNamespace: Namespace;
 
-export function initOrderSocket(io: SocketIOServer): void {
+export function initOrderNamespace(io: SocketIOServer): void {
     orderNamespace = io.of("/orders");
 
     socketConnection({
@@ -23,7 +23,6 @@ export async function emitOrderNotification(userNotification: UserNotificationAt
         return;
     }
 
-    console.log('Order notification sent.');
     orderNamespace.to(to).emit("receive-notification", {
         userNotification: {
             ... userNotification.toObject(),

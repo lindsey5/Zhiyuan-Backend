@@ -4,7 +4,7 @@ import { setEndDate, setStartDate } from "../utils/utils";
 import redisClient, { deleteCache } from "../config/redis";
 import { AuthRequest } from "../types/auth";
 import DistributorNotification from "../models/DistributorNotification";
-import { emitDistributorNotification } from "../sockets/distributorNotificationSocket";
+import { emitDistributorNotification } from "../sockets/namespaces/distributorNotification.namespace";
 import mongoose from "mongoose";
 import Variant from "../models/Variant";
 import AuditLogService from "../services/AuditLogService";
